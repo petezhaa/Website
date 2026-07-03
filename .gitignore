@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+rust/target
+
+# dev tooling and artifacts
+/scripts/
+
+# cloudflare local secrets
+.dev.vars
+.open-next/
+.wrangler/

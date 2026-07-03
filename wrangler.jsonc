@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // same name as the existing (failed) dashboard worker so we replace it
+  "name": "petezhaa",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-06-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "routes": [
+    // canonical domain
+    { "pattern": "petezha.xyz", "custom_domain": true },
+    // aliases; the app 308-redirects them to petezha.xyz
+    { "pattern": "peterwzhao.com", "custom_domain": true },
+    { "pattern": "www.peterwzhao.com", "custom_domain": true },
+    { "pattern": "www.petezha.xyz", "custom_domain": true }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

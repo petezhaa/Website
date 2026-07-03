@@ -1,65 +1,400 @@
-import Image from "next/image";
+import { Suspense } from "react";
+import { Reveal } from "@/components/Reveal";
+import { StatLine } from "@/components/StatLine";
+import { ScrollProgress } from "@/components/ScrollProgress";
+import { MapGame } from "@/components/MapGame";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { NavLinks } from "@/components/NavLinks";
+import { Magnetic } from "@/components/Magnetic";
+import { ProjectCard } from "@/components/ProjectCard";
+import { CompanyMark } from "@/components/CompanyMark";
+import { HandNote } from "@/components/Scribble";
+import { HeroLine } from "@/components/HeroLine";
+import { Stats } from "@/components/Stats";
+import { LINKS, PROJECTS, ROLES, SKILL_GROUPS } from "@/lib/resume";
+import { ParkTierList } from "@/components/ParkTierList";
+import { FilmShelf } from "@/components/FilmShelf";
+import { GameShelf } from "@/components/GameShelf";
+import { StatsSection } from "@/components/StatsSection";
+import { PeterBot } from "@/components/PeterBot";
+import { ContactForm } from "@/components/ContactForm";
+import { VibeCorner } from "@/components/VibeCorner";
+
+function SectionLabel({
+  n,
+  title,
+  note,
+}: {
+  n: string;
+  title: string;
+  note?: string;
+}) {
+  return (
+    <Reveal>
+      <div className="mb-10 flex items-baseline gap-4">
+        <span className="font-mono text-xs text-accent">{n}</span>
+        <h2 className="font-serif text-4xl tracking-tight sm:text-5xl">
+          {title}
+        </h2>
+        {note && <HandNote className="hidden sm:inline-block">{note}</HandNote>}
+        <div className="h-px flex-1 self-center bg-line" />
+      </div>
+    </Reveal>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
+    <>
+      <ScrollProgress />
+      <PeterBot />
+      <VibeCorner />
+      {/* ============ NAV ============ */}
+      <header className="sticky top-0 z-50 border-b border-line bg-bg/90 backdrop-blur">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+          <a href="#top" className="font-serif text-xl">
+            Peter Zhao
           </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          <NavLinks />
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <a
+              href="/resume.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden rounded-full border border-line px-4 py-1.5 text-sm font-medium text-muted transition hover:border-accent hover:text-accent sm:inline-block"
+            >
+              Resume
+            </a>
+            <a
+              href={`mailto:${LINKS.email}`}
+              className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg transition hover:opacity-90"
+            >
+              Email
+            </a>
+          </div>
         </div>
+      </header>
+
+      <main id="top" className="mx-auto w-full max-w-5xl px-6">
+        {/* ============ HERO ============ */}
+        <section className="flex min-h-[80svh] flex-col justify-center py-20">
+          <Reveal>
+            <p className="mb-6 flex items-center gap-2.5 font-mono text-xs text-muted">
+              <span className="h-2 w-2 rounded-full bg-accent" />
+              Right now: NVIDIA, Santa Clara
+            </p>
+          </Reveal>
+          <Reveal delay={80}>
+            <h1 className="relative max-w-3xl font-serif text-5xl leading-[1.08] tracking-tight sm:text-7xl">
+              <HeroLine />
+            </h1>
+          </Reveal>
+          <Reveal delay={160}>
+            <p className="mt-8 max-w-xl leading-relaxed text-muted">
+              I study computer science, electrical engineering, and math. All
+              three, because the work I enjoy sits somewhere between them.
+              I&apos;m spending the early summer at NVIDIA working on GPU
+              simulation infrastructure, then the late summer at Microsoft on
+              Azure Search. Last summer I was at Amazon.
+            </p>
+            <Suspense fallback={null}>
+              <StatLine />
+            </Suspense>
+          </Reveal>
+          <Reveal delay={240}>
+            <div className="mt-10 flex flex-wrap items-center gap-4">
+              <div className="relative">
+                <Magnetic>
+                  <a
+                    href="#play"
+                    className="inline-block rounded-lg bg-accent px-6 py-3 text-sm font-medium text-accent-fg transition hover:opacity-90"
+                  >
+                    Play the map game
+                  </a>
+                </Magnetic>
+                <HandNote className="absolute -top-7 left-1/2 hidden w-max -translate-x-1/2 sm:inline-block">
+                  the engine is written in Rust
+                </HandNote>
+              </div>
+              <Magnetic>
+                <a
+                  href="#work"
+                  className="inline-block rounded-lg border border-line bg-surface px-6 py-3 text-sm font-medium transition hover:border-accent/50"
+                >
+                  See my work
+                </a>
+              </Magnetic>
+              <div className="flex gap-5 font-mono text-xs text-muted">
+                <a href={LINKS.github} target="_blank" rel="noopener noreferrer" className="transition hover:text-accent">GitHub</a>
+                <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer" className="transition hover:text-accent">LinkedIn</a>
+                <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" className="transition hover:text-accent">Resume</a>
+              </div>
+            </div>
+          </Reveal>
+          <Reveal delay={320}>
+            <div className="mt-14">
+              <Stats />
+            </div>
+          </Reveal>
+        </section>
+
+        {/* ============ WORK ============ */}
+        <section className="py-24" id="work">
+          <SectionLabel n="01" title="Work" note="the resume part" />
+          <div className="flex flex-col">
+            {ROLES.map((role, i) => (
+              <Reveal key={role.company + role.dates} delay={i * 50}>
+                <article className="grid gap-2 border-t border-line py-9 sm:grid-cols-[180px_1fr] sm:gap-8">
+                  <div>
+                    <p className="font-mono text-xs text-muted">{role.dates}</p>
+                    {role.status && (
+                      <span
+                        className={`mt-2 inline-block rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest ${
+                          role.status === "current"
+                            ? "border-accent/50 text-accent"
+                            : "border-line text-muted"
+                        }`}
+                      >
+                        {role.status}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <CompanyMark company={role.company} />
+                      <h3 className="font-serif text-2xl tracking-tight">
+                        {role.company}
+                      </h3>
+                      <p className="text-sm text-muted">
+                        {role.title} · {role.location}
+                      </p>
+                    </div>
+                    <p className="mt-2 max-w-2xl text-[15px]">{role.quip}</p>
+                  </div>
+                </article>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        {/* ============ PROJECTS ============ */}
+        <section className="py-24" id="projects">
+          <SectionLabel n="02" title="Projects" note="the fun part" />
+          <div className="grid gap-5 sm:grid-cols-2">
+            {PROJECTS.map((project, i) => (
+              <Reveal key={project.name} delay={i * 60} className="h-full">
+                <ProjectCard project={project} />
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        {/* ============ MAP GAME ============ */}
+        <section className="py-24" id="play">
+          <SectionLabel n="03" title="The map game" note="play at least one round" />
+          <Reveal>
+            <p className="mb-8 max-w-2xl leading-relaxed text-muted">
+              I like history, and I wanted to learn Rust, so I built a
+              geography game. Click where you think each place is; the closer
+              and faster you are, the more points you get. The game engine
+              (scoring, distances, every coordinate) is written in{" "}
+              <a
+                href={LINKS.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent underline decoration-accent/30 underline-offset-4 transition hover:decoration-accent"
+              >
+                Rust and compiled to WebAssembly
+              </a>
+              ; React draws the map.
+            </p>
+          </Reveal>
+          <Reveal delay={100}>
+            <MapGame />
+          </Reveal>
+        </section>
+
+        {/* ============ ABOUT ============ */}
+        <section className="py-24" id="about">
+          <SectionLabel n="04" title="About" note="the actual person" />
+          <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr]">
+            <Reveal>
+              <div className="space-y-5 leading-relaxed text-muted">
+                <p className="font-serif text-2xl leading-snug tracking-tight text-fg sm:text-3xl">
+                  I grew up in Pulaski, Wisconsin, in a trailer park.
+                </p>
+                <p>
+                  I worked at my parents&apos; restaurant. I was one of the
+                  only Asian students in my school, got held back in
+                  kindergarten, and still ended up valedictorian of my high
+                  school.
+                </p>
+                <p>
+                  I study three majors because the things I want to build need
+                  all three: GPU systems, firmware, and control systems
+                  don&apos;t stay inside one department. I learn fastest when
+                  the project is slightly past what I already know how to do.
+                </p>
+                <p>
+                  Outside of school: history, film and animation, photography,
+                  and grand strategy games. I also hike, which is why
+                  there&apos;s a national park tier list below this.
+                </p>
+              </div>
+            </Reveal>
+            <Reveal delay={100}>
+              <div className="flex flex-col gap-4">
+                <div className="rounded-xl border border-line bg-surface p-6">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
+                    Education
+                  </p>
+                  <h3 className="mt-2 font-serif text-lg">
+                    University of Wisconsin–Madison
+                  </h3>
+                  <p className="mt-1 text-sm text-muted">
+                    B.S. Computer Science, Electrical Engineering &amp;
+                    Mathematics, May 2027
+                  </p>
+                  <p className="mt-1 text-sm text-muted">
+                    STAR &amp; PEOPLE Scholar
+                  </p>
+                </div>
+                <div className="rounded-xl border border-line bg-surface p-6">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
+                    Tools I use
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {SKILL_GROUPS.flatMap((g) => g.items).map((item) => (
+                      <span
+                        key={item}
+                        className="rounded-full border border-line px-2.5 py-1 font-mono text-[10px] text-muted"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ============ PARKS TIER LIST ============ */}
+        <section className="py-24" id="parks">
+          <SectionLabel
+            n="05"
+            title="National parks, ranked"
+            note="all 63. yes I have opinions"
+          />
+          <Reveal>
+            <p className="mb-8 max-w-2xl leading-relaxed text-muted">
+              Every U.S. national park, tiered. Formed on trails, from photos,
+              and with some bias toward mountains. Disagree? Drag a park where
+              you think it belongs, and the list will explain why you&apos;re
+              wrong.
+            </p>
+          </Reveal>
+          <Reveal delay={80}>
+            <ParkTierList />
+          </Reveal>
+        </section>
+
+        {/* ============ FILMS ============ */}
+        <section className="py-24" id="films">
+          <SectionLabel
+            n="06"
+            title="Watching"
+            note="letterboxd, live"
+          />
+          <FilmShelf />
+        </section>
+
+        {/* ============ GAMES ============ */}
+        <section className="py-24" id="games">
+          <SectionLabel n="07" title="Playing" note="steam, live" />
+          <GameShelf />
+        </section>
+
+        {/* ============ STATS ============ */}
+        <section className="py-24" id="stats">
+          <SectionLabel n="08" title="By the numbers" note="live data, real charts" />
+          <Suspense fallback={null}>
+            <StatsSection />
+          </Suspense>
+        </section>
+
+        {/* ============ THE RESTAURANT ============ */}
+        <section className="py-24" id="chinawok">
+          <Reveal>
+            <div className="relative overflow-hidden rounded-2xl border-2 border-accent/40 bg-surface p-8 sm:p-12">
+              <p className="font-mono text-xs uppercase tracking-[0.25em] text-accent">
+                09 · One more thing
+              </p>
+              <h2 className="mt-4 max-w-2xl font-serif text-3xl leading-snug tracking-tight sm:text-5xl">
+                My parents run a Chinese restaurant.
+              </h2>
+              <p className="mt-5 max-w-xl leading-relaxed text-muted">
+                China Wok, in Pulaski, Wisconsin. If you&apos;re ever near
+                Green Bay, ordering the General Tso&apos;s is the single most
+                effective way to support this website.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-muted">
+                <span className="text-gold">4.7★ on Google</span>
+                <span>1170 Mountain Bay Dr, Pulaski, WI</span>
+                <span>$10–20</span>
+              </div>
+              <div className="relative mt-8 inline-block">
+                <Magnetic>
+                  <a
+                    href="https://order.chinawoktasty.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block rounded-lg bg-accent px-8 py-4 text-base font-medium text-accent-fg transition hover:opacity-90"
+                  >
+                    Order here →
+                  </a>
+                </Magnetic>
+                <HandNote className="absolute -right-36 top-1 hidden w-max sm:inline-block">
+                  seriously, order here
+                </HandNote>
+              </div>
+            </div>
+          </Reveal>
+        </section>
+
+        {/* ============ CONTACT ============ */}
+        <section className="py-28 text-center" id="contact">
+          <Reveal>
+            <p className="font-mono text-xs uppercase tracking-[0.25em] text-accent">
+              10 · Contact
+            </p>
+            <h2 className="mx-auto mt-5 max-w-2xl font-serif text-4xl leading-tight tracking-tight sm:text-6xl">
+              Get in touch.
+            </h2>
+            <p className="mx-auto mt-5 max-w-md leading-relaxed text-muted">
+              I&apos;m happy to talk about internships, projects, or school,
+              and I answer email quickly. Genuinely, try me.
+            </p>
+            <div className="mt-9">
+              <ContactForm />
+            </div>
+            <div className="mt-9 flex justify-center gap-7 font-mono text-xs text-muted">
+              <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer" className="transition hover:text-accent">LinkedIn</a>
+              <a href={LINKS.github} target="_blank" rel="noopener noreferrer" className="transition hover:text-accent">GitHub</a>
+              <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" className="transition hover:text-accent">Resume</a>
+            </div>
+          </Reveal>
+        </section>
       </main>
-    </div>
+
+      {/* ============ FOOTER ============ */}
+      <footer className="border-t border-line">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-6 py-6 font-mono text-xs text-muted">
+          <span>Designed and built by me, in Pulaski, WI. © 2026</span>
+          <span>Built with intention</span>
+        </div>
+      </footer>
+    </>
   );
 }
