@@ -747,7 +747,7 @@ export function MapGame() {
     let raf = 0;
     const spin = () => {
       if (onScreenRef.current && !usMapRef.current && globeRef.current && !dragRef.current) {
-        rotRef.current.l += 0.045;
+        rotRef.current.l += 0.09;
         projRef.current?.rotate([rotRef.current.l, rotRef.current.p]);
         draw();
       }
@@ -1019,6 +1019,9 @@ export function MapGame() {
     cancelAnimationFrame(spinRafRef.current);
     guessRef.current = null;
     revealRef.current = 0;
+    // the menu is always a spinning globe, whatever mode you came from
+    globeRef.current = true;
+    setGlobeUi(true);
     fitProjection(false);
     setPhase("menu");
     requestAnimationFrame(() => draw());
@@ -1286,6 +1289,8 @@ export function MapGame() {
               </button>
               <button
                 onClick={() => {
+                  globeRef.current = true;
+                  setGlobeUi(true);
                   fitProjection(false);
                   guessRef.current = null;
                   setPhase("menu");
