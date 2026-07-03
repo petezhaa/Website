@@ -48,7 +48,7 @@ export function NavLinks() {
   }, []);
 
   return (
-    <nav className="hidden items-center gap-5 text-sm lg:flex">
+    <nav className="hidden items-center gap-4 text-sm lg:flex">
       {SECTIONS.map((s) => (
         <a
           key={s.id}

@@ -51,7 +51,7 @@ export default function Home() {
       <VibeCorner />
       {/* ============ NAV ============ */}
       <header className="sticky top-0 z-50 border-b border-line bg-bg/90 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4">
           <a href="#top" className="font-serif text-xl">
             Peter Zhao
           </a>
@@ -62,7 +62,7 @@ export default function Home() {
               href="/resume.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden rounded-full border border-line px-4 py-1.5 text-sm font-medium text-muted transition hover:border-accent hover:text-accent sm:inline-block"
+              className="hidden whitespace-nowrap rounded-full border border-line px-4 py-1.5 text-sm font-medium text-muted transition hover:border-accent hover:text-accent xl:inline-block"
             >
               Resume
             </a>

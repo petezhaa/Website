@@ -26,7 +26,7 @@ const caveat = Caveat({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://petezha.xyz"),
-  title: "Peter Zhao",
+  title: "Peter Zhao · maps, GPUs, and a bot that texts back",
   description:
     "Peter Zhao, a student engineer at UW–Madison studying computer science, electrical engineering, and math. GPU systems at NVIDIA, Azure Search at Microsoft, AWS at Amazon. Also: a geography game with a Rust engine.",
 };
