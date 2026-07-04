@@ -46,7 +46,7 @@ WORK:
 - Morgridge Institute (2024-2025): research. Real-time signal sync in Python, cut timing jitter from 12ms to 2ms for neuroscience sensor arrays.
 
 PROJECTS:
-- The map game on this site: geography guessing game. The engine (scoring, haversine distance, streaks, every coordinate) is Rust compiled to WebAssembly, no wasm-bindgen. React draws the map. 3D globe mode spins with momentum. Five modes including chip fabs and presidential birthplaces.
+- The map game on this site: geography guessing game. The engine (scoring, haversine distance, streaks, every coordinate) is Rust compiled to WebAssembly, no wasm-bindgen. React draws the map. 3D globe mode spins with momentum. Seven modes including chip fabs, presidential birthplaces, world capitals, and national parks (yes, Zion is in that one too).
 - Battleship on custom hardware: C firmware, FSM game logic, PCB designed in Altium.
 - Segway balance controller: PID feedback, sensor fusion, Verilog and C on real hardware.
 - ROT.AI: PyTorch LSTM+Transformer model predicting how long internet slang survives, trained on 500K posts. 87% accuracy, top 5 at Cheesehacks hackathon.

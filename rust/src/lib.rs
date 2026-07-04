@@ -102,6 +102,46 @@ static FABS: &[Place] = &[
     place!("ASML HQ (the EUV machines)", 51.40, 5.40), // Veldhoven, NL
 ];
 
+// ---- mode 5: world capitals ----
+static CAPITALS: &[Place] = &[
+    place!("Reykjavik, Iceland", 64.15, -21.94),
+    place!("Canberra, Australia", -35.28, 149.13),
+    place!("Ottawa, Canada", 45.42, -75.70),
+    place!("Brasilia, Brazil", -15.79, -47.88),
+    place!("Cairo, Egypt", 30.04, 31.24),
+    place!("Tokyo, Japan", 35.68, 139.69),
+    place!("Wellington, New Zealand", -41.29, 174.78),
+    place!("Nairobi, Kenya", -1.29, 36.82),
+    place!("Ulaanbaatar, Mongolia", 47.89, 106.91),
+    place!("Bern, Switzerland", 46.95, 7.45),
+    place!("Hanoi, Vietnam", 21.03, 105.85),
+    place!("Astana, Kazakhstan", 51.17, 71.43),
+    place!("Lima, Peru", -12.05, -77.04),
+    place!("Madrid, Spain", 40.42, -3.70),
+    place!("Helsinki, Finland", 60.17, 24.94),
+    place!("Kathmandu, Nepal", 27.72, 85.32),
+];
+
+// ---- mode 6: national parks (the tier list, now with consequences) ----
+static PARKS: &[Place] = &[
+    place!("Yellowstone", 44.6, -110.5),
+    place!("Yosemite", 37.85, -119.55),
+    place!("Grand Canyon", 36.10, -112.10),
+    place!("Zion (C tier, fight me)", 37.30, -113.05),
+    place!("Black Canyon of the Gunnison", 38.57, -107.72),
+    place!("Glacier", 48.70, -113.80),
+    place!("Acadia", 44.35, -68.21),
+    place!("Great Smoky Mountains", 35.60, -83.50),
+    place!("Rocky Mountain", 40.40, -105.70),
+    place!("Olympic", 47.80, -123.60),
+    place!("Arches", 38.70, -109.57),
+    place!("Badlands", 43.75, -102.50),
+    place!("Everglades", 25.30, -80.90),
+    place!("Death Valley", 36.50, -117.00),
+    place!("Denali", 63.10, -151.00),
+    place!("Crater Lake", 42.94, -122.10),
+];
+
 struct Mode {
     name: &'static [u8],
     places: &'static [Place],
@@ -115,6 +155,8 @@ static MODES: &[Mode] = &[
     Mode { name: b"Historical Battles\0", places: BATTLES, scale_km: 800.0, us_map: false },
     Mode { name: b"Presidential Birthplaces\0", places: PRESIDENTS, scale_km: 400.0, us_map: true },
     Mode { name: b"Chip Fabs of the World\0", places: FABS, scale_km: 800.0, us_map: false },
+    Mode { name: b"World Capitals\0", places: CAPITALS, scale_km: 600.0, us_map: false },
+    Mode { name: b"National Parks\0", places: PARKS, scale_km: 300.0, us_map: true },
 ];
 
 // ---- game state (wasm is single-threaded; a static is honest about that) ----

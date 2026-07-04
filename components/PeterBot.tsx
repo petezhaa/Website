@@ -306,7 +306,7 @@ export function PeterBot() {
                   flashKey(k);
                 }}
                 placeholder={busy ? "Peter is typing…" : "Text message"}
-                disabled={busy || offline}
+                disabled={offline}
                 className="min-w-0 flex-1 rounded-full border border-line bg-surface px-4 py-2 text-sm outline-none transition focus:border-accent"
               />
               <button

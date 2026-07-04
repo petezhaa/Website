@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { bumpVibe } from "@/lib/vibeBus";
 
 const SECTIONS = [
@@ -20,6 +20,7 @@ const SECTIONS = [
 // has crossed a line 40% down the viewport. Deterministic, no flicker.
 export function NavLinks() {
   const [active, setActive] = useState("");
+  const visited = useRef(new Set<string>());
 
   useEffect(() => {
     let raf = 0;
@@ -30,6 +31,11 @@ export function NavLinks() {
         const el = document.getElementById(s.id);
         if (!el) continue;
         if (el.getBoundingClientRect().top <= line) current = s.id;
+      }
+      // reaching a section for the first time is exploring, nav or not
+      if (current && !visited.current.has(current)) {
+        visited.current.add(current);
+        if (visited.current.size > 1) bumpVibe("explorer", 8);
       }
       setActive(current);
     };
