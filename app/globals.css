@@ -58,6 +58,30 @@
   color: var(--accent-fg);
 }
 
+/* the secret: type "cheese" (or the konami code) anywhere on the site */
+:root.cheese {
+  --accent: #b8860b;
+  --accent-soft: rgba(184, 134, 11, 0.14);
+}
+:root.cheese.dark {
+  --accent: #d9a83f;
+  --accent-soft: rgba(217, 168, 63, 0.16);
+}
+.cheese-drop {
+  top: -8%;
+  animation: cheese-fall 3.2s ease-in forwards;
+}
+@keyframes cheese-fall {
+  to {
+    transform: translateY(115vh) rotate(var(--spin, 240deg));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cheese-drop {
+    display: none;
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }

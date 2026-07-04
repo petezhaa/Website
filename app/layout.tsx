@@ -1,3 +1,4 @@
+import { CheeseMode } from "@/components/CheeseMode";
 import type { Metadata } from "next";
 import { Caveat, Inter, JetBrains_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
@@ -64,7 +65,10 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        {children}
+        <CheeseMode />
+      </body>
     </html>
   );
 }
