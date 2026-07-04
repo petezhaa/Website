@@ -70,8 +70,14 @@ export function CheeseMode() {
         }
       }
     };
+    // the phone dispatches this when someone texts peter the magic word
+    const onEvent = () => trigger();
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("cheesemode", onEvent);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("cheesemode", onEvent);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -79,6 +79,8 @@ export function PeterBot() {
   const send = async (text: string) => {
     const content = text.trim();
     if (!content || busy) return;
+    // texting the secret to peter counts as finding it
+    if (/cheese/i.test(content)) window.dispatchEvent(new Event("cheesemode"));
     const next: Msg[] = [...messages, { role: "user", content }];
     // feed the visitor-vibe radar from this message's style
     const style = readMessage(content);
