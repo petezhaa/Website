@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# petezha.xyz
 
-## Getting Started
+My personal site. Next.js and Tailwind on the outside, a Rust game engine on the inside.
 
-First, run the development server:
+**Live at [petezha.xyz](https://petezha.xyz)**
+
+## What's in it
+
+- **The map game.** A geography guessing game with seven modes (U.S. states, countries, historical battles, presidential birthplaces, chip fabs, world capitals, national parks). The engine (scoring, haversine distances, streaks, every coordinate) is Rust compiled to bare WebAssembly, no wasm-bindgen. React and d3-geo draw the map, including a 3D globe that spins with momentum.
+- **PeterBot.** A phone-simulation chat that texts like me. Groq behind it, my persona in front of it.
+- **Live stats.** Letterboxd and Steam data pulled server-side and run through actual statistics: hypothesis tests, control charts, a Lorenz curve, a survival curve of my backlog. The charts are hand-rolled SVG.
+- **A national park tier list** that argues back if you move Zion out of C tier.
+- **A vibe radar** that graphs how you behave on the site. The bot can read it.
+- There is one secret. The bot will hint at it if you ask.
+
+## Stack
+
+Next.js (App Router, webpack build), Tailwind v4, motion, d3-geo, Rust → wasm32-unknown-unknown, deployed to Cloudflare Workers via OpenNext.
+
+## Develop
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev        # dev server
+npm run build:wasm # rebuild the Rust engine -> public/mapgame.bin
+npm run build      # production build (webpack, not turbopack)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Deploy:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npx opennextjs-cloudflare build && npx wrangler deploy
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Needs `GROQ_API_KEY` and `STEAM_API_KEY` in `.env.local` (and as Cloudflare secrets in production).
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Designed and built by me, in Pulaski, WI.
