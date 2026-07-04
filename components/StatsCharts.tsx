@@ -87,6 +87,11 @@ export type StatsData = {
   topGames: { name: string; hours: number }[] | null;
   github: { repos: number } | null;
   siteCode: { ts: number; rust: number; css: number; wasmKB: number } | null;
+  counts: {
+    filmsAllTime: number | null;
+    steamHours: number | null;
+    gamesOwned: number | null;
+  } | null;
 };
 
 type Tip = { x: number; y: number; lines: string[] } | null;
@@ -479,9 +484,11 @@ function HoursBox({ data }: { data: NonNullable<StatsData["hours"]> }) {
 function DevTiles({
   github,
   siteCode,
+  counts,
 }: {
   github: StatsData["github"];
   siteCode: StatsData["siteCode"];
+  counts: StatsData["counts"];
 }) {
   const tiles: { value: string; label: string }[] = [];
   if (github) tiles.push({ value: String(github.repos), label: "public repos on github" });
@@ -491,6 +498,24 @@ function DevTiles({
       { value: siteCode.rust.toLocaleString(), label: "lines of Rust in the map engine" },
       { value: `${siteCode.wasmKB} KB`, label: "compiled engine, zero dependencies" }
     );
+  }
+  if (counts?.filmsAllTime) {
+    tiles.push({
+      value: counts.filmsAllTime.toLocaleString(),
+      label: "films logged on letterboxd",
+    });
+  }
+  if (counts?.steamHours) {
+    tiles.push({
+      value: counts.steamHours.toLocaleString(),
+      label: `hours on steam. ${Math.round(counts.steamHours / 24)} full days`,
+    });
+  }
+  if (counts?.gamesOwned) {
+    tiles.push({
+      value: String(counts.gamesOwned),
+      label: "steam games owned",
+    });
   }
   if (tiles.length === 0) return null;
   return (
@@ -1179,7 +1204,7 @@ function TopGames({ data }: { data: NonNullable<StatsData["topGames"]> }) {
 export function StatsCharts({ data }: { data: StatsData }) {
   return (
     <div className="grid gap-5 lg:grid-cols-2">
-      <DevTiles github={data.github} siteCode={data.siteCode} />
+      <DevTiles github={data.github} siteCode={data.siteCode} counts={data.counts} />
       {data.ratings && <Ratings data={data.ratings} />}
       {data.drift && <Drift data={data.drift} />}
       {data.nostalgia && <Nostalgia data={data.nostalgia} />}

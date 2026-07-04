@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node count-loc.mjs",
     "build": "next build --webpack",
     "build:wasm": "cd rust && cargo build --release --target wasm32-unknown-unknown && node -e \"require('fs').copyFileSync('target/wasm32-unknown-unknown/release/mapgame.wasm','../public/mapgame.bin')\"",
     "start": "next start",

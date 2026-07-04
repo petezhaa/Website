@@ -303,6 +303,12 @@ export async function StatsSection() {
     };
   }
 
+  const counts: StatsData["counts"] = {
+    filmsAllTime: lb?.filmsAllTime ?? null,
+    steamHours: steam ? steam.reduce((sum, g) => sum + g.hours, 0) : null,
+    gamesOwned: steamMeta?.totalOwned ?? null,
+  };
+
   const topGames: StatsData["topGames"] =
     steam?.slice(0, 8).map((g) => ({ name: g.name, hours: g.hours })) ?? null;
 
@@ -330,6 +336,7 @@ export async function StatsSection() {
           topGames,
           github,
           siteCode,
+          counts,
         }}
       />
     </Reveal>
