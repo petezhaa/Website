@@ -27,6 +27,13 @@ function phi(z: number): number {
   return 0.5 * (1 + (z < 0 ? -erf : erf));
 }
 
+// Wilson-Hilferty: chi-square upper tail via the normal CDF
+function chiSqP(x: number, k: number): number {
+  const z =
+    (Math.cbrt(x / k) - (1 - 2 / (9 * k))) / Math.sqrt(2 / (9 * k));
+  return 1 - phi(z);
+}
+
 const meanOf = (a: number[]) => a.reduce((s, v) => s + v, 0) / a.length;
 function pearson(xs: number[], ys: number[]): number | null {
   const mx = meanOf(xs);
@@ -254,6 +261,28 @@ export async function StatsSection() {
     }
   }
 
+  // weekday: is any day of the week actually movie night? (chi-square)
+  let weekday: StatsData["weekday"] = null;
+  const datedAll = (lb?.films ?? []).filter((f) => f.watchedDate);
+  if (datedAll.length >= 14) {
+    const counts = Array(7).fill(0) as number[]; // monday-first
+    for (const f of datedAll) {
+      const d = new Date(`${f.watchedDate}T12:00:00Z`).getUTCDay();
+      counts[(d + 6) % 7]++;
+    }
+    const n = datedAll.length;
+    const e = n / 7;
+    const chi2 = counts.reduce((sum, o) => sum + ((o - e) ** 2) / e, 0);
+    const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+    weekday = {
+      counts,
+      n,
+      chi2,
+      p: chiSqP(chi2, 6),
+      topDay: days[counts.indexOf(Math.max(...counts))],
+    };
+  }
+
   // survival: how much of the library is still alive past h hours?
   let survival: StatsData["survival"] = null;
   if (steam && steam.length >= 8) {
@@ -293,6 +322,7 @@ export async function StatsSection() {
           drift,
           nostalgia,
           momentum,
+          weekday,
           hours,
           lorenz,
           survival,

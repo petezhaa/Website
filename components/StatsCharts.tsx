@@ -67,6 +67,13 @@ export type StatsData = {
     z: number;
     p: number;
   } | null;
+  weekday: {
+    counts: number[];
+    n: number;
+    chi2: number;
+    p: number;
+    topDay: string;
+  } | null;
   survival: {
     points: { x: number; y: number; name: string }[];
     median: number;
@@ -797,6 +804,121 @@ function Momentum({ data }: { data: NonNullable<StatsData["momentum"]> }) {
   );
 }
 
+/* ---------------- films by day of week ---------------- */
+function Weekday({ data }: { data: NonNullable<StatsData["weekday"]> }) {
+  const [tip, setTip] = useState<Tip>(null);
+  const W = 440;
+  const H = 190;
+  const PAD = { l: 26, r: 8, t: 16, b: 22 };
+  const plotW = W - PAD.l - PAD.r;
+  const plotH = H - PAD.t - PAD.b;
+  const labels = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+  const max = Math.max(...data.counts, 1);
+  const slot = plotW / 7;
+  const barW = Math.min(34, slot - 8);
+  const expected = data.n / 7;
+
+  return (
+    <Card
+      title="When do movies happen?"
+      sub={`recent diary by day of week · n=${data.n} · χ² = ${data.chi2.toFixed(1)} (df 6)`}
+      table={
+        <table className={tableCls}>
+          <thead>
+            <tr>
+              <th className={thCls}>day</th>
+              <th className={thCls}>films</th>
+            </tr>
+          </thead>
+          <tbody>
+            {labels.map((d, i) => (
+              <tr key={d}>
+                <td className={tdCls}>{d}</td>
+                <td className={tdCls}>{data.counts[i]}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      }
+    >
+      <div className="relative">
+        <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full">
+          {[0, Math.ceil(max / 2), max].map((t) => {
+            const y = PAD.t + plotH - (t / max) * plotH;
+            return (
+              <g key={t}>
+                <line x1={PAD.l} x2={W - PAD.r} y1={y} y2={y} stroke={GRID} strokeWidth={1} />
+                <text x={PAD.l - 5} y={y + 3} textAnchor="end" fontSize={10} fill={INK_MUTED}>
+                  {t}
+                </text>
+              </g>
+            );
+          })}
+          {/* what a perfectly even week would look like */}
+          <line
+            x1={PAD.l}
+            x2={W - PAD.r}
+            y1={PAD.t + plotH - (expected / max) * plotH}
+            y2={PAD.t + plotH - (expected / max) * plotH}
+            stroke={INK_MUTED}
+            strokeWidth={1}
+            strokeDasharray="3 4"
+            opacity={0.6}
+          />
+          <text
+            x={W - PAD.r - 2}
+            y={PAD.t + plotH - (expected / max) * plotH - 4}
+            textAnchor="end"
+            fontSize={9}
+            fill={INK_MUTED}
+          >
+            even week
+          </text>
+          {data.counts.map((c, i) => {
+            const h = (c / max) * plotH;
+            const x = PAD.l + i * slot + (slot - barW) / 2;
+            const y = PAD.t + plotH - h;
+            return (
+              <g key={labels[i]}>
+                {c > 0 && <path d={vBarPath(x, y, barW, h)} fill={MARK} />}
+                <text x={PAD.l + i * slot + slot / 2} y={H - 8} textAnchor="middle" fontSize={10} fill={INK_MUTED}>
+                  {labels[i]}
+                </text>
+                <rect
+                  x={PAD.l + i * slot}
+                  y={PAD.t}
+                  width={slot}
+                  height={plotH}
+                  fill="transparent"
+                  onMouseMove={(e) => {
+                    const r = e.currentTarget.closest("svg")!.getBoundingClientRect();
+                    setTip({
+                      x: ((PAD.l + i * slot + slot / 2) / W) * r.width,
+                      y: (y / H) * r.height,
+                      lines: [labels[i], `${c} film${c === 1 ? "" : "s"}`],
+                    });
+                  }}
+                  onMouseLeave={() => setTip(null)}
+                />
+              </g>
+            );
+          })}
+        </svg>
+        <Tooltip tip={tip} />
+        <div className="mt-3 border-t border-line pt-2 font-mono text-[10.5px] leading-relaxed text-muted">
+          <p>
+            H₀: every day is equally likely to be movie night → p ={" "}
+            {data.p < 0.001 ? "<0.001" : data.p.toFixed(3)} →{" "}
+            {data.p < 0.05
+              ? `rejected. ${data.topDay} is movie night, and it is not close.`
+              : `fail to reject. movies happen whenever they happen. (${data.topDay} leads, for now.)`}
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 /* ---------------- backlog survival curve ---------------- */
 function Survival({ data }: { data: NonNullable<StatsData["survival"]> }) {
   const [tip, setTip] = useState<Tip>(null);
@@ -1062,6 +1184,7 @@ export function StatsCharts({ data }: { data: StatsData }) {
       {data.drift && <Drift data={data.drift} />}
       {data.nostalgia && <Nostalgia data={data.nostalgia} />}
       {data.momentum && <Momentum data={data.momentum} />}
+      {data.weekday && <Weekday data={data.weekday} />}
       {data.hours && <HoursBox data={data.hours} />}
       {data.lorenz && <Lorenz data={data.lorenz} />}
       {data.survival && <Survival data={data.survival} />}
