@@ -668,7 +668,9 @@ export function MapGame() {
   // ---------- load wasm + geometry ----------
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
+    let io: IntersectionObserver | null = null;
+    // the engine + map data are ~MBs; don't fetch until the section is close
+    const load = () => Promise.all([
       // .bin extension + instantiate(arrayBuffer): dodges a wrangler bundler
       // bug with .wasm files in public/ on Windows, and drops the MIME requirement
       fetch("/mapgame.bin")
@@ -704,8 +706,26 @@ export function MapGame() {
         playIntro();
       })
       .catch(() => !cancelled && setPhase("failed"));
+
+    const canvas = canvasRef.current;
+    if (canvas && typeof IntersectionObserver !== "undefined") {
+      io = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            io?.disconnect();
+            io = null;
+            load();
+          }
+        },
+        { rootMargin: "600px" }
+      );
+      io.observe(canvas);
+    } else {
+      load();
+    }
     return () => {
       cancelled = true;
+      io?.disconnect();
       cancelAnimationFrame(revealRafRef.current);
       cancelAnimationFrame(viewRafRef.current);
       cancelAnimationFrame(introRafRef.current);
@@ -779,14 +799,49 @@ export function MapGame() {
     return [x, y];
   };
 
+  // two active pointers = pinch zoom (phones have no scroll wheel)
+  const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchDistRef = useRef<number | null>(null);
+  const pinchingRef = useRef(false); // stays true until every finger lifts
+  const pinchDist = () => {
+    const pts = [...pointersRef.current.values()];
+    return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+  };
+
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    canvasRef.current?.setPointerCapture(e.pointerId);
+    if (pointersRef.current.size === 2) {
+      // a second finger turns the gesture into a pinch, not a drag
+      dragRef.current = null;
+      pinchingRef.current = true;
+      pinchDistRef.current = pinchDist();
+      return;
+    }
     dragRef.current = { x: e.clientX, y: e.clientY, moved: false };
     velRef.current = { x: 0, y: 0, t: performance.now() };
     cancelAnimationFrame(spinRafRef.current); // grab a spinning globe to stop it
-    canvasRef.current?.setPointerCapture(e.pointerId);
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (pointersRef.current.has(e.pointerId)) {
+      pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+    if (pointersRef.current.size >= 2) {
+      if (phaseRef.current !== "guess" && phaseRef.current !== "reveal") return;
+      const d = pinchDist();
+      const prev = pinchDistRef.current;
+      pinchDistRef.current = d;
+      const canvas = canvasRef.current;
+      if (prev && d > 0 && canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const pts = [...pointersRef.current.values()];
+        const mx = (((pts[0].x + pts[1].x) / 2 - rect.left) / rect.width) * W;
+        const my = (((pts[0].y + pts[1].y) / 2 - rect.top) / rect.height) * H;
+        zoomBy(d / prev, mx, my);
+      }
+      return;
+    }
     const drag = dragRef.current;
     if (drag) {
       const dx = e.clientX - drag.x;
@@ -862,6 +917,14 @@ export function MapGame() {
   };
 
   const onPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    pointersRef.current.delete(e.pointerId);
+    if (pinchingRef.current) {
+      // fingers lifting off a pinch are not taps; never submit a guess here,
+      // not even for the last finger to leave
+      if (pointersRef.current.size < 2) pinchDistRef.current = null;
+      if (pointersRef.current.size === 0) pinchingRef.current = false;
+      return;
+    }
     const drag = dragRef.current;
     dragRef.current = null;
     if (drag?.moved) {
@@ -1091,17 +1154,25 @@ export function MapGame() {
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          className={`block h-auto w-full touch-pan-y select-none ${
-            phase === "guess" ? "cursor-crosshair" : "cursor-grab"
-          }`}
+          onPointerCancel={(e) => {
+            pointersRef.current.delete(e.pointerId);
+            pinchDistRef.current = null;
+            dragRef.current = null;
+            if (pointersRef.current.size === 0) pinchingRef.current = false;
+          }}
+          className={`block h-auto w-full select-none ${
+            phase === "guess" || phase === "reveal"
+              ? "touch-none"
+              : "touch-pan-y"
+          } ${phase === "guess" ? "cursor-crosshair" : "cursor-grab"}`}
         />
 
         {(phase === "guess" || phase === "reveal") && (
           <>
             <p className="pointer-events-none absolute bottom-3 right-4 font-mono text-[10px] uppercase tracking-widest text-muted/70">
               {isUsMode || !globeUi
-                ? "scroll to zoom · drag to pan"
-                : "drag to spin · scroll to zoom"}
+                ? "scroll or pinch to zoom · drag to pan"
+                : "drag to spin · scroll or pinch to zoom"}
             </p>
             <div className="absolute bottom-3 left-3 flex flex-col gap-1.5">
               {[
@@ -1153,25 +1224,29 @@ export function MapGame() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-bg/85 p-6 backdrop-blur-sm"
+            className="absolute inset-0 flex overflow-y-auto bg-bg/85 p-3 backdrop-blur-sm sm:p-6"
           >
-            <p className="font-mono text-xs uppercase tracking-[0.25em] text-accent">
-              pick a map
-            </p>
-            <div className="flex max-w-xl flex-wrap justify-center gap-3">
-              {modes.map((name, m) => (
-                <button
-                  key={name}
-                  onClick={() => startGame(m)}
-                  className="rounded-xl border border-line bg-surface px-5 py-3 text-sm transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
-                >
-                  {name}
-                </button>
-              ))}
+            {/* m-auto centers when it fits and scrolls from the top when it doesn't
+                (justify-center would clip the overflow on short phone screens) */}
+            <div className="m-auto flex flex-col items-center gap-3 sm:gap-6">
+              <p className="font-mono text-xs uppercase tracking-[0.25em] text-accent">
+                pick a map
+              </p>
+              <div className="flex max-w-xl flex-wrap justify-center gap-2 sm:gap-3">
+                {modes.map((name, m) => (
+                  <button
+                    key={name}
+                    onClick={() => startGame(m)}
+                    className="rounded-lg border border-line bg-surface px-3 py-2 text-xs transition hover:-translate-y-0.5 hover:border-accent hover:text-accent sm:rounded-xl sm:px-5 sm:py-3 sm:text-sm"
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+              <p className="text-center font-mono text-[10px] text-muted sm:text-[11px]">
+                {rounds} rounds · click the map · answering fast earns a bonus
+              </p>
             </div>
-            <p className="font-mono text-[11px] text-muted">
-              {rounds} rounds · click the map · answering fast earns a bonus
-            </p>
           </motion.div>
         )}
 
@@ -1203,7 +1278,7 @@ export function MapGame() {
         ))}
 
         {phase === "reveal" && (
-          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-4 rounded-xl border border-line bg-surface/95 px-5 py-3 shadow-lg backdrop-blur">
+          <div className="absolute bottom-4 left-1/2 flex w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-2 rounded-xl border border-line bg-surface/95 px-4 py-2.5 shadow-lg backdrop-blur sm:gap-4 sm:px-5 sm:py-3">
             <span className="min-w-20 font-mono text-2xl font-bold text-accent">
               +{shownPts}
             </span>
@@ -1229,12 +1304,13 @@ export function MapGame() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-bg/90 p-6 text-center backdrop-blur-sm"
+            className="absolute inset-0 flex overflow-y-auto bg-bg/90 p-3 text-center backdrop-blur-sm sm:p-6"
           >
+            <div className="m-auto flex flex-col items-center gap-2.5 sm:gap-4">
             <p className="font-mono text-xs uppercase tracking-[0.25em] text-muted">
               final score
             </p>
-            <p className="font-mono text-5xl font-bold">
+            <p className="font-mono text-4xl font-bold sm:text-5xl">
               {score}
               <span className="text-xl text-muted"> / {maxScore}</span>
             </p>
@@ -1280,7 +1356,7 @@ export function MapGame() {
                 </p>
               </div>
             )}
-            <div className="mt-2 flex gap-3">
+            <div className="mt-1 flex gap-3 sm:mt-2">
               <button
                 onClick={() => startGame(modeIdx)}
                 className="rounded-lg bg-accent px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
@@ -1300,6 +1376,7 @@ export function MapGame() {
               >
                 other maps
               </button>
+            </div>
             </div>
           </motion.div>
         )}

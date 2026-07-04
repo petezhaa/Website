@@ -29,6 +29,22 @@ export const metadata: Metadata = {
   title: "Peter Zhao · maps, GPUs, and a bot that texts back",
   description:
     "Peter Zhao, a student engineer at UW–Madison studying computer science, electrical engineering, and math. GPU systems at NVIDIA, Azure Search at Microsoft, AWS at Amazon. Also: a geography game with a Rust engine.",
+  openGraph: {
+    title: "Peter Zhao",
+    description:
+      "Engineering student at UW–Madison. Maps, GPUs, and a bot that texts back.",
+    url: "https://petezha.xyz",
+    siteName: "Peter Zhao",
+    type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Pixel Peter says hi" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Peter Zhao",
+    description:
+      "Engineering student at UW–Madison. Maps, GPUs, and a bot that texts back.",
+    images: ["/og.png"],
+  },
 };
 
 // set the theme class before paint so there's no flash
