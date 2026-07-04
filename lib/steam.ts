@@ -13,6 +13,12 @@ export type SteamGame = {
   hours: number;
 };
 
+export type SteamMeta = {
+  totalOwned: number;
+  neverPlayed: number; // owned, zero minutes: the graveyard
+  recent: { name: string; hours2w: number } | null; // last two weeks
+};
+
 export type RareAchievement = {
   game: string;
   name: string;
@@ -83,7 +89,16 @@ export async function getRareAchievements(): Promise<
   return all.length ? all.slice(0, 7) : null;
 }
 
-export async function getSteamGames(): Promise<SteamGame[] | null> {
+type OwnedGame = {
+  appid: number;
+  name: string;
+  playtime_forever?: number;
+  playtime_2weeks?: number;
+};
+
+// One fetch feeds both getSteamGames and getSteamMeta; Next dedupes the
+// identical URL within a render, so this stays a single API call.
+async function fetchOwnedGames(): Promise<OwnedGame[] | null> {
   const key = process.env.STEAM_API_KEY;
   if (!key) return null;
   try {
@@ -92,27 +107,42 @@ export async function getSteamGames(): Promise<SteamGame[] | null> {
       `?key=${key}&steamid=${STEAM_ID64}&include_appinfo=1&include_played_free_games=1&format=json`;
     const res = await fetch(url, { next: { revalidate: 21600 } });
     if (!res.ok) return null;
-    const data = (await res.json()) as {
-      response?: {
-        games?: Array<{
-          appid: number;
-          name: string;
-          playtime_forever?: number;
-        }>;
-      };
-    };
+    const data = (await res.json()) as { response?: { games?: OwnedGame[] } };
     const games = data.response?.games;
-    if (!games || games.length === 0) return null;
-
-    return games
-      .map((g) => ({
-        appid: g.appid,
-        name: g.name,
-        hours: Math.round((g.playtime_forever ?? 0) / 60),
-      }))
-      .filter((g) => g.hours > 0)
-      .sort((a, b) => b.hours - a.hours);
+    return games && games.length > 0 ? games : null;
   } catch {
     return null;
   }
+}
+
+export async function getSteamGames(): Promise<SteamGame[] | null> {
+  const games = await fetchOwnedGames();
+  if (!games) return null;
+  return games
+    .map((g) => ({
+      appid: g.appid,
+      name: g.name,
+      hours: Math.round((g.playtime_forever ?? 0) / 60),
+    }))
+    .filter((g) => g.hours > 0)
+    .sort((a, b) => b.hours - a.hours);
+}
+
+export async function getSteamMeta(): Promise<SteamMeta | null> {
+  const games = await fetchOwnedGames();
+  if (!games) return null;
+  const neverPlayed = games.filter((g) => (g.playtime_forever ?? 0) === 0).length;
+  const top2w = games
+    .filter((g) => (g.playtime_2weeks ?? 0) > 0)
+    .sort((a, b) => (b.playtime_2weeks ?? 0) - (a.playtime_2weeks ?? 0))[0];
+  return {
+    totalOwned: games.length,
+    neverPlayed,
+    recent: top2w
+      ? {
+          name: top2w.name,
+          hours2w: Math.round(((top2w.playtime_2weeks ?? 0) / 60) * 10) / 10,
+        }
+      : null,
+  };
 }

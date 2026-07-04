@@ -49,6 +49,31 @@ export type StatsData = {
     gini: number;
     top3Share: number;
   } | null;
+  nostalgia: {
+    points: { year: number; rating: number; title: string }[];
+    r: number;
+    n: number;
+    t: number;
+    p: number;
+    slope: number;
+    intercept: number;
+    minYear: number;
+    maxYear: number;
+  } | null;
+  momentum: {
+    pairs: { a: number; b: number; from: string; to: string }[];
+    r1: number;
+    n: number;
+    z: number;
+    p: number;
+  } | null;
+  survival: {
+    points: { x: number; y: number; name: string }[];
+    median: number;
+    totalOwned: number | null;
+    neverPlayed: number | null;
+    recent: { name: string; hours2w: number } | null;
+  } | null;
   achievements:
     | { game: string; name: string; description: string; globalPct: number }[]
     | null;
@@ -565,6 +590,326 @@ function Lorenz({ data }: { data: NonNullable<StatsData["lorenz"]> }) {
   );
 }
 
+/* ---------------- nostalgia: rating vs release year ---------------- */
+function Nostalgia({ data }: { data: NonNullable<StatsData["nostalgia"]> }) {
+  const [tip, setTip] = useState<Tip>(null);
+  const W = 440;
+  const H = 200;
+  const PAD = { l: 30, r: 12, t: 12, b: 22 };
+  const plotW = W - PAD.l - PAD.r;
+  const plotH = H - PAD.t - PAD.b;
+  const span = Math.max(data.maxYear - data.minYear, 1);
+  const x0 = data.minYear - span * 0.05;
+  const x1 = data.maxYear + span * 0.05;
+  const sx = (v: number) => PAD.l + ((v - x0) / (x1 - x0)) * plotW;
+  const sy = (v: number) =>
+    PAD.t + (1 - (Math.min(Math.max(v, 0.5), 5) - 0.5) / 4.5) * plotH;
+  const ticks: number[] = [];
+  const step = span > 60 ? 20 : 10;
+  for (let y = Math.ceil(x0 / step) * step; y <= x1; y += step) ticks.push(y);
+  const perDecade = data.slope * 10;
+
+  return (
+    <Card
+      title="Do I overrate old films?"
+      sub={`rating vs release year · r = ${data.r.toFixed(2)} · ${perDecade >= 0 ? "+" : ""}${perDecade.toFixed(2)}★ per decade newer · n=${data.n}`}
+      table={
+        <table className={tableCls}>
+          <thead>
+            <tr>
+              <th className={thCls}>film</th>
+              <th className={thCls}>year</th>
+              <th className={thCls}>rating</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...data.points]
+              .sort((a, b) => a.year - b.year)
+              .map((p, i) => (
+                <tr key={`${p.title}-${i}`}>
+                  <td className={tdCls}>{p.title}</td>
+                  <td className={tdCls}>{p.year}</td>
+                  <td className={tdCls}>{p.rating}★</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      }
+    >
+      <div className="relative">
+        <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full">
+          {[1, 2, 3, 4, 5].map((v) => (
+            <g key={v}>
+              <line x1={PAD.l} x2={W - PAD.r} y1={sy(v)} y2={sy(v)} stroke={GRID} strokeWidth={1} />
+              <text x={PAD.l - 5} y={sy(v) + 3} textAnchor="end" fontSize={10} fill={INK_MUTED}>
+                {v}★
+              </text>
+            </g>
+          ))}
+          {ticks.map((t) => (
+            <text key={t} x={sx(t)} y={H - 6} textAnchor="middle" fontSize={10} fill={INK_MUTED}>
+              {t}
+            </text>
+          ))}
+          {/* least-squares fit */}
+          <line
+            x1={sx(data.minYear)}
+            y1={sy(data.slope * data.minYear + data.intercept)}
+            x2={sx(data.maxYear)}
+            y2={sy(data.slope * data.maxYear + data.intercept)}
+            stroke={MARK}
+            strokeWidth={2}
+            strokeDasharray="5 4"
+            strokeLinecap="round"
+          />
+          {data.points.map((p, i) => (
+            <circle
+              key={`${p.title}-${i}`}
+              cx={sx(p.year)}
+              cy={sy(p.rating)}
+              r={4}
+              fill={MARK}
+              opacity={0.5}
+              stroke="var(--surface)"
+              strokeWidth={1}
+              onMouseMove={(e) => {
+                const r = e.currentTarget.closest("svg")!.getBoundingClientRect();
+                setTip({
+                  x: (sx(p.year) / W) * r.width,
+                  y: (sy(p.rating) / H) * r.height,
+                  lines: [p.title, `${p.year} · rated ${p.rating}★`],
+                });
+              }}
+              onMouseLeave={() => setTip(null)}
+            />
+          ))}
+        </svg>
+        <Tooltip tip={tip} />
+        <div className="mt-3 border-t border-line pt-2 font-mono text-[10.5px] leading-relaxed text-muted">
+          <p>
+            H₀: release year tells you nothing about my rating → t = {data.t.toFixed(2)}, p ={" "}
+            {data.p < 0.001 ? "<0.001" : data.p.toFixed(3)} →{" "}
+            {data.p < 0.05
+              ? data.r < 0
+                ? "rejected. nostalgia is real and it is inflating my ratings."
+                : "rejected. I like them newer, apparently."
+              : "fail to reject. a film's age buys it nothing from me."}
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+/* ---------------- mood momentum: lag-1 autocorrelation ---------------- */
+function Momentum({ data }: { data: NonNullable<StatsData["momentum"]> }) {
+  const [tip, setTip] = useState<Tip>(null);
+  const W = 440;
+  const H = 210;
+  const PAD = { l: 30, r: 12, t: 14, b: 26 };
+  const plotW = W - PAD.l - PAD.r;
+  const plotH = H - PAD.t - PAD.b;
+  const sx = (v: number) => PAD.l + ((v - 0.5) / 4.5) * plotW;
+  const sy = (v: number) => PAD.t + (1 - (v - 0.5) / 4.5) * plotH;
+  // ratings are half-star quantized, so stacked pairs need a deterministic
+  // nudge apart (Math.random would break SSR hydration)
+  const jit = (i: number, k: number) =>
+    ((((i * 7919 + k * 104729) % 13) - 6) / 6) * 0.09;
+
+  return (
+    <Card
+      title="Does one film's rating leak into the next?"
+      sub={`each dot: a rating and the one after it · lag-1 r₁ = ${data.r1.toFixed(2)} · n=${data.n} pairs`}
+      table={
+        <table className={tableCls}>
+          <thead>
+            <tr>
+              <th className={thCls}>watched</th>
+              <th className={thCls}>then</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.pairs.map((p, i) => (
+              <tr key={i}>
+                <td className={tdCls}>{p.from} ({p.a}★)</td>
+                <td className={tdCls}>{p.to} ({p.b}★)</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      }
+    >
+      <div className="relative">
+        <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full">
+          {[1, 2, 3, 4, 5].map((v) => (
+            <g key={v}>
+              <line x1={PAD.l} x2={W - PAD.r} y1={sy(v)} y2={sy(v)} stroke={GRID} strokeWidth={1} />
+              <line x1={sx(v)} x2={sx(v)} y1={PAD.t} y2={H - PAD.b} stroke={GRID} strokeWidth={1} />
+              <text x={PAD.l - 5} y={sy(v) + 3} textAnchor="end" fontSize={10} fill={INK_MUTED}>
+                {v}★
+              </text>
+              <text x={sx(v)} y={H - 10} textAnchor="middle" fontSize={10} fill={INK_MUTED}>
+                {v}★
+              </text>
+            </g>
+          ))}
+          {/* the "same rating again" diagonal */}
+          <line x1={sx(0.5)} y1={sy(0.5)} x2={sx(5)} y2={sy(5)} stroke={INK_MUTED} strokeWidth={1} opacity={0.4} strokeDasharray="3 4" />
+          {data.pairs.map((p, i) => (
+            <circle
+              key={i}
+              cx={sx(Math.min(Math.max(p.a + jit(i, 1), 0.5), 5))}
+              cy={sy(Math.min(Math.max(p.b + jit(i, 2), 0.5), 5))}
+              r={4}
+              fill={MARK}
+              opacity={0.45}
+              stroke="var(--surface)"
+              strokeWidth={1}
+              onMouseMove={(e) => {
+                const r = e.currentTarget.closest("svg")!.getBoundingClientRect();
+                setTip({
+                  x: (sx(p.a) / W) * r.width,
+                  y: (sy(p.b) / H) * r.height,
+                  lines: [`${p.from}: ${p.a}★`, `then ${p.to}: ${p.b}★`],
+                });
+              }}
+              onMouseLeave={() => setTip(null)}
+            />
+          ))}
+          <text x={W - PAD.r - 4} y={PAD.t + 10} textAnchor="end" fontSize={9.5} fill={INK_MUTED}>
+            next rating ↑ · previous rating →
+          </text>
+        </svg>
+        <Tooltip tip={tip} />
+        <div className="mt-3 border-t border-line pt-2 font-mono text-[10.5px] leading-relaxed text-muted">
+          <p>
+            H₀: consecutive ratings are independent → z = {data.z.toFixed(2)}, p ={" "}
+            {data.p < 0.001 ? "<0.001" : data.p.toFixed(3)} →{" "}
+            {data.p < 0.05
+              ? data.r1 > 0
+                ? "rejected. a good film puts me in a good mood and the next one profits."
+                : "rejected. a great film makes the next one look worse."
+              : "fail to reject. every film gets judged on its own."}
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+/* ---------------- backlog survival curve ---------------- */
+function Survival({ data }: { data: NonNullable<StatsData["survival"]> }) {
+  const [tip, setTip] = useState<Tip>(null);
+  const W = 440;
+  const H = 200;
+  const PAD = { l: 34, r: 14, t: 12, b: 24 };
+  const plotW = W - PAD.l - PAD.r;
+  const plotH = H - PAD.t - PAD.b;
+  const asc = [...data.points].sort((a, b) => a.x - b.x);
+  const n = asc.length;
+  const maxX = asc[n - 1]?.x ?? 10;
+  const logMax = Math.log10(Math.max(maxX, 10)) * 1.04;
+  const sx = (v: number) => PAD.l + (Math.log10(Math.max(v, 1)) / logMax) * plotW;
+  const sy = (frac: number) => PAD.t + (1 - frac) * plotH;
+  const ticks = [1, 10, 100, 1000].filter((t) => t <= maxX * 1.2);
+
+  // step function: S(h) = share of played games with at least h hours
+  let d = `M${sx(1)},${sy(1)}`;
+  asc.forEach((p, i) => {
+    d += ` L${sx(p.x)},${sy((n - i) / n)} L${sx(p.x)},${sy((n - i - 1) / n)}`;
+  });
+  const sAt = (h: number) => asc.filter((p) => p.x >= h).length / n;
+  const s100 = Math.round(sAt(100) * 100);
+  const gravePct =
+    data.totalOwned && data.neverPlayed !== null
+      ? Math.round((data.neverPlayed / data.totalOwned) * 100)
+      : null;
+
+  return (
+    <Card
+      title="How long before I abandon a game?"
+      sub={`survival curve: share of library still alive after h hours · log scale · n=${n}`}
+      table={
+        <table className={tableCls}>
+          <thead>
+            <tr>
+              <th className={thCls}>hours in</th>
+              <th className={thCls}>games surviving</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[1, 5, 10, 25, 50, 100, 500].filter((h) => h <= maxX).map((h) => (
+              <tr key={h}>
+                <td className={tdCls}>{h}h</td>
+                <td className={tdCls}>{Math.round(sAt(h) * 100)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      }
+    >
+      <div className="relative">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="block h-auto w-full"
+          onMouseMove={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            const fx = ((e.clientX - r.left) / r.width) * W;
+            const h = Math.pow(10, (Math.min(Math.max(fx - PAD.l, 0), plotW) / plotW) * logMax);
+            const frac = sAt(h);
+            setTip({
+              x: (sx(h) / W) * r.width,
+              y: (sy(frac) / H) * r.height,
+              lines: [`${Math.round(h)}h in`, `${Math.round(frac * 100)}% of games survive`],
+            });
+          }}
+          onMouseLeave={() => setTip(null)}
+        >
+          {[0, 0.5, 1].map((t) => (
+            <g key={t}>
+              <line x1={PAD.l} x2={W - PAD.r} y1={sy(t)} y2={sy(t)} stroke={GRID} strokeWidth={1} />
+              <text x={PAD.l - 5} y={sy(t) + 3} textAnchor="end" fontSize={10} fill={INK_MUTED}>
+                {t * 100}%
+              </text>
+            </g>
+          ))}
+          {ticks.map((t) => (
+            <g key={t}>
+              <line x1={sx(t)} x2={sx(t)} y1={PAD.t} y2={H - PAD.b} stroke={GRID} strokeWidth={1} />
+              <text x={sx(t)} y={H - 8} textAnchor="middle" fontSize={10} fill={INK_MUTED}>
+                {t.toLocaleString()}h
+              </text>
+            </g>
+          ))}
+          <path d={`${d} L${sx(maxX)},${sy(0)} L${sx(1)},${sy(0)} Z`} fill={MARK} opacity={0.08} />
+          <path d={d} fill="none" stroke={MARK} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+          {/* median lifespan marker */}
+          <line x1={sx(data.median)} x2={sx(data.median)} y1={sy(0.5) - 14} y2={sy(0.5) + 14} stroke={INK_MUTED} strokeWidth={1} strokeDasharray="3 3" />
+          <text x={sx(data.median) + 4} y={sy(0.5) - 16} fontSize={9.5} fill={INK_MUTED}>
+            median {data.median}h
+          </text>
+        </svg>
+        <Tooltip tip={tip} />
+        <div className="mt-3 space-y-1 border-t border-line pt-2 font-mono text-[10.5px] leading-relaxed text-muted">
+          <p>
+            half my played games die before {data.median}h · only {s100}% make it past 100h
+          </p>
+          {gravePct !== null && (
+            <p>
+              I own {data.totalOwned} games and have never launched {data.neverPlayed} of them ({gravePct}%). the backlog is a graveyard.
+            </p>
+          )}
+          <p>
+            {data.recent
+              ? `last 2 weeks: ${data.recent.hours2w}h, mostly ${data.recent.name}.`
+              : "last 2 weeks: 0 hours. school won."}
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 /* ---------------- rarest achievements ---------------- */
 function RareAchievements({
   data,
@@ -715,8 +1060,11 @@ export function StatsCharts({ data }: { data: StatsData }) {
       <DevTiles github={data.github} siteCode={data.siteCode} />
       {data.ratings && <Ratings data={data.ratings} />}
       {data.drift && <Drift data={data.drift} />}
+      {data.nostalgia && <Nostalgia data={data.nostalgia} />}
+      {data.momentum && <Momentum data={data.momentum} />}
       {data.hours && <HoursBox data={data.hours} />}
       {data.lorenz && <Lorenz data={data.lorenz} />}
+      {data.survival && <Survival data={data.survival} />}
       {data.achievements && data.achievements.length > 0 && (
         <RareAchievements data={data.achievements} />
       )}

@@ -1,5 +1,5 @@
 import { getLetterboxd } from "@/lib/letterboxd";
-import { getSteamGames, getRareAchievements } from "@/lib/steam";
+import { getSteamGames, getSteamMeta, getRareAchievements } from "@/lib/steam";
 import { getGithubStats } from "@/lib/github";
 import { getSiteCode } from "@/lib/sitecode";
 import { Reveal } from "@/components/Reveal";
@@ -28,13 +28,29 @@ function phi(z: number): number {
 }
 
 const meanOf = (a: number[]) => a.reduce((s, v) => s + v, 0) / a.length;
+function pearson(xs: number[], ys: number[]): number | null {
+  const mx = meanOf(xs);
+  const my = meanOf(ys);
+  let sxy = 0;
+  let sxx = 0;
+  let syy = 0;
+  for (let i = 0; i < xs.length; i++) {
+    const dx = xs[i] - mx;
+    const dy = ys[i] - my;
+    sxy += dx * dy;
+    sxx += dx * dx;
+    syy += dy * dy;
+  }
+  return sxx > 0 && syy > 0 ? sxy / Math.sqrt(sxx * syy) : null;
+}
 const varOf = (a: number[], m: number) =>
   a.reduce((s, v) => s + (v - m) ** 2, 0) / (a.length - 1);
 
 export async function StatsSection() {
-  const [lb, steam, rare, github] = await Promise.all([
+  const [lb, steam, steamMeta, rare, github] = await Promise.all([
     getLetterboxd(),
     getSteamGames(),
+    getSteamMeta(),
     getRareAchievements(),
     getGithubStats(),
   ]);
@@ -180,6 +196,84 @@ export async function StatsSection() {
     lorenz = { points, gini: 1 - 2 * area, top3Share: top3 };
   }
 
+  // nostalgia: does a film's release year predict my rating?
+  let nostalgia: StatsData["nostalgia"] = null;
+  const yearRated = (lb?.films ?? [])
+    .filter((f) => f.rating !== null && /^\d{4}$/.test(f.year))
+    .map((f) => ({
+      year: parseInt(f.year, 10),
+      rating: f.rating as number,
+      title: f.title,
+    }));
+  if (yearRated.length >= 10) {
+    const xs = yearRated.map((p) => p.year);
+    const ys = yearRated.map((p) => p.rating);
+    const r = pearson(xs, ys);
+    if (r !== null) {
+      const n = xs.length;
+      const t = r * Math.sqrt((n - 2) / Math.max(1 - r * r, 1e-9));
+      const mx = meanOf(xs);
+      const slope =
+        (r * Math.sqrt(varOf(ys, meanOf(ys)))) / Math.sqrt(varOf(xs, mx));
+      nostalgia = {
+        points: yearRated,
+        r,
+        n,
+        t,
+        p: 2 * (1 - phi(Math.abs(t))),
+        slope,
+        intercept: meanOf(ys) - slope * mx,
+        minYear: Math.min(...xs),
+        maxYear: Math.max(...xs),
+      };
+    }
+  }
+
+  // momentum: does the previous rating leak into the next one? (lag-1)
+  let momentum: StatsData["momentum"] = null;
+  const chrono = (lb?.films ?? [])
+    .filter((f) => f.rating !== null && f.watchedDate)
+    .sort((a, b) => a.watchedDate.localeCompare(b.watchedDate));
+  if (chrono.length >= 12) {
+    const pairs = [];
+    for (let i = 1; i < chrono.length; i++) {
+      pairs.push({
+        a: chrono[i - 1].rating as number,
+        b: chrono[i].rating as number,
+        from: chrono[i - 1].title,
+        to: chrono[i].title,
+      });
+    }
+    const r1 = pearson(
+      pairs.map((p) => p.a),
+      pairs.map((p) => p.b)
+    );
+    if (r1 !== null) {
+      const z = r1 * Math.sqrt(pairs.length);
+      momentum = { pairs, r1, n: pairs.length, z, p: 2 * (1 - phi(Math.abs(z))) };
+    }
+  }
+
+  // survival: how much of the library is still alive past h hours?
+  let survival: StatsData["survival"] = null;
+  if (steam && steam.length >= 8) {
+    survival = {
+      // steam is sorted by hours desc, so (i+1)/n = share with >= that many
+      points: steam.map((g, i) => ({
+        x: g.hours,
+        y: (i + 1) / steam.length,
+        name: g.name,
+      })),
+      median: quantile(
+        steam.map((g) => g.hours).sort((a, b) => a - b),
+        0.5
+      ),
+      totalOwned: steamMeta?.totalOwned ?? null,
+      neverPlayed: steamMeta?.neverPlayed ?? null,
+      recent: steamMeta?.recent ?? null,
+    };
+  }
+
   const topGames: StatsData["topGames"] =
     steam?.slice(0, 8).map((g) => ({ name: g.name, hours: g.hours })) ?? null;
 
@@ -197,8 +291,11 @@ export async function StatsSection() {
         data={{
           ratings,
           drift,
+          nostalgia,
+          momentum,
           hours,
           lorenz,
+          survival,
           achievements: rare,
           topGames,
           github,
