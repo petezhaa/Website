@@ -1,5 +1,5 @@
 import { getLetterboxd } from "@/lib/letterboxd";
-import { getSteamGames } from "@/lib/steam";
+import { getSteamGames, getSteamMeta } from "@/lib/steam";
 import { RandomLine } from "@/components/RandomLine";
 
 // A batch of dry LLM-written one-liners about the live stats, cached
@@ -12,7 +12,11 @@ async function synthesize(): Promise<string[] | null> {
   if (!key) return null;
   if (cache && Date.now() - cache.at < TTL) return cache.lines;
 
-  const [lb, steam] = await Promise.all([getLetterboxd(), getSteamGames()]);
+  const [lb, steam, meta] = await Promise.all([
+    getLetterboxd(),
+    getSteamGames(),
+    getSteamMeta(),
+  ]);
   const facts: string[] = [];
   if (lb?.films[0]) {
     facts.push(
@@ -23,6 +27,16 @@ async function synthesize(): Promise<string[] | null> {
   if (steam?.[0]) {
     facts.push(
       `most-played game: ${steam[0].name} at ${steam[0].hours} hours; second: ${steam[1]?.name} at ${steam[1]?.hours} hours`
+    );
+  }
+  if (meta?.recent) {
+    facts.push(
+      `last two weeks: ${meta.recent.hours2w} hours of ${meta.recent.name}`
+    );
+  }
+  if (meta && meta.neverPlayed > 0) {
+    facts.push(
+      `owns ${meta.totalOwned} steam games, ${meta.neverPlayed} never launched`
     );
   }
   if (facts.length === 0) return null;
