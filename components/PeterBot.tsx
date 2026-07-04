@@ -175,7 +175,7 @@ export function PeterBot() {
             exit={{ y: 620, rotate: 5, opacity: 0 }}
             transition={{ type: "spring", stiffness: 220, damping: 26 }}
             style={{ transformOrigin: "bottom right" }}
-            className="fixed inset-0 z-[80] flex h-full w-full flex-col overflow-hidden bg-bg shadow-2xl sm:inset-auto sm:bottom-20 sm:right-5 sm:h-[min(34rem,calc(100vh-7rem))] sm:w-[min(22rem,calc(100vw-2.5rem))] sm:rounded-[2.4rem] sm:border-[6px] sm:border-[#2a2620]"
+            className="fixed inset-0 z-[80] flex h-[100dvh] w-full flex-col overflow-hidden bg-bg shadow-2xl sm:inset-auto sm:bottom-20 sm:right-5 sm:h-[min(34rem,calc(100vh-7rem))] sm:w-[min(22rem,calc(100vw-2.5rem))] sm:rounded-[2.4rem] sm:border-[6px] sm:border-[#2a2620]"
           >
             {/* status bar + dynamic island */}
             <div className="relative flex items-center justify-between px-6 pb-1 pt-2.5">
@@ -300,14 +300,15 @@ export function PeterBot() {
               <input
                 value={input}
                 onChange={(e) => onType(e.target.value)}
-                onFocus={() => !touchDevice && setKbOpen(true)}
+                inputMode={touchDevice ? "none" : undefined}
+                onFocus={() => setKbOpen(true)}
                 onKeyDown={(e) => {
                   const k = e.key === " " ? "space" : e.key === "Backspace" ? "del" : e.key === "Enter" ? "return" : e.key.toLowerCase();
                   flashKey(k);
                 }}
                 placeholder={busy ? "Peter is typing…" : "Text message"}
                 disabled={offline}
-                className="min-w-0 flex-1 rounded-full border border-line bg-surface px-4 py-2 text-sm outline-none transition focus:border-accent"
+                className="min-w-0 flex-1 rounded-full border border-line bg-surface px-4 py-2 text-base outline-none transition focus:border-accent sm:text-sm"
               />
               <button
                 type="submit"
@@ -345,7 +346,7 @@ export function PeterBot() {
                               e.preventDefault(); // keep the input focused
                               tapKey(k);
                             }}
-                            className={`h-8 min-w-7 flex-1 max-w-9 rounded-md border text-xs font-medium shadow-sm transition-all duration-75 ${
+                            className={`h-10 min-w-7 max-w-11 flex-1 rounded-md border text-sm font-medium shadow-sm transition-all duration-75 sm:h-8 sm:max-w-9 sm:text-xs ${
                               pressedKey === k
                                 ? "scale-90 border-accent bg-accent text-accent-fg"
                                 : "border-line bg-surface"
@@ -363,7 +364,7 @@ export function PeterBot() {
                           e.preventDefault();
                           setKbOpen(false);
                         }}
-                        className="h-8 w-12 rounded-md border border-line bg-surface text-xs shadow-sm"
+                        className="h-10 w-12 rounded-md border border-line bg-surface text-xs shadow-sm sm:h-8"
                       >
                         ▾
                       </button>
@@ -374,7 +375,7 @@ export function PeterBot() {
                           e.preventDefault();
                           tapKey("space");
                         }}
-                        className={`h-8 flex-1 rounded-md border text-xs shadow-sm transition-all duration-75 ${
+                        className={`h-10 flex-1 rounded-md border text-xs shadow-sm transition-all duration-75 sm:h-8 ${
                           pressedKey === "space"
                             ? "scale-95 border-accent bg-accent text-accent-fg"
                             : "border-line bg-surface"
@@ -389,7 +390,7 @@ export function PeterBot() {
                           e.preventDefault();
                           tapKey("return");
                         }}
-                        className={`h-8 w-16 rounded-md border text-xs font-medium shadow-sm transition-all duration-75 ${
+                        className={`h-10 w-16 rounded-md border text-xs font-medium shadow-sm transition-all duration-75 sm:h-8 ${
                           pressedKey === "return"
                             ? "scale-95 border-accent bg-accent text-accent-fg"
                             : "border-line bg-surface text-accent"
