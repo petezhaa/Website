@@ -13,34 +13,34 @@
 
 /* ---------- semantic tokens ---------- */
 :root {
-  --bg: #f2ecdd;        /* oat paper */
-  --surface: #f8f3e7;   /* lifted panel */
-  --surface-2: #e7dfcb; /* recessed / inset */
-  --fg: #292620;        /* bark ink */
-  --muted: #6a6353;     /* faded ink */
-  --line: #d6ccb6;      /* hairline */
-  --accent: #a2481a;    /* burnt sienna */
-  --accent-soft: rgba(162, 72, 26, 0.12);
-  --accent-fg: #f8f3e7;
-  --gold: #836114;
+  --bg: #f3f2ee;        /* neutral paper (no warm/amber cast) */
+  --surface: #fbfaf7;   /* lifted panel */
+  --surface-2: #e9e8e2; /* recessed / inset */
+  --fg: #1b1a17;        /* near-black ink */
+  --muted: #6b6a64;     /* faded ink */
+  --line: #dcdad3;      /* hairline */
+  --accent: #16150f;    /* ink black (the accent IS black now) */
+  --accent-soft: rgba(22, 21, 15, 0.08);
+  --accent-fg: #fbfaf7;
+  --gold: #7c6414;
   --moss: #4c5f31;
-  --chart: #a2481a; /* validated ≥4.5:1 on --surface, both modes */
+  --chart: #16150f; /* validated ≥4.5:1 on --surface, both modes */
   --grain: 0.5;     /* paper-grain opacity multiplier */
 }
 
 .dark {
-  --bg: #17150f;        /* warm near-black */
-  --surface: #1e1b13;
-  --surface-2: #272317;
-  --fg: #e9e1cf;        /* parchment */
-  --muted: #9d947d;
-  --line: #322d20;
-  --accent: #d98a4f;    /* amber phosphor */
-  --accent-soft: rgba(217, 138, 79, 0.14);
-  --accent-fg: #17150f;
+  --bg: #131312;        /* near-black, neutral (not warm-brown) */
+  --surface: #1b1b19;
+  --surface-2: #242422;
+  --fg: #ececea;        /* off-white ink */
+  --muted: #9a988f;
+  --line: #2f2e2a;
+  --accent: #ececea;    /* white ink — "black" inverts to visible on dark */
+  --accent-soft: rgba(236, 236, 234, 0.12);
+  --accent-fg: #131312;
   --gold: #cba646;
   --moss: #8ba05f;
-  --chart: #cf7f43; /* deeper than accent: keeps the OKLCH band on dark */
+  --chart: #ececea;
   --grain: 0.9;
 }
 

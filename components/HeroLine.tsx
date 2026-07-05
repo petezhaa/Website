@@ -49,10 +49,11 @@ export function HeroLine() {
       <span aria-label={`${GREETING}${NAME}`} className="inline-block">
         <span aria-hidden>{GREETING.split("").map(letter)}</span>
         <span aria-hidden className="relative inline-block text-accent">
-          {/* faint phosphor bloom behind the name */}
+          {/* faint bloom behind the name — dark mode only (a black bloom on
+              light paper just reads as a smudge) */}
           <motion.span
             aria-hidden
-            className="pointer-events-none absolute -inset-x-[0.35em] -inset-y-[0.18em] -z-10 rounded-[40%]"
+            className="pointer-events-none absolute -inset-x-[0.35em] -inset-y-[0.18em] -z-10 hidden rounded-[40%] dark:block"
             style={{
               background:
                 "radial-gradient(ellipse at center, var(--accent) 0%, transparent 70%)",
@@ -70,12 +71,7 @@ export function HeroLine() {
                 : { delay: 0.9, duration: 3.6, repeat: Infinity, ease: "easeInOut" }
             }
           />
-          <span
-            style={{
-              textShadow:
-                "0 0 20px color-mix(in oklab, var(--accent) 40%, transparent)",
-            }}
-          >
+          <span>
             {NAME.split("").map((ch, idx) => letter(ch, GREETING.length + idx))}
           </span>
         </span>
