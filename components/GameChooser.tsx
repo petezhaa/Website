@@ -16,6 +16,9 @@ import { GoGame } from "@/components/GoGame";
 import { SnakeJava } from "@/components/SnakeJava";
 import { PendulumGame } from "@/components/PendulumGame";
 import { LogicPuzzle } from "@/components/LogicPuzzle";
+import { GuessYear } from "@/components/GuessYear";
+import { WhichFirst } from "@/components/WhichFirst";
+import { TimelineBuilder } from "@/components/TimelineBuilder";
 import { FilterDesigner } from "@/components/FilterDesigner";
 import { SmithChart } from "@/components/SmithChart";
 import { bumpVibe } from "@/lib/vibeBus";
@@ -33,6 +36,9 @@ type GameDef = {
 
 const GAMES: GameDef[] = [
   { key: "map", label: "Map game", tag: "Rust", area: "geography", render: () => <MapGame /> },
+  { key: "gy", label: "Guess the year", tag: "Rust", area: "history", render: () => <GuessYear /> },
+  { key: "wf", label: "Which came first?", tag: "Rust", area: "history", render: () => <WhichFirst /> },
+  { key: "tl", label: "Timeline builder", tag: "Rust", area: "history", render: () => <TimelineBuilder /> },
   { key: "em", label: "Electrodynamics", tag: "C++", area: "fields & waves", render: () => <ChargeSim /> },
   { key: "mag", label: "Magnetism", tag: "C++", area: "fields & waves", render: () => <MagnetismSim /> },
   { key: "wav", label: "EM waves", tag: "C++", area: "fields & waves", render: () => <WaveSim /> },
