@@ -9,7 +9,15 @@ export type GithubStats = {
   languages: Record<string, number>;
 };
 
-const HEADERS = { "User-Agent": "peterzhao-site" };
+// keyless works from a friendly IP, but the worker shares Cloudflare egress
+// with the internet — set GITHUB_TOKEN (fine-grained, public-repo read) as a
+// secret to dodge the anonymous 60/hr limit in production.
+const HEADERS: Record<string, string> = {
+  "User-Agent": "peterzhao-site",
+  ...(process.env.GITHUB_TOKEN
+    ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+    : {}),
+};
 
 export async function getGithubStats(): Promise<GithubStats | null> {
   try {
