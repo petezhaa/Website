@@ -27,8 +27,8 @@ function cleanText(s: string): string {
   return out.replace(/[ \t]+$/, "");
 }
 
-export function PeterBot() {
-  const [open, setOpen] = useState(false);
+export function PeterBot({ initialOpen = false }: { initialOpen?: boolean } = {}) {
+  const [open, setOpen] = useState(initialOpen);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);

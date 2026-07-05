@@ -19,7 +19,7 @@ import { ParkTierList } from "@/components/ParkTierList";
 import { FilmShelf } from "@/components/FilmShelf";
 import { GameShelf } from "@/components/GameShelf";
 import { StatsSection } from "@/components/StatsSection";
-import { PeterBot } from "@/components/PeterBot";
+import { PeterBotShell } from "@/components/PeterBotShell";
 import { ContactForm } from "@/components/ContactForm";
 import { VibeCorner } from "@/components/VibeCorner";
 
@@ -50,7 +50,7 @@ export default function Home() {
   return (
     <>
       <ScrollProgress />
-      <PeterBot />
+      <PeterBotShell />
       <VibeCorner />
       {/* ============ NAV ============ */}
       <header className="sticky top-0 z-50 border-b border-line bg-bg/90 backdrop-blur">
