@@ -58,10 +58,10 @@ export function PeterBot({ initialOpen = false }: { initialOpen?: boolean } = {}
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const firedRef = useRef(0); // how many action tags in the current reply we've run
+  const lastUserMsg = useRef(""); // what the visitor actually asked for
 
   // run one of the bot's site-remote actions (see the persona's SITE REMOTE block)
   const runAction = (type: string, arg: string) => {
-    foundSecret("remote-control"); // you made the bot drive the page
     const a = arg.trim().toLowerCase();
     if (type === "play") {
       document.getElementById("play")?.scrollIntoView({ behavior: "smooth" });
@@ -69,8 +69,15 @@ export function PeterBot({ initialOpen = false }: { initialOpen?: boolean } = {}
     } else if (type === "goto") {
       document.getElementById(a)?.scrollIntoView({ behavior: "smooth" });
     } else if (type === "theme") {
+      // the model sometimes volunteers this tag on small talk, and a surprise
+      // theme flip is worse than a missed one: only honor it when the visitor's
+      // message was actually about the theme
+      if (!/(theme|dark|light|night|day|mode)/i.test(lastUserMsg.current)) return;
       window.dispatchEvent(new Event("theme-toggle"));
+    } else {
+      return; // unknown tag: stripped from display, nothing ran, no credit
     }
+    foundSecret("remote-control"); // you made the bot drive the page
   };
 
   const onType = (value: string) => {
@@ -123,6 +130,7 @@ export function PeterBot({ initialOpen = false }: { initialOpen?: boolean } = {}
     // texting a secret to peter counts as finding it
     if (/cheese/i.test(content)) window.dispatchEvent(new Event("cheesemode"));
     else if (/\b(beers?|wine)\b/i.test(content)) window.dispatchEvent(new Event("beermode"));
+    lastUserMsg.current = content;
     const next: Msg[] = [...messages, { role: "user", content }];
     // feed the visitor-vibe radar from this message's style
     const style = readMessage(content);
