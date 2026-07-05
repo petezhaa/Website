@@ -2,6 +2,13 @@
   "name": "peter-zhao",
   "version": "0.1.0",
   "private": true,
+  "browserslist": [
+    "chrome 100",
+    "edge 111",
+    "firefox 111",
+    "safari 15",
+    "ios_saf 15"
+  ],
   "scripts": {
     "dev": "next dev",
     "prebuild": "node count-loc.mjs",

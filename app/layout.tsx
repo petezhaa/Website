@@ -54,6 +54,12 @@ const themeInit = `(function(){try{var t=localStorage.getItem("theme");if(t==="d
 // the arcade works offline: register the service worker after load
 const swInit = `if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){})})}`;
 
+// hydration watchdog (ES5 on purpose: it must parse where the bundle can't).
+// The entrance animations server-render as opacity:0; if the JS bundle dies
+// (old browser, failed chunk, bad network) nothing ever reveals them and the
+// page reads as blank. If React hasn't checked in after 3.5s, force-reveal.
+const revealInit = `window.__nhT=setTimeout(function(){document.documentElement.className+=" no-hydrate"},3500)`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -68,6 +74,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <script dangerouslySetInnerHTML={{ __html: swInit }} />
+        <script dangerouslySetInnerHTML={{ __html: revealInit }} />
         <link rel="manifest" href="/manifest.json" />
         {/* the shelves' images come from these two; shave the handshakes */}
         <link rel="preconnect" href="https://cdn.cloudflare.steamstatic.com" />

@@ -177,6 +177,15 @@ html {
   scroll-behavior: smooth;
 }
 
+/* hydration never arrived (old browser, dead chunk): reveal everything the
+   entrance animations were hiding. A static page beats a blank one. */
+html.no-hydrate [style*="opacity:0"],
+html.no-hydrate [style*="opacity: 0"] {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+}
+
 /* theme toggle: a smooth full-frame cross-fade via the View Transitions API.
    A hard-edged wipe used to slice diagonally through the bright contact-form
    inputs mid-animation, which looked torn; a cross-fade dissolves the whole

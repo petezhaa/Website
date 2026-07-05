@@ -144,6 +144,11 @@ export function CheeseMode() {
   };
 
   useEffect(() => {
+    // React is alive: stand down the layout's no-hydrate watchdog
+    const w = window as Window & { __nhT?: number };
+    if (w.__nhT) clearTimeout(w.__nhT);
+    document.documentElement.classList.remove("no-hydrate");
+
     const onKey = (e: KeyboardEvent) => {
       // never intercept real typing
       const t = e.target as HTMLElement | null;

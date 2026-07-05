@@ -2,7 +2,7 @@
 // - navigations: network first, cached home as the offline fallback
 // - engines + static chunks: cache first (they're immutable per deploy)
 // - everything else same-origin: network, backfilling the cache
-const VERSION = "v2";
+const VERSION = "v3";
 const CACHE = `petezha-${VERSION}`;
 
 // Precache ONLY the tiny engines (~180 KB total): first-visit bandwidth
@@ -63,8 +63,12 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(
       fetch(e.request)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put("/", copy)).catch(() => {});
+          // only an OK page is a valid offline fallback; caching an error
+          // page would serve it forever
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put("/", copy)).catch(() => {});
+          }
           return res;
         })
         .catch(() => caches.match("/"))
@@ -78,8 +82,11 @@ self.addEventListener("fetch", (e) => {
         (hit) =>
           hit ||
           fetch(e.request).then((res) => {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
+            // cache-first means a cached 404 is permanent: never cache non-OK
+            if (res.ok) {
+              const copy = res.clone();
+              caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
+            }
             return res;
           })
       )

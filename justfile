@@ -44,8 +44,11 @@ all-engines: wasm engines goban java
 # ---- shipping ----
 
 # bundle the worker and deploy to Cloudflare (petezha.xyz)
+# downlevel-chunks: Next 16 ships Safari 16.4+ syntax; older iPhones need it
+# lowered or the page renders blank (see scripts/downlevel-chunks.mjs)
 deploy:
     npx opennextjs-cloudflare build
+    node scripts/downlevel-chunks.mjs
     npx wrangler deploy
 
 # the whole ceremony: engines, site build, deploy
