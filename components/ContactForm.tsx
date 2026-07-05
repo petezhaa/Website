@@ -1,25 +1,36 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { bumpVibe } from "@/lib/vibeBus";
 
 const EMAIL = "peterzhaoofficial@gmail.com";
 
 // No backend: submitting composes the email in the visitor's own mail app.
+// The preview window shows exactly what that email will look like, as you
+// type it — so the mailto isn't a leap of faith.
 export function ContactForm() {
   const [name, setName] = useState("");
   const [from, setFrom] = useState("");
   const [message, setMessage] = useState("");
   const [copied, setCopied] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const subject = name ? `Hi Peter — from ${name}` : "Hi Peter";
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const subject = encodeURIComponent(
-      name ? `Hi Peter — from ${name}` : "Hi Peter"
-    );
+    if (sending) return;
+    setSending(true);
+    bumpVibe("curiosity", 15);
     const body = encodeURIComponent(
       `${message}\n\n— ${name || "someone from your website"}${from ? ` (${from})` : ""}`
     );
-    window.location.href = `mailto:${EMAIL}?subject=${subject}&body=${body}`;
+    // let the plane leave the button before the mail app steals focus
+    setTimeout(() => {
+      window.location.href = `mailto:${EMAIL}?subject=${encodeURIComponent(subject)}&body=${body}`;
+      setTimeout(() => setSending(false), 1500);
+    }, 500);
   };
 
   const fieldCls =
@@ -50,14 +61,86 @@ export function ContactForm() {
         placeholder="Internship? Project? Zion discourse? Type it here."
         className={`${fieldCls} resize-none`}
       />
-      <button
+
+      {/* the email, assembling itself as you type */}
+      <AnimatePresence>
+        {(message || name) && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="overflow-hidden"
+          >
+            <div className="rounded-xl border border-line bg-surface shadow-sm">
+              <div className="flex items-center gap-1.5 border-b border-line px-3 py-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-accent/50" />
+                <span className="h-2.5 w-2.5 rounded-full bg-gold/50" />
+                <span className="h-2.5 w-2.5 rounded-full bg-moss/50" />
+                <span className="ml-2 font-mono text-[10px] text-muted">
+                  new message — this is what I&apos;ll get
+                </span>
+              </div>
+              <div className="space-y-1 px-4 py-3 font-mono text-[11px] text-muted">
+                <p>
+                  <span className="text-fg">to:</span> {EMAIL}
+                </p>
+                <p>
+                  <span className="text-fg">subject:</span> {subject}
+                </p>
+                <p className="whitespace-pre-wrap border-t border-line pt-2 text-[12px] leading-relaxed text-fg">
+                  {message || "…"}
+                </p>
+                <p className="pt-1">
+                  — {name || "someone from your website"}
+                  {from ? ` (${from})` : ""}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.button
         type="submit"
-        className="rounded-lg bg-accent px-6 py-3 text-sm font-medium text-accent-fg transition hover:opacity-90"
+        whileTap={{ scale: 0.97 }}
+        className="relative overflow-hidden rounded-lg bg-accent px-6 py-3 text-sm font-medium text-accent-fg transition hover:opacity-90"
       >
-        Send it
-      </button>
-      <p className="text-center font-mono text-[11px] text-muted">
-        opens your mail app · or copy:{" "}
+        <AnimatePresence mode="wait">
+          {sending ? (
+            <motion.span
+              key="plane"
+              initial={{ x: 0, opacity: 1 }}
+              animate={{ x: 180, y: -26, opacity: 0 }}
+              transition={{ duration: 0.55, ease: "easeIn" }}
+              className="inline-block"
+            >
+              ✈
+            </motion.span>
+          ) : (
+            <motion.span key="label" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              Send it
+            </motion.span>
+          )}
+        </AnimatePresence>
+        {sending && (
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="absolute inset-0 grid place-items-center text-sm"
+          >
+            opening your mail app…
+          </motion.span>
+        )}
+      </motion.button>
+
+      <p className="flex items-center justify-center gap-2 text-center font-mono text-[11px] text-muted">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-moss opacity-60" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-moss" />
+        </span>
+        replies fast, genuinely · or copy:{" "}
         <button
           type="button"
           onClick={() => {

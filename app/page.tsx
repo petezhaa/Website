@@ -242,6 +242,13 @@ export default function Home() {
                   width={339}
                   height={357}
                 />
+                <Polaroid
+                  src="/first-home.jpg"
+                  alt="The trailer in Pulaski, Wisconsin, where Peter grew up"
+                  caption="the trailer park years"
+                  width={316}
+                  height={234}
+                />
                 <div className="rounded-xl border border-line bg-surface p-6">
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
                     Education
