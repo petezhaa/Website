@@ -1,28 +1,21 @@
 import { CheeseMode } from "@/components/CheeseMode";
 import type { Metadata } from "next";
-import { Caveat, Inter, JetBrains_Mono, Newsreader } from "next/font/google";
+import { JetBrains_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
 
+// JetBrains Mono is the system voice: chrome, labels, headings, body.
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+});
+
+// Newsreader shows up only where a human is talking — the few serif
+// pull-quotes that warm up an otherwise-monospace page.
 const newsreader = Newsreader({
   variable: "--font-newsreader",
   subsets: ["latin"],
   style: ["normal", "italic"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-});
-
-const caveat = Caveat({
-  variable: "--font-caveat",
-  subsets: ["latin"],
-  weight: ["500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -69,7 +62,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${newsreader.variable} ${inter.variable} ${jetbrainsMono.variable} ${caveat.variable} h-full antialiased`}
+      className={`${newsreader.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
@@ -80,7 +73,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://cdn.cloudflare.steamstatic.com" />
         <link rel="preconnect" href="https://a.ltrbxd.com" />
       </head>
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="min-h-full flex flex-col font-mono">
         {children}
         <CheeseMode />
       </body>

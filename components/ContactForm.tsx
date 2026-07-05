@@ -34,10 +34,10 @@ export function ContactForm() {
   };
 
   const fieldCls =
-    "w-full rounded-lg border border-line bg-surface px-4 py-2.5 text-sm outline-none transition focus:border-accent";
+    "w-full rounded-[2px] border border-line bg-surface px-3.5 py-2.5 font-mono text-sm outline-none transition focus:border-accent";
 
   return (
-    <form onSubmit={submit} className="mx-auto flex max-w-md flex-col gap-3 text-left">
+    <form onSubmit={submit} className="flex w-full flex-col gap-3 text-left">
       <div className="flex gap-3">
         <input
           value={name}
@@ -72,14 +72,14 @@ export function ContactForm() {
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="overflow-hidden"
           >
-            <div className="rounded-xl border border-line bg-surface shadow-sm">
-              <div className="flex items-center gap-1.5 border-b border-line px-3 py-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-accent/50" />
-                <span className="h-2.5 w-2.5 rounded-full bg-gold/50" />
-                <span className="h-2.5 w-2.5 rounded-full bg-moss/50" />
-                <span className="ml-2 font-mono text-[10px] text-muted">
-                  new message — this is what I&apos;ll get
+            <div className="panel">
+              <div className="panel-titlebar">
+                <span className="win-dots">
+                  <i className="bg-accent/60" />
+                  <i className="bg-gold/60" />
+                  <i className="bg-moss/60" />
                 </span>
+                <span className="text-accent">$</span> mail — this is what I&apos;ll get
               </div>
               <div className="space-y-1 px-4 py-3 font-mono text-[11px] text-muted">
                 <p>
@@ -104,7 +104,7 @@ export function ContactForm() {
       <motion.button
         type="submit"
         whileTap={{ scale: 0.97 }}
-        className="relative overflow-hidden rounded-lg bg-accent px-6 py-3 text-sm font-medium text-accent-fg transition hover:opacity-90"
+        className="btn-solid relative overflow-hidden px-6 py-3 text-sm"
       >
         <AnimatePresence mode="wait">
           {sending ? (

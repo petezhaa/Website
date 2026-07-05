@@ -294,7 +294,7 @@ export function PeterBot({ initialOpen = false }: { initialOpen?: boolean } = {}
                     <button
                       key={q}
                       onClick={() => send(q)}
-                      className="block w-full rounded-2xl border border-line bg-surface px-3 py-2 text-left text-sm transition hover:border-accent hover:text-accent"
+                      className="panel block w-full px-3 py-2 text-left text-sm transition hover:border-accent hover:text-accent"
                     >
                       {q}
                     </button>

@@ -111,7 +111,7 @@ export function BenchPanel() {
   const spread = rows ? rows[0].ops / rows[rows.length - 1].ops : 1;
 
   return (
-    <div className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
+    <div className="panel p-5 sm:p-6">
       <p className="text-sm font-medium">Same function, three languages</p>
       <p className="mb-4 mt-1 font-mono text-[11px] leading-relaxed text-muted">
         the engine&apos;s haversine, hand-written in C++, Rust, and JS with the
@@ -129,7 +129,7 @@ export function BenchPanel() {
           <button
             onClick={run}
             disabled={!ready || running}
-            className="rounded-lg bg-accent px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-solid px-5 py-2 text-xs font-bold uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-50"
           >
             {running ? "racing…" : ready ? (rows ? "run again" : "run the benchmark") : "loading…"}
           </button>
@@ -147,9 +147,9 @@ export function BenchPanel() {
                       {fmtOps(row.ops)} · {row.ms.toFixed(1)}ms · {row.note}
                     </span>
                   </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-surface-2">
+                  <div className="h-2.5 overflow-hidden rounded-[2px] bg-surface-2">
                     <div
-                      className={`h-full rounded-full transition-[width] duration-700 ease-out ${
+                      className={`h-full rounded-[2px] transition-[width] duration-700 ease-out ${
                         row.key === "cpp"
                           ? "bg-accent"
                           : row.key === "rust"

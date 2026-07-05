@@ -1333,12 +1333,12 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
       {(phase === "guess" || phase === "reveal") && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="rounded-lg border border-line bg-surface px-4 py-2 text-sm">
+            <span className="rounded-[2px] border border-line bg-surface px-4 py-2 text-sm">
               {phase === "guess" ? "Find: " : ""}
               <span className="font-medium text-accent">{prompt}</span>
             </span>
             {streakNow >= 2 && (
-              <span className="rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 font-mono text-xs font-bold text-gold">
+              <span className="rounded-[2px] border border-gold/40 bg-gold/10 px-3 py-2 font-mono text-xs font-bold text-gold">
                 {streakNow}× streak
               </span>
             )}
@@ -1361,7 +1361,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
       )}
 
       {/* the map */}
-      <div className="relative overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="panel relative overflow-hidden">
         <canvas
           ref={canvasRef}
           width={W}
@@ -1399,7 +1399,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
                   key={b.label}
                   onClick={b.f}
                   aria-label={`zoom ${b.label}`}
-                  className="h-8 w-8 rounded-lg border border-line bg-surface/90 font-mono text-sm text-muted backdrop-blur transition hover:border-accent hover:text-accent"
+                  className="h-8 w-8 rounded-[2px] border border-line bg-surface/90 font-mono text-sm text-muted backdrop-blur transition hover:border-accent hover:text-accent"
                 >
                   {b.label}
                 </button>
@@ -1409,7 +1409,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
                   onClick={toggleGlobe}
                   aria-label="toggle globe view"
                   title={globeUi ? "switch to flat map" : "switch to globe"}
-                  className="h-8 w-8 rounded-lg border border-line bg-surface/90 font-mono text-xs text-muted backdrop-blur transition hover:border-accent hover:text-accent"
+                  className="h-8 w-8 rounded-[2px] border border-line bg-surface/90 font-mono text-xs text-muted backdrop-blur transition hover:border-accent hover:text-accent"
                 >
                   {globeUi ? "2D" : "3D"}
                 </button>
@@ -1418,7 +1418,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
                 onClick={quitToMenu}
                 aria-label="quit to menu"
                 title="back to the map menu"
-                className="h-8 w-8 rounded-lg border border-line bg-surface/90 font-mono text-xs text-muted backdrop-blur transition hover:border-accent hover:text-accent"
+                className="h-8 w-8 rounded-[2px] border border-line bg-surface/90 font-mono text-xs text-muted backdrop-blur transition hover:border-accent hover:text-accent"
               >
                 ✕
               </button>
@@ -1448,7 +1448,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
               <div className="flex flex-col items-center gap-1.5">
                 <button
                   onClick={dailyInfo.played ? copyDailyShare : startDaily}
-                  className={`rounded-xl border-2 px-5 py-2.5 text-sm font-medium transition sm:text-base ${
+                  className={`rounded-[2px] border-2 px-5 py-2.5 text-sm font-medium transition sm:text-base ${
                     dailyInfo.played
                       ? "border-line text-muted hover:border-accent hover:text-accent"
                       : "border-accent bg-accent-soft text-accent hover:-translate-y-0.5"
@@ -1474,7 +1474,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
                   <button
                     key={name}
                     onClick={() => startGame(m)}
-                    className="rounded-lg border border-line bg-surface px-3 py-2 text-xs transition hover:-translate-y-0.5 hover:border-accent hover:text-accent sm:rounded-xl sm:px-5 sm:py-3 sm:text-sm"
+                    className="rounded-[2px] border border-line bg-surface px-3 py-2 text-xs transition hover:-translate-y-0.5 hover:border-accent hover:text-accent sm:px-5 sm:py-3 sm:text-sm"
                   >
                     {name}
                   </button>
@@ -1515,7 +1515,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
         ))}
 
         {phase === "reveal" && (
-          <div className="absolute bottom-4 left-1/2 flex w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-2 rounded-xl border border-line bg-surface/95 px-4 py-2.5 shadow-lg backdrop-blur sm:gap-4 sm:px-5 sm:py-3">
+          <div className="panel absolute bottom-4 left-1/2 flex w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-2 px-4 py-2.5 shadow-lg backdrop-blur sm:gap-4 sm:px-5 sm:py-3">
             <span className="min-w-20 font-mono text-2xl font-bold text-accent">
               +{shownPts}
             </span>
@@ -1529,7 +1529,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
             <button
               onClick={advance}
               title="or press Enter"
-              className="rounded-lg bg-accent px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+              className="btn-solid px-4 py-2 text-xs font-bold uppercase tracking-wider"
             >
               {engineRef.current?.game_finished() ? "results" : "next ⏎"}
             </button>
@@ -1551,7 +1551,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
               {score}
               <span className="text-xl text-muted"> / {maxScore}</span>
             </p>
-            <p className="rounded-full border border-accent/40 bg-accent-soft px-5 py-2 text-sm text-accent">
+            <p className="rounded-[2px] border border-accent/40 bg-accent-soft px-5 py-2 text-sm text-accent">
               {rankTitle(pct)}
             </p>
             <div className="flex gap-6 font-mono text-xs text-muted">
@@ -1559,7 +1559,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
               {best !== null && <span>personal best: {best}</span>}
             </div>
             {challengeRef.current && (
-              <div className="w-full max-w-60 rounded-xl border border-line bg-surface p-3 font-mono text-[11px]">
+              <div className="panel w-full max-w-60 p-3 font-mono text-[11px]">
                 <p className="uppercase tracking-widest text-accent">head to head</p>
                 <div className="mt-1.5 flex justify-between">
                   <span className="text-muted">you</span>
@@ -1593,7 +1593,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
                       {row.label}
                     </span>
                     <div
-                      className={`h-3 rounded-full ${row.cls}`}
+                      className={`h-3 rounded-[2px] ${row.cls}`}
                       style={{
                         width: `${Math.max(
                           (row.value / Math.max(score, baselineRef.current, 1)) * 100,
@@ -1614,7 +1614,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
               </div>
             )}
             {dailyResult && (
-              <div className="w-full max-w-xs rounded-xl border border-accent/40 bg-accent-soft/40 p-3">
+              <div className="w-full max-w-xs rounded-[2px] border border-accent/40 bg-accent-soft/40 p-3">
                 <p className="font-mono text-[11px] uppercase tracking-widest text-accent">
                   Daily #{dailyInfo.num}
                   {dailyResult.streak > 1 ? ` · 🔥 ${dailyResult.streak} day streak` : ""}
@@ -1624,7 +1624,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
                   onClick={() =>
                     copyText(buildShare(roundPtsRef.current, score, maxScore, dailyInfo.num))
                   }
-                  className="mt-2 rounded-lg bg-accent px-4 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+                  className="btn-solid mt-2 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider"
                 >
                   {copied ? "copied ✓" : "share result"}
                 </button>
@@ -1641,12 +1641,12 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
                         onChange={(e) => setPlayerName(e.target.value)}
                         maxLength={16}
                         placeholder="name for the board"
-                        className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-1.5 font-mono text-[11px] outline-none transition focus:border-accent"
+                        className="min-w-0 flex-1 rounded-[2px] border border-line bg-surface px-3 py-1.5 font-mono text-[11px] outline-none transition focus:border-accent"
                       />
                       <button
                         onClick={submitScore}
                         disabled={lbState === "sending"}
-                        className="shrink-0 rounded-lg border border-accent/50 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent transition hover:bg-accent-soft disabled:opacity-50"
+                        className="btn-term shrink-0 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider disabled:opacity-50"
                       >
                         {lbState === "sending" ? "posting…" : lbState === "failed" ? "retry" : "post score"}
                       </button>
@@ -1680,7 +1680,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
               {!dailyResult && (
                 <button
                   onClick={() => startGame(modeIdx)}
-                  className="rounded-lg bg-accent px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+                  className="btn-solid px-5 py-2.5 text-xs font-bold uppercase tracking-wider"
                 >
                   play again
                 </button>
@@ -1689,14 +1689,14 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
                 <button
                   onClick={copyChallenge}
                   title="copy a link that replays these exact rounds"
-                  className="rounded-lg border border-accent/50 px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-accent transition hover:bg-accent-soft"
+                  className="btn-term px-5 py-2.5 text-xs font-bold uppercase tracking-wider"
                 >
                   {copiedLink ? "link copied ✓" : "challenge a friend"}
                 </button>
               )}
               <button
                 onClick={quitToMenu}
-                className="rounded-lg border border-line px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider transition hover:border-accent hover:text-accent"
+                className="btn-term px-5 py-2.5 text-xs font-bold uppercase tracking-wider"
               >
                 other maps
               </button>

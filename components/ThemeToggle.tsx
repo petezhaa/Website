@@ -105,7 +105,7 @@ export function ThemeToggle() {
     <button
       onClick={runToggle}
       aria-label="Toggle dark mode"
-      className="grid h-9 w-9 place-items-center rounded-full border border-line text-muted transition hover:border-accent hover:text-accent"
+      className="grid h-8 w-8 place-items-center rounded-[2px] border border-line text-muted transition hover:border-accent hover:text-accent"
     >
       {/* keyed so the icon pops in with a little spin on each toggle */}
       <motion.span

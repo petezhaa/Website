@@ -131,7 +131,7 @@ export function TimelineBuilder() {
   };
 
   const btn = (active: boolean) =>
-    `rounded-lg border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
       active
         ? "border-accent bg-accent-soft text-accent"
         : "border-line text-muted hover:border-accent hover:text-accent"
@@ -141,7 +141,7 @@ export function TimelineBuilder() {
     return <p className="font-mono text-sm text-muted">the history engine didn&apos;t load.</p>;
   if (!ready)
     return (
-      <div className="grid h-40 place-items-center rounded-2xl border border-line bg-surface">
+      <div className="panel grid h-40 place-items-center">
         <p className="animate-pulse font-mono text-sm text-muted">shuffling the centuries…</p>
       </div>
     );
@@ -159,7 +159,7 @@ export function TimelineBuilder() {
         </span>
       </div>
 
-      <div className="rounded-2xl border border-line bg-surface p-4 sm:p-5">
+      <div className="panel p-4 sm:p-5">
         <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
           earliest on top · latest on the bottom
         </p>
@@ -177,7 +177,7 @@ export function TimelineBuilder() {
                 key={card.pos}
                 layout
                 transition={{ type: "spring", stiffness: 550, damping: 38 }}
-                className={`flex items-center gap-3 rounded-xl border p-2.5 sm:p-3 ${cardTone}`}
+                className={`flex items-center gap-3 rounded-[2px] border p-2.5 sm:p-3 ${cardTone}`}
               >
                 <span className="w-4 text-center font-mono text-[10px] text-muted/70">
                   {i + 1}
@@ -187,7 +187,7 @@ export function TimelineBuilder() {
                     onClick={() => move(i, -1)}
                     disabled={revealed || i === 0}
                     aria-label={`move "${card.name}" earlier`}
-                    className="grid h-6 w-7 place-items-center rounded-md border border-line font-mono text-[11px] text-muted transition enabled:hover:border-accent enabled:hover:text-accent disabled:opacity-30"
+                    className="grid h-6 w-7 place-items-center rounded-[2px] border border-line font-mono text-[11px] text-muted transition enabled:hover:border-accent enabled:hover:text-accent disabled:opacity-30"
                   >
                     ↑
                   </button>
@@ -195,7 +195,7 @@ export function TimelineBuilder() {
                     onClick={() => move(i, 1)}
                     disabled={revealed || i === hand.length - 1}
                     aria-label={`move "${card.name}" later`}
-                    className="grid h-6 w-7 place-items-center rounded-md border border-line font-mono text-[11px] text-muted transition enabled:hover:border-accent enabled:hover:text-accent disabled:opacity-30"
+                    className="grid h-6 w-7 place-items-center rounded-[2px] border border-line font-mono text-[11px] text-muted transition enabled:hover:border-accent enabled:hover:text-accent disabled:opacity-30"
                   >
                     ↓
                   </button>
@@ -232,7 +232,7 @@ export function TimelineBuilder() {
           {!revealed ? (
             <button
               onClick={check}
-              className="rounded-lg bg-accent px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+              className="btn-solid px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider"
             >
               check my timeline
             </button>
@@ -246,7 +246,7 @@ export function TimelineBuilder() {
               </p>
               <button
                 onClick={deal}
-                className="rounded-lg bg-accent px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+                className="btn-solid px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider"
               >
                 new hand
               </button>
@@ -255,7 +255,7 @@ export function TimelineBuilder() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">kendall tau, in Rust</p>
         <p>
           six events make fifteen pairs. the engine counts how many pairs you put in the right

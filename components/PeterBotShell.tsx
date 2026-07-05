@@ -19,7 +19,7 @@ export function PeterBotShell() {
     <button
       onClick={() => setWanted(true)}
       aria-label="Chat with PeterBot"
-      className="fixed bottom-5 right-5 z-[70] flex h-12 items-center gap-2 rounded-full bg-accent px-5 text-sm font-medium text-accent-fg shadow-lg transition hover:opacity-90"
+      className="btn-solid fixed bottom-5 right-5 z-[70] flex h-12 items-center gap-2 px-5 text-sm font-medium shadow-lg"
     >
       text me
     </button>

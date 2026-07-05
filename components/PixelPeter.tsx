@@ -43,7 +43,7 @@ export function PixelPeter({ size = 30 }: { size?: number }) {
       viewBox="0 0 16 16"
       shapeRendering="crispEdges"
       aria-hidden
-      className="shrink-0 rounded-md bg-surface-2"
+      className="shrink-0 rounded-[2px] bg-surface-2"
     >
       {GRID.flatMap((row, y) =>
         row.split("").map((cell, x) =>

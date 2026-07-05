@@ -52,7 +52,7 @@ export function Polaroid({
           unoptimized
           className={round ? "w-full rounded-full" : "w-full"}
         />
-        <p className="mt-2 text-center font-hand text-lg text-muted">{caption}</p>
+        <p className="mt-2 text-center font-mono text-[11px] lowercase tracking-wide text-muted">{caption}</p>
       </motion.button>
 
       <AnimatePresence>
@@ -79,7 +79,7 @@ export function Polaroid({
                 unoptimized
                 className={round ? "w-full rounded-full" : "w-full"}
               />
-              <p className="mt-3 text-center font-hand text-2xl text-muted">{caption}</p>
+              <p className="mt-3 text-center font-mono text-sm lowercase tracking-wide text-muted">{caption}</p>
             </motion.div>
           </motion.div>
         )}

@@ -57,10 +57,9 @@ export function FortuneCookie() {
             animate={{ opacity: 1, scaleX: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className="max-w-64 border border-line bg-surface px-4 py-2 text-center shadow-md"
-            style={{ borderRadius: 2 }}
+            className="panel max-w-64 px-4 py-2 text-center shadow-md"
           >
-            <p className="font-hand text-lg leading-snug text-fg">{fortune}</p>
+            <p className="font-mono text-lg leading-snug text-fg">{fortune}</p>
           </motion.div>
         )}
       </AnimatePresence>

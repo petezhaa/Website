@@ -52,7 +52,7 @@ export default async function NowPage() {
         <span className="h-2 w-2 rounded-full bg-accent" />
         a /now page
       </p>
-      <h1 className="mt-4 font-serif text-4xl leading-[1.1] tracking-tight sm:text-5xl">
+      <h1 className="mt-4 font-mono text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl">
         What I&apos;m doing now
       </h1>
       <p className="mt-5 max-w-xl leading-relaxed text-muted">
@@ -61,7 +61,7 @@ export default async function NowPage() {
           href="https://nownownow.com/about"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-accent underline decoration-accent/30 underline-offset-4 transition hover:decoration-accent"
+          className="tlink"
         >
           /now page
         </a>{" "}

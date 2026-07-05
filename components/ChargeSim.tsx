@@ -415,7 +415,7 @@ export function ChargeSim() {
   const togglePause = () => { pausedRef.current = !pausedRef.current; setPaused(pausedRef.current); };
 
   const btn = (active: boolean) =>
-    `rounded-lg border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
       active ? "border-accent bg-accent-soft text-accent" : "border-line text-muted hover:border-accent hover:text-accent"
     }`;
 
@@ -454,7 +454,7 @@ export function ChargeSim() {
             />
             {gaussInfo && (
               <span
-                className={`rounded-lg border px-2.5 py-1 font-mono text-[11px] ${
+                className={`rounded-[2px] border px-2.5 py-1 font-mono text-[11px] ${
                   Math.abs(gaussInfo.flux - gaussInfo.pred) < 0.004
                     ? "border-moss/50 text-moss"
                     : "border-line text-muted"
@@ -469,7 +469,7 @@ export function ChargeSim() {
         )}
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="panel relative overflow-hidden">
         <canvas
           ref={canvasRef}
           width={W}
@@ -496,7 +496,7 @@ export function ChargeSim() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the math, running in C++</p>
         <p>force&nbsp;&nbsp;&nbsp;&nbsp;F = k·q₁q₂·r̂ / r²&nbsp;&nbsp;(Coulomb; like repels, opposite attracts)</p>
         <p>field&nbsp;&nbsp;&nbsp;&nbsp;E(p) = k·Σⱼ qⱼ (p − pⱼ) / |p − pⱼ|³&nbsp;&nbsp;(the arrows)</p>

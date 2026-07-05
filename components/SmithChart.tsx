@@ -405,7 +405,7 @@ export function SmithChart() {
         : "over par, but the wave forgives you.";
 
   const chip = (active: boolean, locked = false) =>
-    `rounded-lg border px-2.5 py-1 font-mono text-[11px] transition ${
+    `rounded-[2px] border px-2.5 py-1 font-mono text-[11px] transition ${
       locked
         ? "cursor-not-allowed border-line text-muted opacity-40"
         : active
@@ -440,7 +440,7 @@ export function SmithChart() {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(280px,2fr)]">
         {/* the chart */}
-        <div className="relative self-start overflow-hidden rounded-2xl border border-line bg-surface">
+        <div className="panel relative self-start overflow-hidden">
           <canvas
             ref={canvasRef}
             width={SIZE}
@@ -460,7 +460,7 @@ export function SmithChart() {
 
         {/* mission + network + readouts */}
         <div className="flex min-w-0 flex-col gap-3">
-          <div className="rounded-2xl border border-line bg-surface p-4">
+          <div className="panel p-4">
             <p className="font-mono text-[10px] uppercase tracking-widest text-accent">
               level {level + 1} · {names[level] ?? "…"}
             </p>
@@ -489,7 +489,7 @@ export function SmithChart() {
             )}
           </div>
           {slots.map((s, si) => (
-            <div key={si} className="rounded-2xl border border-line bg-surface p-3">
+            <div key={si} className="panel p-3">
               <div className="mb-2 flex items-center justify-between">
                 <span className="font-mono text-[10px] uppercase tracking-widest text-muted">
                   slot {si + 1}
@@ -533,7 +533,7 @@ export function SmithChart() {
           ))}
 
           {/* readouts + win state */}
-          <div className="rounded-2xl border border-line bg-surface p-4">
+          <div className="panel p-4">
             <div className="flex items-end justify-between">
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-widest text-muted">|Γ|</p>
@@ -548,9 +548,9 @@ export function SmithChart() {
                 </p>
               </div>
             </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2">
+            <div className="mt-2 h-2 overflow-hidden rounded-[2px] bg-surface-2">
               <div
-                className={`h-full rounded-full transition-all ${out.matched ? "bg-moss" : "bg-accent"}`}
+                className={`h-full rounded-[2px] transition-all ${out.matched ? "bg-moss" : "bg-accent"}`}
                 style={{ width: `${Math.max(2, (1 - Math.min(1, out.gm)) * 100)}%` }}
               />
             </div>
@@ -561,7 +561,7 @@ export function SmithChart() {
             <p className="mt-1 font-mono text-[10px] text-muted">pass line: |Γ| &lt; 0.10 · vswr &lt; 1.22</p>
 
             {out.matched && (
-              <div className="mt-3 rounded-xl border border-moss/50 bg-moss/10 p-3">
+              <div className="mt-3 rounded-[2px] border border-moss/50 bg-moss/10 p-3">
                 <p className="font-mono text-[12px] font-bold text-moss">
                   matched. the power goes where you point it.
                 </p>
@@ -571,7 +571,7 @@ export function SmithChart() {
                 {level + 1 < names.length ? (
                   <button
                     onClick={() => { pickLevel(level + 1); bumpVibe("gamer", 4); }}
-                    className="mt-2 rounded-lg bg-accent px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+                    className="btn-solid mt-2 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider"
                   >
                     next level →
                   </button>
@@ -589,7 +589,7 @@ export function SmithChart() {
       </div>
 
       {/* explainer */}
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the math, running in C++</p>
         <p>reflection&nbsp;&nbsp;Γ = (Z − Z₀)/(Z + Z₀)&nbsp;&nbsp;(the whole chart is this complex number&apos;s plane: center = nothing bounces back, rim = everything does)</p>
         <p>series L/C&nbsp;&nbsp;z′ = z + jX/Z₀, X = ωL or −1/ωC&nbsp;&nbsp;(a series part can&apos;t change resistance → the dot rides a constant-R circle)</p>

@@ -30,13 +30,13 @@ export async function GameShelf() {
       {top.length > 0 ? (
         <>
           {/* what the last two weeks actually went to */}
-          <div className="mb-6 rounded-xl border border-accent/40 bg-surface p-4 sm:flex sm:items-center sm:gap-5">
+          <div className="panel mb-6 border-accent/40 p-4 sm:flex sm:items-center sm:gap-5">
             {recentGame && (
               <a
                 href={`https://store.steampowered.com/app/${recentGame.appid}/`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mb-3 block w-full max-w-56 shrink-0 overflow-hidden rounded-lg border border-line transition hover:border-accent sm:mb-0"
+                className="mb-3 block w-full max-w-56 shrink-0 overflow-hidden rounded-[2px] border border-line transition hover:border-accent sm:mb-0"
               >
                 <Image
                   src={`https://cdn.cloudflare.steamstatic.com/steam/apps/${recentGame.appid}/header.jpg`}
@@ -53,7 +53,7 @@ export async function GameShelf() {
               </p>
               {recent ? (
                 <>
-                  <p className="mt-1 font-serif text-xl leading-snug">{recent.name}</p>
+                  <p className="mt-1 font-mono text-xl font-bold leading-snug">{recent.name}</p>
                   <p className="mt-1 font-mono text-xs text-muted">
                     {recent.hours2w}h in the last two weeks
                     {recentGame ? ` · ${recentGame.hours.toLocaleString()}h lifetime` : ""}
@@ -67,13 +67,13 @@ export async function GameShelf() {
             </div>
             <div className="hidden shrink-0 flex-col items-center gap-1 pr-2 sm:flex">
               <StardewPeter size={52} />
-              <p className="font-hand text-sm text-muted">me, in the valley</p>
+              <p className="font-mono text-sm text-muted">me, in the valley</p>
             </div>
           </div>
 
           {/* the damage, quantified */}
           <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-xl border border-line bg-surface px-5 py-4">
+            <div className="panel px-5 py-4">
               <p className="font-mono text-2xl font-bold text-accent">
                 {Math.round(totalHours / 24)}
               </p>
@@ -82,19 +82,19 @@ export async function GameShelf() {
               </p>
             </div>
             {meta && (
-              <div className="rounded-xl border border-line bg-surface px-5 py-4">
+              <div className="panel px-5 py-4">
                 <p className="font-mono text-2xl font-bold text-accent">{meta.totalOwned}</p>
                 <p className="mt-0.5 text-xs text-muted">games owned</p>
               </div>
             )}
             {meta && (
-              <div className="rounded-xl border border-line bg-surface px-5 py-4">
+              <div className="panel px-5 py-4">
                 <p className="font-mono text-2xl font-bold text-accent">{meta.neverPlayed}</p>
                 <p className="mt-0.5 text-xs text-muted">never launched. the graveyard</p>
               </div>
             )}
             {rarest && (
-              <div className="rounded-xl border border-line bg-surface px-5 py-4">
+              <div className="panel px-5 py-4">
                 <p className="font-mono text-2xl font-bold text-accent">
                   {rarest.globalPct.toFixed(1)}%
                 </p>
@@ -108,7 +108,7 @@ export async function GameShelf() {
           {/* where the hours actually went */}
           {totalHours > 0 && (
             <div className="mb-6">
-              <div className="flex h-3 overflow-hidden rounded-full">
+              <div className="flex h-3 overflow-hidden rounded-[2px]">
                 {strip.map((s, i) => (
                   <div
                     key={s.name}
@@ -145,7 +145,7 @@ export async function GameShelf() {
                 href={`https://store.steampowered.com/app/${g.appid}/`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group overflow-hidden rounded-xl border border-line bg-surface transition hover:border-accent"
+                className="panel group overflow-hidden transition hover:border-accent"
               >
                 <Image
                   src={`https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appid}/header.jpg`}
@@ -164,9 +164,9 @@ export async function GameShelf() {
                 </div>
                 {/* share of the top game's hours: the shelf, to scale */}
                 <div className="px-4 pb-3 pt-2">
-                  <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+                  <div className="h-1.5 overflow-hidden rounded-[2px] bg-surface-2">
                     <div
-                      className="h-full rounded-full bg-gold/70"
+                      className="h-full rounded-[2px] bg-gold/70"
                       style={{ width: `${Math.max((g.hours / maxHours) * 100, 3)}%` }}
                     />
                   </div>
@@ -182,7 +182,7 @@ export async function GameShelf() {
             href={STEAM_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-accent underline decoration-accent/30 underline-offset-4"
+            className="tlink"
           >
             steamcommunity.com/id/PeterZhaoOfficial
           </a>

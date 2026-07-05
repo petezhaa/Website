@@ -43,7 +43,7 @@ export default async function ChallengePage({
 
       {challenge ? (
         <>
-          <h1 className="font-serif text-3xl tracking-tight sm:text-4xl">
+          <h1 className="font-mono font-bold text-3xl tracking-tight sm:text-4xl">
             Beat my {challenge.score.toLocaleString()}
           </h1>
           <p className="mb-8 mt-3 max-w-xl leading-relaxed text-muted">
@@ -58,7 +58,7 @@ export default async function ChallengePage({
         </>
       ) : (
         <>
-          <h1 className="font-serif text-3xl tracking-tight sm:text-4xl">
+          <h1 className="font-mono font-bold text-3xl tracking-tight sm:text-4xl">
             That challenge link looks broken
           </h1>
           <p className="mb-8 mt-3 max-w-xl leading-relaxed text-muted">

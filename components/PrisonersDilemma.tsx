@@ -84,7 +84,7 @@ export function PrisonersDilemma() {
   };
 
   const cell = (m: number) =>
-    `grid h-5 w-5 place-items-center rounded text-[9px] font-bold ${
+    `grid h-5 w-5 place-items-center rounded-[2px] text-[9px] font-bold ${
       m ? "bg-moss/25 text-moss" : "bg-accent/20 text-accent"
     }`;
   const recent = history.slice(-30);
@@ -94,7 +94,7 @@ export function PrisonersDilemma() {
     return <p className="font-mono text-sm text-muted">couldn&apos;t load the wasm engine.</p>;
   if (!ready)
     return (
-      <div className="grid h-40 place-items-center rounded-2xl border border-line bg-surface">
+      <div className="panel grid h-40 place-items-center">
         <p className="animate-pulse font-mono text-sm text-muted">dealing…</p>
       </div>
     );
@@ -108,7 +108,7 @@ export function PrisonersDilemma() {
           <button
             key={n}
             onClick={() => beginMatch(i)}
-            className={`rounded-lg border px-2.5 py-1 font-mono text-[11px] transition ${
+            className={`rounded-[2px] border px-2.5 py-1 font-mono text-[11px] transition ${
               opp === i ? "border-accent bg-accent-soft text-accent" : "border-line text-muted hover:border-accent hover:text-accent"
             }`}
           >
@@ -119,7 +119,7 @@ export function PrisonersDilemma() {
 
       <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
         {/* play area */}
-        <div className="rounded-2xl border border-line bg-surface p-5">
+        <div className="panel p-5">
           <div className="mb-4 flex items-end justify-between">
             <div>
               <p className="font-mono text-[11px] text-muted">you</p>
@@ -135,13 +135,13 @@ export function PrisonersDilemma() {
           <div className="flex gap-3">
             <button
               onClick={() => move(1)}
-              className="flex-1 rounded-lg border-2 border-moss/60 bg-moss/10 px-4 py-3 text-sm font-medium text-moss transition hover:bg-moss/20"
+              className="flex-1 rounded-[2px] border-2 border-moss/60 bg-moss/10 px-4 py-3 text-sm font-medium text-moss transition hover:bg-moss/20"
             >
               Cooperate
             </button>
             <button
               onClick={() => move(0)}
-              className="flex-1 rounded-lg border-2 border-accent/60 bg-accent-soft px-4 py-3 text-sm font-medium text-accent transition hover:bg-accent/15"
+              className="flex-1 rounded-[2px] border-2 border-accent/60 bg-accent-soft px-4 py-3 text-sm font-medium text-accent transition hover:bg-accent/15"
             >
               Defect
             </button>
@@ -163,14 +163,14 @@ export function PrisonersDilemma() {
                 </div>
               </div>
               <div className="flex gap-3 pt-1">
-                <button onClick={() => beginMatch(opp)} className="font-mono text-[10px] text-muted underline decoration-line underline-offset-2 transition hover:text-accent">rematch</button>
+                <button onClick={() => beginMatch(opp)} className="tlink font-mono text-[10px]">rematch</button>
               </div>
             </div>
           )}
         </div>
 
         {/* payoff matrix */}
-        <div className="rounded-2xl border border-line bg-surface p-5 font-mono text-[11px]">
+        <div className="panel p-5 font-mono text-[11px]">
           <p className="mb-2 uppercase tracking-widest text-accent">payoffs (you / them)</p>
           <table className="tabular-nums text-muted">
             <thead>
@@ -188,12 +188,12 @@ export function PrisonersDilemma() {
       </div>
 
       {/* Axelrod tournament */}
-      <div className="rounded-2xl border border-line bg-surface p-5">
+      <div className="panel p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-medium">Axelrod tournament</p>
           <button
             onClick={runTournament}
-            className="rounded-lg bg-accent px-4 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+            className="btn-solid px-4 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider"
           >
             {tour ? "run again" : "run tournament"}
           </button>
@@ -211,9 +211,9 @@ export function PrisonersDilemma() {
                   </span>
                   <span className="text-muted tabular-nums">{r.score.toLocaleString()}</span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-surface-2">
+                <div className="h-2 overflow-hidden rounded-[2px] bg-surface-2">
                   <div
-                    className={`h-full rounded-full ${r.idx === opp ? "bg-accent" : "bg-moss/70"}`}
+                    className={`h-full rounded-[2px] ${r.idx === opp ? "bg-accent" : "bg-moss/70"}`}
                     style={{ width: `${(r.score / maxTour) * 100}%` }}
                   />
                 </div>

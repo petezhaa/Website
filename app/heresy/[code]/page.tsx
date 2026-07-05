@@ -33,7 +33,7 @@ export async function generateMetadata({
 function TierChip({ digit }: { digit: number }) {
   return (
     <span
-      className="grid h-7 w-7 place-items-center rounded-md font-serif text-sm font-bold text-[#26241e]"
+      className="grid h-7 w-7 place-items-center rounded-[2px] font-mono text-sm font-bold text-[#26241e]"
       style={{ backgroundColor: TIER_HEX[digit] ?? "#feff7f" }}
     >
       {TIER_LABELS[digit]}
@@ -60,7 +60,7 @@ export default async function HeresyPage({
 
       {h && h.length > 0 ? (
         <>
-          <h1 className="font-serif text-3xl leading-tight tracking-tight sm:text-4xl">
+          <h1 className="font-mono text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
             Heresy, on the record
           </h1>
           <p className="mt-4 max-w-xl leading-relaxed text-muted">
@@ -94,14 +94,14 @@ export default async function HeresyPage({
 
           <a
             href="/#parks"
-            className="mt-10 inline-block rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-accent-fg transition hover:opacity-90"
+            className="btn-solid mt-10 inline-block px-5 py-2.5 text-sm"
           >
             Think you can do better? →
           </a>
         </>
       ) : (
         <>
-          <h1 className="font-serif text-3xl tracking-tight sm:text-4xl">
+          <h1 className="font-mono text-3xl font-bold tracking-tight sm:text-4xl">
             That heresy link is corrupted
           </h1>
           <p className="mt-4 max-w-xl leading-relaxed text-muted">
@@ -109,7 +109,7 @@ export default async function HeresyPage({
             made. Go commit your own heresy instead:{" "}
             <a
               href="/#parks"
-              className="text-accent underline decoration-accent/30 underline-offset-4"
+              className="tlink"
             >
               the tier list
             </a>

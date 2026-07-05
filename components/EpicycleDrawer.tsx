@@ -355,7 +355,7 @@ export function EpicycleDrawer() {
   };
 
   const btn = (active: boolean) =>
-    `rounded-lg border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
       active ? "border-accent bg-accent-soft text-accent" : "border-line text-muted hover:border-accent hover:text-accent"
     }`;
 
@@ -401,7 +401,7 @@ export function EpicycleDrawer() {
           />
         </label>
       </div>
-      <div className="relative overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="panel relative overflow-hidden">
         <canvas
           ref={canvasRef}
           width={W}
@@ -427,7 +427,7 @@ export function EpicycleDrawer() {
           {drawing ? "" : "dashed ghost: your original · fewer circles, blurrier trace"}
         </p>
       </div>
-      <div className="rounded-xl border border-line bg-surface p-3">
+      <div className="panel p-3">
         <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-4 font-mono text-[11px] text-muted">
           <span className="uppercase tracking-[0.2em] text-accent">spectrum</span>
           <span>
@@ -436,7 +436,7 @@ export function EpicycleDrawer() {
         </div>
         <canvas ref={specRef} width={SW} height={SH} className="block h-auto w-full" aria-label="harmonic spectrum" />
       </div>
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the signal, running in C++</p>
         <p>each point is a complex number z = x + iy.</p>
         <p>analysis&nbsp;&nbsp;c_k = (1/N) Σⱼ zⱼ · e^(−i·2π·k·j/N)&nbsp;&nbsp;(the DFT, in C++)</p>

@@ -437,7 +437,7 @@ export function InductionSim() {
   };
 
   const btn = (active: boolean) =>
-    `rounded-lg border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
       active ? "border-accent bg-accent-soft text-accent" : "border-line text-muted hover:border-accent hover:text-accent"
     }`;
 
@@ -474,7 +474,7 @@ export function InductionSim() {
         <span className="font-mono text-[11px] text-muted">{shakeOn ? "autopilot" : "manual"} · C++</span>
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="panel relative overflow-hidden">
         <canvas
           ref={canvasRef}
           width={W}
@@ -501,7 +501,7 @@ export function InductionSim() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the physics, running in C++</p>
         <p>flux&nbsp;&nbsp;&nbsp;&nbsp;Φ(d) = k·a² / (a² + d²)^(3/2)&nbsp;&nbsp;(bar magnet a distance d down the coil axis)</p>
         <p>faraday&nbsp;ℰ = −N·dΦ/dt&nbsp;&nbsp;(finite-differenced from the magnet&apos;s actual motion — your wrist is the input)</p>

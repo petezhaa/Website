@@ -155,12 +155,12 @@ export function MandelbrotExplorer() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <button onClick={() => zoomBtn(0.5)} className="h-8 w-8 rounded-lg border border-line font-mono text-sm text-muted transition hover:border-accent hover:text-accent">+</button>
-        <button onClick={() => zoomBtn(2)} className="h-8 w-8 rounded-lg border border-line font-mono text-sm text-muted transition hover:border-accent hover:text-accent">−</button>
-        <button onClick={reset} className="rounded-lg border border-line px-3 py-1.5 font-mono text-[11px] text-muted transition hover:border-accent hover:text-accent">reset</button>
+        <button onClick={() => zoomBtn(0.5)} className="btn-term h-8 w-8 text-sm">+</button>
+        <button onClick={() => zoomBtn(2)} className="btn-term h-8 w-8 text-sm">−</button>
+        <button onClick={reset} className="btn-term px-3 py-1.5 text-[11px]">reset</button>
         <span className="font-mono text-[11px] text-muted">{ready ? `zoom ${fmtZoom(zoom)} · ${maxIterFor(viewRef.current.scale)} iters/px · C++` : "loading…"}</span>
       </div>
-      <div className="relative overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="panel relative overflow-hidden">
         <canvas
           ref={canvasRef}
           width={W}
@@ -185,7 +185,7 @@ export function MandelbrotExplorer() {
           scroll to zoom · drag to pan
         </p>
       </div>
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the math, running in C++</p>
         <p>for each pixel c, iterate z → z² + c from z = 0.</p>
         <p>points where |z| stays bounded are the set (dark); the rest are colored by how fast they escape.</p>

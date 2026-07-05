@@ -153,12 +153,12 @@ export function ParkTierList() {
               setSelected(null);
             }
           }}
-          className={`flex overflow-hidden rounded-xl border border-line bg-surface transition ${
+          className={`panel flex overflow-hidden transition ${
             selected ? "cursor-pointer hover:border-accent" : ""
           }`}
         >
           <div
-            className="flex w-14 shrink-0 items-center justify-center font-serif text-2xl font-bold text-[#26241e] sm:w-16"
+            className="flex w-14 shrink-0 items-center justify-center font-mono text-2xl font-bold text-[#26241e] sm:w-16"
             style={{ backgroundColor: tier.color }}
           >
             {tier.label}
@@ -183,7 +183,7 @@ export function ParkTierList() {
                     e.stopPropagation();
                     setSelected(selected === park ? null : park);
                   }}
-                  className={`cursor-grab select-none rounded-full border px-2.5 py-1 text-xs transition active:cursor-grabbing ${
+                  className={`cursor-grab select-none rounded-[2px] border px-2.5 py-1 text-xs transition active:cursor-grabbing ${
                     selected === park
                       ? "border-accent bg-accent-soft text-accent"
                       : "border-line bg-surface-2 hover:border-accent hover:text-accent"
@@ -205,12 +205,12 @@ export function ParkTierList() {
         <div className="flex flex-col gap-2">
           <button
             onClick={publishHeresy}
-            className="self-start rounded-lg border border-accent/50 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-accent transition hover:bg-accent-soft"
+            className="btn-term self-start px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider"
           >
             publish it anyway ({heresyCount})
           </button>
           {heresyLink && (
-            <div className="rounded-xl border border-accent/40 bg-surface p-3">
+            <div className="panel border-accent/40 p-3">
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
                 your heresy is on the record
               </p>
@@ -223,11 +223,11 @@ export function ParkTierList() {
                   readOnly
                   value={heresyLink}
                   onFocus={(e) => e.currentTarget.select()}
-                  className="min-w-0 flex-1 rounded-lg border border-line bg-surface-2 px-3 py-1.5 font-mono text-[11px] text-muted"
+                  className="min-w-0 flex-1 rounded-[2px] border border-line bg-surface-2 px-3 py-1.5 font-mono text-[11px] text-muted"
                 />
                 <button
                   onClick={publishHeresy}
-                  className="shrink-0 rounded-lg bg-accent px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+                  className="btn-solid shrink-0 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider"
                 >
                   {heresyCopied ? "copied ✓" : "copy"}
                 </button>
@@ -244,7 +244,7 @@ export function ParkTierList() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
-            className="relative mt-2 rounded-xl border border-accent/40 bg-surface p-5"
+            className="panel relative mt-2 border-accent/40 p-5"
           >
             <button
               onClick={() => setRebuttal(null)}

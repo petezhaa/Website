@@ -52,7 +52,7 @@ export function VibeCorner() {
             exit={{ opacity: 0, y: 12, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 300, damping: 24 }}
             style={{ transformOrigin: "bottom left" }}
-            className="fixed bottom-20 left-5 z-[70] rounded-2xl border border-line bg-surface p-5 shadow-2xl"
+            className="panel fixed bottom-20 left-5 z-[70] p-5 shadow-2xl"
           >
             <VibeRadar vibe={vibe} samples={samples} />
             <p className="mt-2.5 max-w-64 text-center font-mono text-[11px] leading-snug text-muted">

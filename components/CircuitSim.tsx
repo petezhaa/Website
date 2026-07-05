@@ -563,7 +563,7 @@ export function CircuitSim() {
   const endDrag = () => { dragFRef.current = false; };
 
   const btn = (active: boolean) =>
-    `rounded-lg border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
       active ? "border-accent bg-accent-soft text-accent" : "border-line text-muted hover:border-accent hover:text-accent"
     }`;
 
@@ -612,7 +612,7 @@ export function CircuitSim() {
         <span className="font-mono text-[11px] text-muted">rk4 · 2.4 kHz · C++</span>
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="panel relative overflow-hidden">
         <canvas
           ref={canvasRef}
           width={W}
@@ -643,14 +643,14 @@ export function CircuitSim() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-line bg-surface px-4 py-3">
+      <div className="panel flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
         {slider("R", R, 0.05, 10, 0.05, "Ω", onR)}
         {mode !== 1 && slider("C", Cc, 0.1, 5, 0.05, "F", onC)}
         {mode !== 0 && slider("L", Ll, 0.1, 5, 0.05, "H", onL)}
         {mode === 2 && slider("f", f, FMIN, FMAX, 0.005, "Hz", onF)}
       </div>
 
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the differential equations, running in C++</p>
         {mode === 0 && (
           <>

@@ -480,7 +480,7 @@ export function FilterDesigner() {
   };
 
   const chip = (active: boolean) =>
-    `rounded-lg border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
       active ? "border-accent bg-accent-soft text-accent" : "border-line text-muted hover:border-accent hover:text-accent"
     }`;
 
@@ -561,7 +561,7 @@ export function FilterDesigner() {
       </p>
 
       {/* bode magnitude plot */}
-      <div className="relative overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="panel relative overflow-hidden">
         <canvas
           ref={bodeRef}
           width={BW}
@@ -589,7 +589,7 @@ export function FilterDesigner() {
           return (
             <span
               key={i}
-              className={`rounded-lg border px-2.5 py-1 font-mono text-[11px] ${
+              className={`rounded-[2px] border px-2.5 py-1 font-mono text-[11px] ${
                 ok ? "border-moss/60 text-moss" : "border-accent/60 text-accent"
               }`}
             >
@@ -608,12 +608,12 @@ export function FilterDesigner() {
 
       {/* win banner */}
       {allPass && msg && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-moss/50 bg-surface px-4 py-2.5 font-mono text-[11px] text-moss">
+        <div className="flex flex-wrap items-center gap-3 rounded-[2px] border border-moss/50 bg-surface px-4 py-2.5 font-mono text-[11px] text-moss">
           <span>{msg}</span>
           {!lastLevel && (
             <button
               onClick={() => loadLevel(level + 1)}
-              className="rounded-lg border border-moss/60 px-3 py-1 font-bold transition hover:bg-moss/10"
+              className="rounded-[2px] border border-moss/60 px-3 py-1 font-bold transition hover:bg-moss/10"
             >
               next level →
             </button>
@@ -628,7 +628,7 @@ export function FilterDesigner() {
           const used = k !== "l" || topo >= 2;
           const val = Math.pow(10, sl[k]);
           return (
-            <div key={k} className={`rounded-xl border border-line bg-surface p-3 transition ${used ? "" : "opacity-40"}`}>
+            <div key={k} className={`panel p-3 transition ${used ? "" : "opacity-40"}`}>
               <div className="mb-1.5 flex items-center justify-between font-mono text-[11px]">
                 <span className="text-muted">
                   {cfg.label} = <span className="text-fg">{fmtEng(val, cfg.unit)}</span>
@@ -638,7 +638,7 @@ export function FilterDesigner() {
                     onClick={() => nudge(k, -0.01)}
                     disabled={!used || !ready}
                     aria-label={`${cfg.label} down a hair`}
-                    className="grid h-6 w-6 place-items-center rounded border border-line text-muted transition hover:border-accent hover:text-accent disabled:pointer-events-none"
+                    className="grid h-6 w-6 place-items-center rounded-[2px] border border-line text-muted transition hover:border-accent hover:text-accent disabled:pointer-events-none"
                   >
                     −
                   </button>
@@ -646,7 +646,7 @@ export function FilterDesigner() {
                     onClick={() => nudge(k, 0.01)}
                     disabled={!used || !ready}
                     aria-label={`${cfg.label} up a hair`}
-                    className="grid h-6 w-6 place-items-center rounded border border-line text-muted transition hover:border-accent hover:text-accent disabled:pointer-events-none"
+                    className="grid h-6 w-6 place-items-center rounded-[2px] border border-line text-muted transition hover:border-accent hover:text-accent disabled:pointer-events-none"
                   >
                     +
                   </button>
@@ -671,7 +671,7 @@ export function FilterDesigner() {
       </div>
 
       {/* waveform lab: in vs out, steady state */}
-      <div className="relative overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="panel relative overflow-hidden">
         <canvas ref={waveRef} width={WW} height={WH} className="block h-auto w-full select-none" />
         <p className="pointer-events-none absolute bottom-2 right-4 text-right font-mono text-[10px] text-muted/70">
           faint: what goes in · clay: what comes out — steady state, the transient gave up long ago
@@ -679,7 +679,7 @@ export function FilterDesigner() {
       </div>
 
       {/* the fine print */}
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the math, running in C++</p>
         <p>transfer&nbsp;&nbsp;&nbsp;RC: 1/(1+jωRC) · CR: jωRC/(1+jωRC) · band-pass: R/(R+jX) · notch: jX/(R+jX), with X = ωL − 1/ωC</p>
         <p>magnitude&nbsp;&nbsp;|H| needs only sqrt — the one math instruction wasm has. dB = 20·log10|H|, judged at each spec frequency.</p>

@@ -146,7 +146,7 @@ export function WhichFirst() {
   };
 
   const btn = (active: boolean) =>
-    `rounded-lg border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
       active
         ? "border-accent bg-accent-soft text-accent"
         : "border-line text-muted hover:border-accent hover:text-accent"
@@ -156,7 +156,7 @@ export function WhichFirst() {
     return <p className="font-mono text-sm text-muted">the history engine didn&apos;t load.</p>;
   if (!ready || !pair)
     return (
-      <div className="grid h-40 place-items-center rounded-2xl border border-line bg-surface">
+      <div className="panel grid h-40 place-items-center">
         <p className="animate-pulse font-mono text-sm text-muted">shuffling the timeline…</p>
       </div>
     );
@@ -178,8 +178,8 @@ export function WhichFirst() {
       </div>
 
       <div
-        className={`rounded-2xl border bg-surface p-4 transition-colors duration-300 sm:p-6 ${
-          flash ? "border-moss/70" : "border-line"
+        className={`panel p-4 transition-colors duration-300 sm:p-6 ${
+          flash ? "border-moss/70" : ""
         }`}
       >
         {!over ? (
@@ -196,7 +196,7 @@ export function WhichFirst() {
                   key={side}
                   onClick={() => pick(side)}
                   aria-label={`${name} came first`}
-                  className="min-h-[7rem] cursor-pointer rounded-2xl border border-line bg-surface-2 px-6 py-8 text-center font-serif text-lg leading-snug text-fg transition hover:border-accent hover:bg-accent-soft sm:min-h-[9rem] sm:px-8 sm:text-xl"
+                  className="min-h-[7rem] cursor-pointer rounded-[2px] border border-line bg-surface-2 px-6 py-8 text-center font-mono text-lg font-bold leading-snug text-fg transition hover:border-accent hover:bg-accent-soft sm:min-h-[9rem] sm:px-8 sm:text-xl"
                 >
                   {name}
                 </button>
@@ -204,9 +204,9 @@ export function WhichFirst() {
             </div>
             <div className="mt-4 flex items-center gap-3">
               <span className="font-mono text-[10px] uppercase tracking-wider text-muted">gap</span>
-              <div className="h-1 flex-1 overflow-hidden rounded-full bg-line/60">
+              <div className="h-1 flex-1 overflow-hidden rounded-[2px] bg-line/60">
                 <div
-                  className="h-full rounded-full bg-accent transition-all duration-500"
+                  className="h-full rounded-[2px] bg-accent transition-all duration-500"
                   style={{ width: `${Math.round(tight * 100)}%` }}
                 />
               </div>
@@ -231,11 +231,11 @@ export function WhichFirst() {
                 return (
                   <div
                     key={side}
-                    className={`rounded-2xl border px-6 py-6 text-center ${
+                    className={`rounded-[2px] border px-6 py-6 text-center ${
                       earlier ? "border-moss/60" : "border-accent/50"
                     }`}
                   >
-                    <p className="font-serif text-lg leading-snug text-fg">{name}</p>
+                    <p className="font-mono text-lg font-bold leading-snug text-fg">{name}</p>
                     <p
                       className={`mt-2 font-mono text-[11px] font-bold ${
                         earlier ? "text-moss" : "text-accent"
@@ -258,7 +258,7 @@ export function WhichFirst() {
             </p>
             <button
               onClick={newGame}
-              className="rounded-lg bg-accent px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+              className="btn-solid px-5 py-2 text-xs font-bold uppercase tracking-wider"
             >
               play again
             </button>
@@ -266,7 +266,7 @@ export function WhichFirst() {
         )}
       </div>
 
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">chronology under pressure, in Rust</p>
         <p>
           {nEvents} events in the wasm engine&apos;s table, one rule: click the earlier one.

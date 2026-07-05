@@ -4,16 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { bumpVibe } from "@/lib/vibeBus";
 
 const SECTIONS = [
-  { id: "work", label: "Work" },
-  { id: "projects", label: "Projects" },
-  { id: "play", label: "Games" },
-  { id: "about", label: "About" },
-  { id: "parks", label: "Parks" },
-  { id: "films", label: "Films" },
-  { id: "games", label: "Video games" },
-  { id: "stats", label: "Stats" },
-  { id: "chinawok", label: "China Wok" },
-  { id: "contact", label: "Contact" },
+  { id: "work", label: "work" },
+  { id: "projects", label: "projects" },
+  { id: "play", label: "arcade" },
+  { id: "about", label: "about" },
+  { id: "parks", label: "parks" },
+  { id: "films", label: "watching" },
+  { id: "games", label: "playing" },
+  { id: "stats", label: "stats" },
+  { id: "chinawok", label: "chinawok" },
+  { id: "contact", label: "contact" },
 ];
 
 // Highlights the section you're currently in: the last section whose top
@@ -54,15 +54,15 @@ export function NavLinks() {
   }, []);
 
   return (
-    <nav className="hidden items-center gap-4 text-sm lg:flex">
+    <nav className="hidden items-center gap-1 font-mono text-xs lg:flex">
       {SECTIONS.map((s) => (
         <a
           key={s.id}
           href={`#${s.id}`}
           onClick={() => bumpVibe("explorer", 12)}
-          className={`transition ${
+          className={`px-1.5 py-0.5 transition ${
             active === s.id
-              ? "font-medium text-accent"
+              ? "text-accent before:text-accent before:content-['~/']"
               : "text-muted hover:text-accent"
           }`}
         >

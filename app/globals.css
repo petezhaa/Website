@@ -3,36 +3,45 @@
 /* class-based dark mode */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ============================================================
+   EARTHY TERMINAL
+   A personal site that reads like a warm phosphor terminal:
+   kraft-paper light mode, bark-dark mode, one amber accent.
+   Mono is the system voice; serif shows up only where a human
+   is talking. Sharp corners, hairline frames, no soft cards.
+   ============================================================ */
+
 /* ---------- semantic tokens ---------- */
-/* earthy palette: soil, clay, moss, stone, warm sunlight */
 :root {
-  --bg: #faf7f0;
-  --surface: #fffdf7;
-  --surface-2: #f1ebdd;
-  --fg: #26241e;
-  --muted: #6f6a5c;
-  --line: #e4ddcb;
-  --accent: #bf5b32;
-  --accent-soft: rgba(191, 91, 50, 0.12);
-  --accent-fg: #fffdf7;
-  --gold: #a98729;
-  --moss: #5f7350;
-  --chart: #bf5b32; /* validated ≥3:1 on --surface, both modes */
+  --bg: #f2ecdd;        /* oat paper */
+  --surface: #f8f3e7;   /* lifted panel */
+  --surface-2: #e7dfcb; /* recessed / inset */
+  --fg: #292620;        /* bark ink */
+  --muted: #6a6353;     /* faded ink */
+  --line: #d6ccb6;      /* hairline */
+  --accent: #a2481a;    /* burnt sienna */
+  --accent-soft: rgba(162, 72, 26, 0.12);
+  --accent-fg: #f8f3e7;
+  --gold: #836114;
+  --moss: #4c5f31;
+  --chart: #a2481a; /* validated ≥4.5:1 on --surface, both modes */
+  --grain: 0.5;     /* paper-grain opacity multiplier */
 }
 
 .dark {
-  --bg: #161814;
-  --surface: #1d201b;
-  --surface-2: #262a23;
-  --fg: #e8e4d8;
-  --muted: #9a967f;
-  --line: #2e332b;
-  --accent: #d3805a;
-  --accent-soft: rgba(211, 128, 90, 0.14);
-  --accent-fg: #161814;
-  --gold: #c9a545;
-  --moss: #7d9468;
-  --chart: #c06a42; /* darker than accent: keeps the OKLCH band on dark */
+  --bg: #17150f;        /* warm near-black */
+  --surface: #1e1b13;
+  --surface-2: #272317;
+  --fg: #e9e1cf;        /* parchment */
+  --muted: #9d947d;
+  --line: #322d20;
+  --accent: #d98a4f;    /* amber phosphor */
+  --accent-soft: rgba(217, 138, 79, 0.14);
+  --accent-fg: #17150f;
+  --gold: #cba646;
+  --moss: #8ba05f;
+  --chart: #cf7f43; /* deeper than accent: keeps the OKLCH band on dark */
+  --grain: 0.9;
 }
 
 @theme inline {
@@ -47,10 +56,10 @@
   --color-accent-fg: var(--accent-fg);
   --color-gold: var(--gold);
   --color-moss: var(--moss);
-  --font-serif: var(--font-newsreader);
-  --font-sans: var(--font-inter);
+  /* mono is the system voice; sans falls through to it on purpose */
   --font-mono: var(--font-jetbrains-mono);
-  --font-hand: var(--font-caveat);
+  --font-sans: var(--font-jetbrains-mono);
+  --font-serif: var(--font-newsreader);
 }
 
 ::selection {
@@ -64,6 +73,7 @@
   opacity: 0.7;
 }
 
+/* ---------- easter eggs (unchanged behavior, retuned to the palette) ---------- */
 /* the secret: type "cheese" (or the konami code) anywhere on the site */
 :root.cheese {
   --accent: #b8860b;
@@ -186,17 +196,13 @@ html.no-hydrate [style*="opacity: 0"] {
   filter: none !important;
 }
 
-/* theme toggle: a smooth full-frame cross-fade via the View Transitions API.
-   A hard-edged wipe used to slice diagonally through the bright contact-form
-   inputs mid-animation, which looked torn; a cross-fade dissolves the whole
-   page uniformly, so nothing seams. */
+/* theme toggle: a smooth full-frame cross-fade via the View Transitions API. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 0.35s;
   animation-timing-function: ease;
 }
-/* while a theme flip animates, the page underneath must swap instantly —
-   its own color transition running under the snapshot reads as a glitch */
+/* while a theme flip animates, the page underneath must swap instantly */
 :root.theme-flip body {
   transition: none !important;
 }
@@ -208,12 +214,145 @@ html.no-hydrate [style*="opacity: 0"] {
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--fg);
   transition: background-color 0.25s ease, color 0.25s ease;
+  /* a faint kraft-paper tooth so the background isn't a dead flat fill —
+     two low-contrast dot layers, cheap and static (no repaint) */
+  background-image:
+    radial-gradient(color-mix(in oklab, var(--fg) 6%, transparent) 0.5px, transparent 0.5px),
+    radial-gradient(color-mix(in oklab, var(--fg) 4%, transparent) 0.5px, transparent 0.5px);
+  background-size: 7px 7px, 13px 13px;
+  background-position: 0 0, 3px 4px;
+}
+.dark body {
+  background-image:
+    radial-gradient(color-mix(in oklab, var(--fg) 4%, transparent) 0.5px, transparent 0.5px),
+    radial-gradient(color-mix(in oklab, var(--fg) 3%, transparent) 0.5px, transparent 0.5px);
 }
 
-/* the scroll bar flows like water, but in the site's clay tones */
+/* ============================================================
+   TERMINAL PRIMITIVES
+   ============================================================ */
+
+/* a blinking block cursor, terminal-style. put after text or standalone. */
+.caret::after {
+  content: "";
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  margin-left: 0.12em;
+  transform: translateY(0.16em);
+  background: var(--accent);
+  animation: caret-blink 1.05s steps(1) infinite;
+}
+.caret-solid::after { animation: none; }
+@keyframes caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .caret::after { animation: none; }
+}
+
+/* the shell prompt lead-in: "peter@petezha:~$ " style markers.
+   used as a small mono affordance in front of section titles / labels. */
+.prompt::before {
+  content: "$ ";
+  color: var(--accent);
+  font-weight: 600;
+}
+.prompt-path::before {
+  content: "~/";
+  color: var(--accent);
+}
+
+/* a dashed ASCII-style rule that fills remaining width */
+.rule-dash {
+  flex: 1 1 auto;
+  height: 0;
+  border-top: 1px dashed var(--line);
+}
+
+/* framed terminal panel: sharp corners, hairline border, optional title bar.
+   replaces the old soft rounded cards. */
+.panel {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 2px;
+}
+.panel-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in oklab, var(--surface-2) 60%, var(--surface));
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+/* the three-dot window control, drawn in the palette (not mac gray) */
+.win-dots {
+  display: inline-flex;
+  gap: 0.34rem;
+}
+.win-dots i {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+/* terminal link: dotted underline that solidifies to the accent on hover */
+.tlink {
+  color: var(--accent);
+  text-underline-offset: 3px;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  transition: text-decoration-color 0.15s ease, background-color 0.15s ease;
+}
+.tlink:hover {
+  text-decoration-style: solid;
+  text-decoration-color: var(--accent);
+}
+
+/* bracketed terminal button: [ label ] that fills on hover */
+.btn-term {
+  font-family: var(--font-mono);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+  border-radius: 2px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.btn-term:hover {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.btn-solid {
+  font-family: var(--font-mono);
+  background: var(--accent);
+  color: var(--accent-fg);
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+.btn-solid:hover { filter: brightness(1.06); }
+.btn-solid:active { transform: translateY(1px); }
+
+/* mono chip / tag, terminal style: [tag] look without literal brackets */
+.chip {
+  font-family: var(--font-mono);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--surface-2) 50%, transparent);
+}
+
+/* the scroll bar flows like water, but in the site's amber tones */
 .water-bar {
   background:
     repeating-linear-gradient(
@@ -244,7 +383,7 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   background: color-mix(in oklab, var(--accent) 70%, var(--bg));
-  border-radius: 999px;
+  border-radius: 0;
   border: 3px solid var(--bg);
 }
 ::-webkit-scrollbar-thumb:hover {

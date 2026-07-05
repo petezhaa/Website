@@ -107,7 +107,7 @@ export function NimGame() {
   };
 
   const btn = (active: boolean) =>
-    `rounded-lg border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
       active
         ? "border-accent bg-accent-soft text-accent"
         : "border-line text-muted hover:border-accent hover:text-accent"
@@ -117,7 +117,7 @@ export function NimGame() {
     return <p className="font-mono text-sm text-muted">the Nim engine didn&apos;t load.</p>;
   if (!ready)
     return (
-      <div className="grid h-40 place-items-center rounded-2xl border border-line bg-surface">
+      <div className="panel grid h-40 place-items-center">
         <p className="animate-pulse font-mono text-sm text-muted">counting stones…</p>
       </div>
     );
@@ -149,7 +149,7 @@ export function NimGame() {
       </div>
 
       {/* the piles */}
-      <div className="rounded-2xl border border-line bg-surface p-6">
+      <div className="panel p-6">
         <div className="flex items-end justify-center gap-8 sm:gap-14" style={{ minHeight: 240 }}>
           {piles.map((count, p) => (
             <div key={p} className="flex flex-col items-center gap-2">
@@ -201,7 +201,7 @@ export function NimGame() {
           <div className="mt-3 text-center">
             <button
               onClick={() => newGame(casual)}
-              className="rounded-lg bg-accent px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+              className="btn-solid px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider"
             >
               play again
             </button>
@@ -211,7 +211,7 @@ export function NimGame() {
 
       {/* the math: pile sizes in binary and their XOR */}
       {showMath && (
-        <div className="rounded-2xl border border-accent/40 bg-surface p-4 font-mono text-[12px]">
+        <div className="rounded-[2px] border border-accent/40 bg-surface p-4 font-mono text-[12px]">
           <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-accent">
             the nim-sum (XOR of the piles, in binary)
           </p>
@@ -243,7 +243,7 @@ export function NimGame() {
         </div>
       )}
 
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">combinatorial game theory, in Rust</p>
         <p>Bouton (1901): a Nim position is lost for the player to move ⇔ the XOR of the pile sizes is 0.</p>
         <p>the bot just plays that theorem — when the nim-sum is s ≠ 0, some pile has pᵢ ⊕ s &lt; pᵢ, and shrinking it to pᵢ ⊕ s zeroes the sum.</p>

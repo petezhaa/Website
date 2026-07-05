@@ -162,7 +162,7 @@ export function SnakeJava() {
     <button
       onPointerDown={(e) => { e.preventDefault(); jvmRef.current?.callVoid("setDir", d); }}
       aria-label={`move ${label}`}
-      className="h-11 w-11 rounded-lg border border-line bg-surface font-mono text-sm text-muted active:border-accent active:text-accent"
+      className="h-11 w-11 rounded-[2px] border border-line bg-surface font-mono text-sm text-muted active:border-accent active:text-accent"
     >
       {label}
     </button>
@@ -178,7 +178,7 @@ export function SnakeJava() {
         {best > 0 && <span>best {best}</span>}
         <span>arrows / wasd · it wraps</span>
       </div>
-      <div className="relative w-full max-w-[720px] overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="panel relative w-full max-w-[720px] overflow-hidden">
         <canvas ref={canvasRef} width={W} height={H} className="block h-auto w-full select-none" />
         {!ready && !failed && (
           <div className="absolute inset-0 grid place-items-center bg-surface/90">
@@ -192,7 +192,7 @@ export function SnakeJava() {
               <p className="mt-1 font-mono text-[11px] text-muted">(not really. you hit yourself.)</p>
               <button
                 onClick={restart}
-                className="mt-4 rounded-lg bg-accent px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+                className="btn-solid mt-4 px-5 py-2 text-xs font-bold uppercase tracking-wider"
               >
                 new game (space)
               </button>
@@ -205,7 +205,7 @@ export function SnakeJava() {
         {dpad(0, "↑")}
         <div className="flex gap-1">{dpad(3, "←")}{dpad(2, "↓")}{dpad(1, "→")}</div>
       </div>
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">actual Java bytecode</p>
         <p>java/Snake.java is compiled with javac, and the raw .class file ships to your browser — where a ~250-line JVM interpreter written in TypeScript for this site (lib/jvm.ts) executes the bytecode, instruction by instruction: iload, iastore, if_icmpne, invokestatic.</p>
         <p>no plugins, no transpiling. `javap -c Snake.class` shows exactly what&apos;s running right now.</p>

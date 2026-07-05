@@ -143,7 +143,7 @@ function Card({
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ type: "spring", stiffness: 180, damping: 22 }}
-      className="rounded-xl border border-line bg-surface p-5">
+      className="panel p-5">
       <p className="text-sm font-medium">{title}</p>
       <p className="mb-4 font-mono text-[11px] text-muted">{sub}</p>
       {children}
@@ -161,7 +161,7 @@ function Tooltip({ tip }: { tip: Tip }) {
   if (!tip) return null;
   return (
     <div
-      className="pointer-events-none absolute z-10 rounded-lg border border-line bg-surface px-3 py-1.5 shadow-lg"
+      className="pointer-events-none absolute z-10 rounded-[2px] border border-line bg-surface px-3 py-1.5 shadow-lg"
       style={{ left: tip.x, top: tip.y, transform: "translate(-50%, -110%)" }}
     >
       {tip.lines.map((l) => (
@@ -538,7 +538,7 @@ function DevTiles({
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:col-span-2">
       {tiles.map((t) => (
-        <div key={t.label} className="rounded-xl border border-line bg-surface px-5 py-4">
+        <div key={t.label} className="panel px-5 py-4">
           <p className="font-mono text-2xl font-bold text-accent">{t.value}</p>
           <p className="mt-0.5 text-xs text-muted">{t.label}</p>
         </div>
@@ -760,11 +760,11 @@ function GuessRating({ data }: { data: NonNullable<StatsData["guessGame"]> }) {
             alt={`${film.title} poster`}
             width={230}
             height={345}
-            className="h-auto w-full rounded-lg border border-line"
+            className="h-auto w-full rounded-[2px] border border-line"
           />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-serif text-lg leading-tight">{film.title}</p>
+          <p className="font-mono font-bold text-lg leading-tight">{film.title}</p>
           <p className="font-mono text-[11px] text-muted">{film.year}</p>
           {!revealed && (
             <div className="mt-3">
@@ -790,7 +790,7 @@ function GuessRating({ data }: { data: NonNullable<StatsData["guessGame"]> }) {
               <button
                 type="button"
                 onClick={next}
-                className="mt-1 rounded-lg border border-line px-3 py-1.5 text-[11px] text-muted transition hover:border-accent hover:text-accent"
+                className="btn-term mt-1 px-3 py-1.5 text-[11px]"
               >
                 next film →
               </button>
@@ -801,7 +801,7 @@ function GuessRating({ data }: { data: NonNullable<StatsData["guessGame"]> }) {
                 type="button"
                 onClick={reveal}
                 disabled={guess === null}
-                className="rounded-lg bg-accent px-4 py-1.5 text-[11px] font-medium text-accent-fg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                className="btn-solid px-4 py-1.5 text-[11px] font-medium disabled:cursor-not-allowed disabled:opacity-40"
               >
                 reveal
               </button>

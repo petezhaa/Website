@@ -175,13 +175,13 @@ export function LogicPuzzle() {
   };
 
   const chip = (active: boolean) =>
-    `rounded-lg border px-2.5 py-1 font-mono text-[11px] transition ${
+    `chip px-2.5 py-1 text-[11px] transition ${
       active
         ? "border-accent bg-accent-soft text-accent"
-        : "border-line text-muted hover:border-accent hover:text-accent"
+        : "hover:border-accent hover:text-accent"
     }`;
   const valBadge = (v: number) =>
-    `grid h-5 w-5 place-items-center rounded text-[10px] font-bold ${
+    `grid h-5 w-5 place-items-center rounded-[2px] text-[10px] font-bold ${
       v ? "bg-moss/25 text-moss" : "bg-surface-2 text-muted"
     }`;
 
@@ -189,7 +189,7 @@ export function LogicPuzzle() {
     return <p className="font-mono text-sm text-muted">couldn&apos;t load the wasm engine.</p>;
   if (!ready)
     return (
-      <div className="grid h-40 place-items-center rounded-2xl border border-line bg-surface">
+      <div className="panel grid h-40 place-items-center">
         <p className="animate-pulse font-mono text-sm text-muted">flashing the fpga…</p>
       </div>
     );
@@ -232,7 +232,7 @@ export function LogicPuzzle() {
 
       <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
         {/* the bench: the netlist under construction */}
-        <div className="rounded-2xl border border-line bg-surface p-4">
+        <div className="panel p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2 font-mono text-[11px]">
             <span className="uppercase tracking-widest text-accent">the bench</span>
             <span className={nG > par ? "text-gold" : "text-muted"}>
@@ -246,7 +246,7 @@ export function LogicPuzzle() {
             {Array.from({ length: nIn }, (_, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2 py-0.5 text-fg"
+                className="inline-flex items-center gap-1.5 rounded-[2px] border border-line px-2 py-0.5 text-fg"
               >
                 {IN_NAMES[i]}
                 <span className={valBadge(sigVal(i))}>{sigVal(i)}</span>
@@ -258,7 +258,7 @@ export function LogicPuzzle() {
           </div>
 
           {gates.length === 0 && !pending && (
-            <p className="rounded-lg border border-dashed border-line px-3 py-4 text-center font-mono text-[11px] text-muted">
+            <p className="rounded-[2px] border border-dashed border-line px-3 py-4 text-center font-mono text-[11px] text-muted">
               empty board. pick a gate from the palette below — solder responsibly.
             </p>
           )}
@@ -270,7 +270,7 @@ export function LogicPuzzle() {
               return (
                 <div
                   key={k}
-                  className={`flex flex-wrap items-center gap-2 rounded-lg border px-2.5 py-1.5 font-mono text-[11px] ${
+                  className={`flex flex-wrap items-center gap-2 rounded-[2px] border px-2.5 py-1.5 font-mono text-[11px] ${
                     isOut ? "border-accent/60" : "border-line"
                   }`}
                 >
@@ -285,7 +285,7 @@ export function LogicPuzzle() {
                   <span className="ml-auto flex items-center gap-1.5">
                     <span className={valBadge(v)}>{v}</span>
                     {isOut && (
-                      <span className="rounded bg-accent/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent">
+                      <span className="rounded-[2px] bg-accent/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent">
                         out
                       </span>
                     )}
@@ -296,7 +296,7 @@ export function LogicPuzzle() {
 
             {/* the staged gate: pick its inputs from the live signals */}
             {pending && (
-              <div className="rounded-lg border border-dashed border-accent/60 px-2.5 py-2 font-mono text-[11px]">
+              <div className="rounded-[2px] border border-dashed border-accent/60 px-2.5 py-2 font-mono text-[11px]">
                 <div className="flex items-center gap-2">
                   <span className="w-6 shrink-0 text-muted">g{nG + 1}</span>
                   <span className="flex items-center gap-1 text-fg">
@@ -375,7 +375,7 @@ export function LogicPuzzle() {
         </div>
 
         {/* the spec: a live truth table */}
-        <div className="rounded-2xl border border-line bg-surface p-4">
+        <div className="panel p-4">
           <p className="mb-2 font-mono text-[11px] uppercase tracking-widest text-accent">the spec</p>
           <table className="font-mono text-[11px] tabular-nums">
             <thead>
@@ -435,7 +435,7 @@ export function LogicPuzzle() {
 
       {/* win state */}
       {isSolved && nG > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-moss/50 bg-moss/10 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3 rounded-[2px] border border-moss/50 bg-moss/10 px-4 py-3">
           <p className="font-mono text-[11px] leading-relaxed text-moss">
             ✓ all {rows} rows match. done in {nG} gate{nG === 1 ? "" : "s"} · par {par} —{" "}
             {nG < par
@@ -447,7 +447,7 @@ export function LogicPuzzle() {
           {level + 1 < names.length ? (
             <button
               onClick={() => pickLevel(level + 1)}
-              className="rounded-lg bg-accent px-4 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+              className="btn-solid px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider"
             >
               next level
             </button>
@@ -464,7 +464,7 @@ export function LogicPuzzle() {
       )}
 
       {/* the explainer */}
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the netlist, running in C++</p>
         <p>
           signals — inputs are 0..n−1; gate k&apos;s output is signal n+k. a new gate may only read

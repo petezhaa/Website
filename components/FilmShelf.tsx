@@ -9,7 +9,7 @@ import { Reveal } from "@/components/Reveal";
 
 function StatTile({ value, label }: { value: string; label: string }) {
   return (
-    <div className="rounded-xl border border-line bg-surface px-5 py-4">
+    <div className="panel px-5 py-4">
       <p className="font-mono text-2xl font-bold text-accent">{value}</p>
       <p className="mt-0.5 text-xs text-muted">{label}</p>
     </div>
@@ -98,7 +98,7 @@ function Shelf({ data }: { data: LetterboxdData }) {
                 className="group"
                 title={fav.title}
               >
-                <div className="overflow-hidden rounded-lg border-2 border-gold/60 transition group-hover:-translate-y-1 group-hover:border-gold">
+                <div className="overflow-hidden rounded-[2px] border-2 border-gold/60 transition group-hover:-translate-y-1 group-hover:border-gold">
                   {fav.poster ? (
                     <Image
                       src={fav.poster}
@@ -108,7 +108,7 @@ function Shelf({ data }: { data: LetterboxdData }) {
                       className="h-auto w-full"
                     />
                   ) : (
-                    <div className="grid aspect-2/3 place-items-center bg-surface-2 p-2 text-center font-serif text-xs">
+                    <div className="grid aspect-2/3 place-items-center bg-surface-2 p-2 text-center font-mono text-xs">
                       {fav.title}
                     </div>
                   )}
@@ -160,7 +160,7 @@ function Shelf({ data }: { data: LetterboxdData }) {
               film.rating !== null ? ` — ${stars(film.rating)}` : ""
             }`}
           >
-            <div className="overflow-hidden rounded-lg border border-line transition group-hover:-translate-y-1 group-hover:border-accent">
+            <div className="overflow-hidden rounded-[2px] border border-line transition group-hover:-translate-y-1 group-hover:border-accent">
               {film.poster ? (
                 <Image
                   src={film.poster}
@@ -170,7 +170,7 @@ function Shelf({ data }: { data: LetterboxdData }) {
                   className="h-auto w-full"
                 />
               ) : (
-                <div className="grid aspect-2/3 place-items-center bg-surface-2 p-2 text-center font-serif text-xs">
+                <div className="grid aspect-2/3 place-items-center bg-surface-2 p-2 text-center font-mono text-xs">
                   {film.title}
                 </div>
               )}
@@ -204,7 +204,7 @@ export async function FilmShelf() {
             href={LETTERBOXD_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-accent underline decoration-accent/30 underline-offset-4"
+            className="tlink"
           >
             letterboxd.com/petezha
           </a>
@@ -217,7 +217,7 @@ export async function FilmShelf() {
           href={LETTERBOXD_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-accent underline decoration-accent/30 underline-offset-4"
+          className="tlink"
         >
           Letterboxd
         </a>

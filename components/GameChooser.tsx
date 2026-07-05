@@ -7,7 +7,7 @@ import { bumpVibe } from "@/lib/vibeBus";
 // Each cabinet is its own code-split chunk: opening a game fetches its JS,
 // and nothing else. Twenty statically-imported games was one heavy bundle.
 const booting = () => (
-  <div className="grid h-40 place-items-center rounded-2xl border border-line bg-surface">
+  <div className="panel grid h-40 place-items-center">
     <p className="animate-pulse font-mono text-sm text-muted">booting the cabinet…</p>
   </div>
 );
@@ -102,7 +102,7 @@ export function GameChooser() {
         <div className="flex flex-wrap items-baseline gap-3">
           <button
             onClick={() => pick(null)}
-            className="rounded-lg border border-line px-3 py-1.5 font-mono text-[11px] text-muted transition hover:border-accent hover:text-accent"
+            className="btn-term px-3 py-1.5 font-mono text-[11px]"
           >
             ← all games
           </button>
@@ -126,7 +126,7 @@ export function GameChooser() {
           <button
             key={g.key}
             onClick={() => pick(g.key)}
-            className="group flex flex-col items-start gap-1 rounded-xl border border-line bg-surface p-4 text-left transition hover:-translate-y-0.5 hover:border-accent"
+            className="panel group flex flex-col items-start gap-1 p-4 text-left transition hover:-translate-y-0.5 hover:border-accent"
           >
             <span className="text-sm font-medium leading-tight group-hover:text-accent">
               {g.label}

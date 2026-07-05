@@ -187,7 +187,7 @@ export function GuessYear() {
   }, [phase, total, readStr]);
 
   const btn = (active: boolean) =>
-    `rounded-lg border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
       active
         ? "border-accent bg-accent-soft text-accent"
         : "border-line text-muted hover:border-accent hover:text-accent"
@@ -197,7 +197,7 @@ export function GuessYear() {
     return <p className="font-mono text-sm text-muted">the history engine didn&apos;t load.</p>;
   if (!ready)
     return (
-      <div className="grid h-40 place-items-center rounded-2xl border border-line bg-surface">
+      <div className="panel grid h-40 place-items-center">
         <p className="animate-pulse font-mono text-sm text-muted">excavating the timeline…</p>
       </div>
     );
@@ -216,7 +216,7 @@ export function GuessYear() {
         </span>
       </div>
 
-      <div className="rounded-2xl border border-line bg-surface p-6">
+      <div className="panel p-6">
         {phase !== "done" && (
           <>
             <div className="flex items-baseline justify-between gap-4 font-mono text-[11px] text-muted">
@@ -227,7 +227,7 @@ export function GuessYear() {
                 </span>
               )}
             </div>
-            <h3 className="mt-2 font-serif text-2xl leading-snug tracking-tight sm:text-3xl">
+            <h3 className="mt-2 font-mono font-bold text-2xl leading-snug tracking-tight sm:text-3xl">
               {eventName}
             </h3>
           </>
@@ -270,7 +270,7 @@ export function GuessYear() {
               </span>
               <button
                 onClick={() => lockIn()}
-                className="rounded-lg bg-accent px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+                className="btn-solid px-5 py-2 text-xs font-bold uppercase tracking-wider"
               >
                 lock it in
               </button>
@@ -285,7 +285,7 @@ export function GuessYear() {
                 time ran out — the slider answered for you.
               </p>
             )}
-            <p className="font-serif text-4xl tracking-tight text-accent">
+            <p className="font-mono font-bold text-4xl tracking-tight text-accent">
               {fmtYear(last.actual)}
             </p>
             <p className="font-mono text-[11px] text-muted">
@@ -305,7 +305,7 @@ export function GuessYear() {
             </p>
             <button
               onClick={next}
-              className="mt-3 rounded-lg border border-accent/50 px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-accent transition hover:bg-accent-soft"
+              className="btn-term mt-3 px-5 py-2.5 text-xs font-bold uppercase tracking-wider"
             >
               {engineRef.current?.gy_finished() ? "final tally" : "next event"}
             </button>
@@ -317,7 +317,7 @@ export function GuessYear() {
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
               final tally
             </p>
-            <p className="font-serif text-5xl tracking-tight">
+            <p className="font-mono font-bold text-5xl tracking-tight">
               {total}
               <span className="text-2xl text-muted"> / 6000</span>
             </p>
@@ -330,7 +330,7 @@ export function GuessYear() {
             </p>
             <button
               onClick={startGame}
-              className="mt-2 rounded-lg bg-accent px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+              className="btn-solid mt-2 px-5 py-2 text-xs font-bold uppercase tracking-wider"
             >
               play again
             </button>
@@ -338,7 +338,7 @@ export function GuessYear() {
         )}
       </div>
 
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">forgiving chronology, in Rust</p>
         <p>the engine (rust/history.rs → wasm) grades on a curve: half points when you&apos;re off by one-twelfth of the event&apos;s age, floor of six years.</p>
         <p>so the pyramid forgives a century. the iPhone does not.</p>

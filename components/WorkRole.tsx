@@ -13,10 +13,10 @@ export function WorkRole({ role, last }: { role: Role; last: boolean }) {
 
   return (
     <article className="relative grid gap-2 border-t border-line py-9 sm:grid-cols-[180px_1fr] sm:gap-8">
-      {/* timeline rail */}
+      {/* timeline rail — a square node, terminal-style */}
       <span
         aria-hidden
-        className={`absolute -left-5 top-9 hidden h-3 w-3 rounded-full border-2 lg:block ${
+        className={`absolute -left-[21px] top-[38px] hidden h-2.5 w-2.5 border lg:block ${
           role.status === "current"
             ? "border-accent bg-accent"
             : role.status === "incoming"
@@ -25,21 +25,21 @@ export function WorkRole({ role, last }: { role: Role; last: boolean }) {
         }`}
       >
         {role.status === "current" && (
-          <span className="absolute inset-0 animate-ping rounded-full bg-accent/60" />
+          <span className="absolute inset-0 animate-ping bg-accent/60" />
         )}
       </span>
       {!last && (
-        <span aria-hidden className="absolute -left-[15px] top-12 hidden h-full w-px bg-line lg:block" />
+        <span aria-hidden className="absolute -left-4 top-12 hidden h-full w-px bg-line lg:block" />
       )}
 
       <div>
         <p className="font-mono text-xs text-muted">{role.dates}</p>
         {role.status && (
           <span
-            className={`mt-2 inline-block rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest ${
+            className={`chip mt-2 inline-block px-2 py-0.5 text-[10px] uppercase tracking-widest ${
               role.status === "current"
-                ? "border-accent/50 text-accent"
-                : "border-line text-muted"
+                ? "!border-accent/50 !text-accent"
+                : ""
             }`}
           >
             {role.status}
@@ -49,7 +49,7 @@ export function WorkRole({ role, last }: { role: Role; last: boolean }) {
       <div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <CompanyMark company={role.company} />
-          <h3 className="font-serif text-2xl tracking-tight">{role.company}</h3>
+          <h3 className="font-mono text-xl font-bold tracking-tight">{role.company}</h3>
           <p className="text-sm text-muted">
             {role.title} · {role.location}
           </p>
@@ -59,10 +59,7 @@ export function WorkRole({ role, last }: { role: Role; last: boolean }) {
         {role.tags && (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {role.tags.map((t) => (
-              <span
-                key={t}
-                className="rounded-full border border-line px-2.5 py-0.5 font-mono text-[10px] text-muted"
-              >
+              <span key={t} className="chip px-2 py-0.5 text-[10px]">
                 {t}
               </span>
             ))}
@@ -76,9 +73,9 @@ export function WorkRole({ role, last }: { role: Role; last: boolean }) {
                 setOpen(!open);
                 if (!open) bumpVibe("curiosity", 10);
               }}
-              className="mt-3 font-mono text-[11px] text-muted underline decoration-line underline-offset-4 transition hover:text-accent hover:decoration-accent"
+              className="mt-3 font-mono text-[11px] text-accent transition hover:opacity-80"
             >
-              {open ? "enough detail ↑" : "what I actually did ↓"}
+              {open ? "$ less --quit ↑" : "$ cat what_i_did.md ↓"}
             </button>
             <AnimatePresence initial={false}>
               {open && (

@@ -245,13 +245,13 @@ export function PendulumGame() {
         <button
           onClick={doPoke}
           disabled={!ready || crashed}
-          className="rounded-lg bg-accent px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90 disabled:opacity-40"
+          className="btn-solid px-4 py-2 text-xs font-bold uppercase tracking-wider disabled:opacity-40"
         >
           poke it ({nextPoke.toFixed(1)})
         </button>
         <button
           onClick={restart}
-          className="rounded-lg border border-line px-3 py-2 font-mono text-[11px] text-muted transition hover:border-accent hover:text-accent"
+          className="btn-term px-3 py-2 text-[11px]"
         >
           reset
         </button>
@@ -259,7 +259,7 @@ export function PendulumGame() {
           up {alive.toFixed(0)}s · biggest poke survived: {bestPoke.toFixed(1)} rad/s
         </span>
       </div>
-      <div className="relative overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="panel relative overflow-hidden">
         <canvas ref={canvasRef} width={W} height={H} className="block h-auto w-full select-none" />
         {!ready && !failed && (
           <div className="absolute inset-0 grid place-items-center bg-surface/90">
@@ -269,13 +269,13 @@ export function PendulumGame() {
         {crashed && (
           <div className="absolute inset-0 grid place-items-center bg-bg/80 backdrop-blur-sm">
             <div className="text-center">
-              <p className="font-serif text-2xl">it fell over.</p>
+              <p className="font-mono text-2xl font-bold">it fell over.</p>
               <p className="mt-1 font-mono text-[11px] text-muted">
                 survived {alive.toFixed(1)}s · retune and try again
               </p>
               <button
                 onClick={restart}
-                className="mt-4 rounded-lg bg-accent px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+                className="btn-solid mt-4 px-5 py-2 text-xs font-bold uppercase tracking-wider"
               >
                 stand it back up
               </button>
@@ -283,7 +283,7 @@ export function PendulumGame() {
           </div>
         )}
       </div>
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">control theory, running in C++</p>
         <p>plant&nbsp;&nbsp;θ̈ = (g/l)·sinθ − (u/l)·cosθ − c·θ̇&nbsp;&nbsp;(inverted pendulum on a cart)</p>
         <p>control u = Kp·θ + Ki·∫θ dt + Kd·θ̇&nbsp;&nbsp;(your three sliders — plus a fixed cart-recentering term, like a real Segway)</p>

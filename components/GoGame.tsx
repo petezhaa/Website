@@ -226,7 +226,7 @@ export function GoGame() {
     draw();
   };
 
-  const btn = "rounded-lg border border-line px-3 py-1.5 font-mono text-[11px] text-muted transition hover:border-accent hover:text-accent";
+  const btn = "btn-term px-3 py-1.5 text-[11px]";
 
   if (failed)
     return <p className="font-mono text-sm text-muted">the Go engine didn&apos;t load. (ironic.)</p>;
@@ -240,13 +240,13 @@ export function GoGame() {
           captures — you: {caps.black} · bot: {caps.white}
         </span>
         {score && (
-          <span className="rounded-lg border border-accent/40 bg-accent-soft px-2.5 py-1 font-mono text-[11px] text-accent">
+          <span className="rounded-[2px] border border-accent/40 bg-accent-soft px-2.5 py-1 font-mono text-[11px] text-accent">
             area score — you {score.black} · bot {score.white} ·{" "}
             {score.black > score.white ? "you lead" : score.black < score.white ? "bot leads" : "even"}
           </span>
         )}
       </div>
-      <div className="relative w-full max-w-[520px] overflow-hidden rounded-2xl border border-line">
+      <div className="panel relative w-full max-w-[520px] overflow-hidden">
         <canvas
           ref={canvasRef}
           width={PX}
@@ -263,7 +263,7 @@ export function GoGame() {
         )}
       </div>
       <p className="font-mono text-[11px] text-muted">{note}</p>
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">Go, written in Go</p>
         <p>the rules engine — legality, ko, capture flood-fills, area scoring, and the bot — is Go compiled to WebAssembly with the standard toolchain (golang/main.go).</p>
         <p>9×9 board. the bot is greedy, not deep: it captures when it can and grabs influence when it can&apos;t. beatable. that&apos;s the point.</p>

@@ -489,7 +489,7 @@ export function AnalysisGame() {
   };
 
   const btn = (active: boolean) =>
-    `rounded-lg border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
       active ? "border-accent bg-accent-soft text-accent" : "border-line text-muted hover:border-accent hover:text-accent"
     }`;
 
@@ -518,7 +518,7 @@ export function AnalysisGame() {
         </p>
       )}
 
-      <div className="relative overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="panel relative overflow-hidden">
         <canvas
           ref={gameRef}
           width={W}
@@ -549,7 +549,7 @@ export function AnalysisGame() {
         <button
           onClick={lockIn}
           disabled={!ready || phase !== "duel"}
-          className="rounded-lg border border-accent bg-accent px-3 py-1.5 font-mono text-[11px] font-medium text-accent-fg transition enabled:hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="btn-solid px-3 py-1.5 text-[11px] font-medium disabled:cursor-not-allowed disabled:opacity-40"
         >
           lock in δ
         </button>
@@ -566,7 +566,7 @@ export function AnalysisGame() {
       </div>
 
       {msg && (
-        <p className="rounded-xl border border-line bg-surface px-4 py-2.5 font-mono text-[11px] leading-relaxed text-muted">
+        <p className="panel px-4 py-2.5 font-mono text-[11px] leading-relaxed text-muted">
           <span className={phase === "trapped" ? "text-accent" : phase === "won" ? "text-moss" : "text-gold"}>ε demon</span>
           {" · "}
           {msg}
@@ -595,7 +595,7 @@ export function AnalysisGame() {
         <span className="font-mono text-[11px] text-muted">n = {nR}</span>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="panel overflow-hidden">
         <canvas ref={labRef} width={RW} height={RH} className="block h-auto w-full select-none" />
       </div>
 
@@ -611,7 +611,7 @@ export function AnalysisGame() {
         </span>
       </div>
 
-      <div className="rounded-xl border border-line bg-surface p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the analysis, running in C++</p>
         <p>limit&nbsp;&nbsp;&nbsp;&nbsp;lim x→a f(x) = L&nbsp;&nbsp;⇔&nbsp;&nbsp;∀ε&gt;0 ∃δ&gt;0 : 0 &lt; |x−a| &lt; δ ⇒ |f(x)−L| &lt; ε</p>
         <p>the duel&nbsp;&nbsp;the demon calls ε, you answer δ. C++ checks sup{"{"}|f(x)−L| : 0&lt;|x−a|&lt;δ{"}"} over ~4000 samples — you win iff sup &lt; ε.</p>
