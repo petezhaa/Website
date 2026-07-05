@@ -34,6 +34,10 @@ const ENGINES = [
   ["cpp/faraday.cpp", "public/faraday.bin", []],
   ["cpp/waves.cpp", "public/waves.bin", []],
   ["cpp/analysis.cpp", "public/analysis.bin", []],
+  ["cpp/pendulum.cpp", "public/pendulum.bin", []],
+  ["cpp/filter.cpp", "public/filter.bin", []],
+  ["cpp/smith.cpp", "public/smith.bin", []],
+  ["cpp/logic.cpp", "public/logic.bin", []],
 ];
 
 for (const [src, out, extra] of ENGINES) {

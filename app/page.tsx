@@ -218,7 +218,10 @@ export default function Home() {
             <GameChooser />
           </Reveal>
           <Reveal delay={160}>
-            <div className="relative mt-6">
+            <div className="relative mt-10">
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted">
+                laboratory
+              </p>
               <BenchPanel />
               <HandNote className="absolute -top-6 right-2 hidden w-max sm:inline-block">
                 yes, the C++ actually runs

@@ -14,10 +14,15 @@ import { AnalysisGame } from "@/components/AnalysisGame";
 import { NimGame } from "@/components/NimGame";
 import { GoGame } from "@/components/GoGame";
 import { SnakeJava } from "@/components/SnakeJava";
+import { PendulumGame } from "@/components/PendulumGame";
+import { LogicPuzzle } from "@/components/LogicPuzzle";
+import { FilterDesigner } from "@/components/FilterDesigner";
+import { SmithChart } from "@/components/SmithChart";
 
 // The arcade. Each game is its own engine; only the selected one mounts (and
-// lazy-loads its binary). Grouped by discipline, because there are majors to
-// represent. Adding a game = one entry here.
+// lazy-loads its binary). The EE rows follow the actual ECE area taxonomy,
+// because if you're going to build the whole curriculum you may as well file
+// it correctly. Adding a game = one entry here.
 type GameDef = { key: string; label: string; tag: string; render: () => ReactNode };
 const GROUPS: { label: string; games: GameDef[] }[] = [
   {
@@ -25,14 +30,43 @@ const GROUPS: { label: string; games: GameDef[] }[] = [
     games: [{ key: "map", label: "Map game", tag: "Rust", render: () => <MapGame /> }],
   },
   {
-    label: "physics (EE)",
+    label: "fields & waves",
     games: [
       { key: "em", label: "Electrodynamics", tag: "C++", render: () => <ChargeSim /> },
       { key: "mag", label: "Magnetism", tag: "C++", render: () => <MagnetismSim /> },
-      { key: "cir", label: "Circuits", tag: "C++", render: () => <CircuitSim /> },
-      { key: "ind", label: "Induction", tag: "C++", render: () => <InductionSim /> },
       { key: "wav", label: "EM waves", tag: "C++", render: () => <WaveSim /> },
+      { key: "smith", label: "Smith chart", tag: "C++", render: () => <SmithChart /> },
+    ],
+  },
+  {
+    label: "circuits & devices",
+    games: [
+      { key: "cir", label: "Circuits", tag: "C++", render: () => <CircuitSim /> },
+    ],
+  },
+  {
+    label: "power & machines",
+    games: [
+      { key: "ind", label: "Induction", tag: "C++", render: () => <InductionSim /> },
+    ],
+  },
+  {
+    label: "systems & control",
+    games: [
+      { key: "pid", label: "Segway balance", tag: "C++", render: () => <PendulumGame /> },
+    ],
+  },
+  {
+    label: "comms & signals",
+    games: [
       { key: "fourier", label: "Fourier", tag: "C++", render: () => <EpicycleDrawer /> },
+      { key: "filter", label: "Filter designer", tag: "C++", render: () => <FilterDesigner /> },
+    ],
+  },
+  {
+    label: "computers & computing",
+    games: [
+      { key: "logic", label: "Logic gates", tag: "C++", render: () => <LogicPuzzle /> },
     ],
   },
   {
@@ -82,7 +116,7 @@ export function GameChooser() {
       <div className="flex flex-col gap-2">
         {GROUPS.map((group) => (
           <div key={group.label} className="flex flex-wrap items-center gap-2">
-            <span className="w-24 shrink-0 font-mono text-[10px] uppercase tracking-widest text-muted">
+            <span className="w-full shrink-0 font-mono text-[10px] uppercase tracking-widest text-muted sm:w-40">
               {group.label}
             </span>
             {group.games.map((g) => (

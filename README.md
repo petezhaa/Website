@@ -26,19 +26,24 @@ Next.js (App Router, webpack build), Tailwind v4, motion, d3-geo, Rust + C++ + G
 
 ## Develop
 
+Tasks run through [`just`](https://github.com/casey/just) (`winget install Casey.Just`):
+
 ```bash
-npm run dev            # dev server
-npm run build:wasm     # rebuild the Rust map engine -> public/mapgame.bin
-npm run build:cppwasm  # rebuild all C++ engines + the Rust bench -> public/*.bin
-npm run build:goban    # rebuild the Go engine -> public/goban.wasm
-npm run build:java     # recompile Snake.java -> public/Snake.class
-npm run build          # production build (webpack, not turbopack)
+just dev          # dev server
+just check        # typecheck
+just wasm         # rebuild the Rust map engine -> public/mapgame.bin
+just engines      # rebuild all C++ engines + Rust bench + Nim -> public/*.bin
+just goban        # rebuild the Go engine -> public/goban.wasm
+just java         # recompile Snake.java -> public/Snake.class
+just all-engines  # every engine in every language
+just build        # production build (webpack, not turbopack)
 ```
 
 Deploy:
 
 ```bash
-npx opennextjs-cloudflare build && npx wrangler deploy
+just deploy       # bundle the worker + wrangler deploy
+just ship         # the whole ceremony: engines, build, deploy
 ```
 
 Needs `GROQ_API_KEY` and `STEAM_API_KEY` in `.env.local` (and as Cloudflare secrets in production).

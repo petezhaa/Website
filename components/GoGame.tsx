@@ -74,24 +74,11 @@ export function GoGame() {
     const c = canvasRef.current;
     const ctx = c?.getContext("2d");
     if (!c || !ctx) return;
-    // wood
-    const g = ctx.createLinearGradient(0, 0, PX, PX);
-    g.addColorStop(0, "#dcaf6b");
-    g.addColorStop(1, "#c99a55");
-    ctx.fillStyle = g;
+    // flat board, simple lines — the game is the graphics
+    ctx.fillStyle = "#d7b473";
     ctx.fillRect(0, 0, PX, PX);
-    // faint grain
-    ctx.globalAlpha = 0.07;
-    ctx.strokeStyle = "#7a5c2e";
-    for (let i = 0; i < 22; i++) {
-      ctx.beginPath();
-      ctx.moveTo(0, (i / 22) * PX + 6 * Math.sin(i * 2.7));
-      ctx.bezierCurveTo(PX / 3, (i / 22) * PX + 14, (2 * PX) / 3, (i / 22) * PX - 10, PX, (i / 22) * PX + 4);
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
     // grid
-    ctx.strokeStyle = "#3a2c14";
+    ctx.strokeStyle = "#4a3a1e";
     ctx.lineWidth = 1;
     for (let i = 0; i < N; i++) {
       ctx.beginPath();
@@ -104,39 +91,31 @@ export function GoGame() {
       ctx.stroke();
     }
     // star points (9x9: corners at 2,2 and center)
-    ctx.fillStyle = "#3a2c14";
+    ctx.fillStyle = "#4a3a1e";
     for (const [sx, sy] of [[2, 2], [6, 2], [2, 6], [6, 6], [4, 4]]) {
       ctx.beginPath();
       ctx.arc(MARGIN + sx * cell, MARGIN + sy * cell, 3, 0, Math.PI * 2);
       ctx.fill();
     }
-    // stones
+    // stones: flat discs, no gloss
     const b = boardRef.current;
-    const r = cell * 0.46;
+    const r = cell * 0.44;
     for (let i = 0; i < b.length; i++) {
       if (!b[i]) continue;
       const [x, y] = pt(i);
-      const grad = ctx.createRadialGradient(x - r / 3, y - r / 3, r / 6, x, y, r);
-      if (b[i] === 1) {
-        grad.addColorStop(0, "#555");
-        grad.addColorStop(1, "#0c0c0c");
-      } else {
-        grad.addColorStop(0, "#ffffff");
-        grad.addColorStop(1, "#c9c9c9");
-      }
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = grad;
+      ctx.fillStyle = b[i] === 1 ? "#1e1e1e" : "#f6f3ea";
       ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
-      ctx.lineWidth = 0.8;
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
+      ctx.lineWidth = 1;
       ctx.stroke();
       // last-move markers
       const last = lastRef.current;
       if (i === last.you || i === last.bot) {
         ctx.beginPath();
-        ctx.arc(x, y, r * 0.4, 0, Math.PI * 2);
-        ctx.strokeStyle = b[i] === 1 ? "#e8e4d8" : "#3a2c14";
+        ctx.arc(x, y, r * 0.38, 0, Math.PI * 2);
+        ctx.strokeStyle = b[i] === 1 ? "#f6f3ea" : "#1e1e1e";
         ctx.lineWidth = 1.6;
         ctx.stroke();
       }
