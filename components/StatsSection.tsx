@@ -2,6 +2,7 @@ import { getLetterboxd } from "@/lib/letterboxd";
 import { getSteamGames, getSteamMeta, getRareAchievements } from "@/lib/steam";
 import { getGithubStats } from "@/lib/github";
 import { getSiteCode } from "@/lib/sitecode";
+import { SKILL_GROUPS } from "@/lib/resume";
 import { Reveal } from "@/components/Reveal";
 import { StatsCharts, type StatsData } from "@/components/StatsCharts";
 
@@ -343,6 +344,24 @@ export async function StatsSection() {
     };
   }
 
+  // how I actually build: primary language per public repo, vs the resume's
+  // claims. GitHub's names normalized against the resume's groupings.
+  let build: StatsData["build"] = null;
+  if (github && Object.keys(github.languages).length >= 2) {
+    const langs = Object.entries(github.languages).sort((a, b) => b[1] - a[1]);
+    const committed = new Set(langs.map(([n]) => n.toLowerCase()));
+    // resume claims, exploded into github-comparable names
+    const norm: Record<string, string[]> = {
+      "c/c++": ["c", "c++"],
+      bash: ["shell"],
+    };
+    const claimed = (
+      SKILL_GROUPS.find((g) => g.label === "Languages")?.items ?? []
+    ).flatMap((i) => norm[i.toLowerCase()] ?? [i.toLowerCase()]);
+    const missing = claimed.filter((c) => !committed.has(c));
+    build = { langs, missing };
+  }
+
   const counts: StatsData["counts"] = {
     filmsAllTime: lb?.filmsAllTime ?? null,
     steamHours: steam ? steam.reduce((sum, g) => sum + g.hours, 0) : null,
@@ -376,6 +395,7 @@ export async function StatsSection() {
           achievements: rare,
           topGames,
           github,
+          build,
           siteCode,
           counts,
         }}

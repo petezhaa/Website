@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import { useState, type ReactNode } from "react";
+import { motion } from "motion/react";
 import { bumpVibe } from "@/lib/vibeBus";
+import { VisitCard } from "@/components/VisitCard";
 
 export type StatsData = {
   ratings: {
@@ -91,7 +93,11 @@ export type StatsData = {
     | { game: string; name: string; description: string; globalPct: number }[]
     | null;
   topGames: { name: string; hours: number }[] | null;
-  github: { repos: number } | null;
+  github: { repos: number; languages: Record<string, number> } | null;
+  build: {
+    langs: [string, number][];
+    missing: string[];
+  } | null;
   siteCode: { ts: number; rust: number; css: number; wasmKB: number } | null;
   counts: {
     filmsAllTime: number | null;
@@ -132,7 +138,12 @@ function Card({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-line bg-surface p-5">
+    <motion.div
+      initial={{ opacity: 0, y: 16, scale: 0.985 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ type: "spring", stiffness: 180, damping: 22 }}
+      className="rounded-xl border border-line bg-surface p-5">
       <p className="text-sm font-medium">{title}</p>
       <p className="mb-4 font-mono text-[11px] text-muted">{sub}</p>
       {children}
@@ -142,7 +153,7 @@ function Card({
         </summary>
         <div className="mt-2 max-h-44 overflow-y-auto">{table}</div>
       </details>
-    </div>
+    </motion.div>
   );
 }
 
@@ -1320,6 +1331,79 @@ function RareAchievements({
   );
 }
 
+/* ---------------- how I actually build (github languages) ---------------- */
+function HowIBuild({ data }: { data: NonNullable<StatsData["build"]> }) {
+  const [tip, setTip] = useState<Tip>(null);
+  const W = 440;
+  const rowH = 30;
+  const PAD = { l: 96, r: 44, t: 4, b: 4 };
+  const langs = data.langs.slice(0, 8);
+  const H = PAD.t + PAD.b + langs.length * rowH;
+  const plotW = W - PAD.l - PAD.r;
+  const max = langs[0]?.[1] ?? 1;
+
+  return (
+    <Card
+      title="How I actually build"
+      sub="primary language per public repo, github, live"
+      table={
+        <table className={tableCls}>
+          <tbody>
+            {data.langs.map(([name, n]) => (
+              <tr key={name}>
+                <td className={tdCls}>{name}</td>
+                <td className={tdCls}>{n} repo{n === 1 ? "" : "s"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      }
+    >
+      <div className="relative">
+        <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full">
+          {langs.map(([name, n], i) => {
+            const y = PAD.t + i * rowH;
+            const w = Math.max((n / max) * plotW, 3);
+            return (
+              <g
+                key={name}
+                onMouseMove={(e) => {
+                  const r = e.currentTarget.closest("svg")!.getBoundingClientRect();
+                  setTip({
+                    x: ((PAD.l + w) / W) * r.width,
+                    y: (y / H) * r.height,
+                    lines: [name, `${n} repo${n === 1 ? "" : "s"} lead with it`],
+                  });
+                }}
+                onMouseLeave={() => setTip(null)}
+              >
+                <rect x={0} y={y} width={W} height={rowH} fill="transparent" />
+                <text x={PAD.l - 8} y={y + 19} textAnchor="end" fontSize={11.5} fill="var(--fg)">
+                  {name}
+                </text>
+                <path d={hBarPath(PAD.l, y + 7, w, 16)} fill={MARK} />
+                <text x={PAD.l + w + 6} y={y + 19} fontSize={10.5} fill={INK_MUTED} className="tabular-nums">
+                  {n}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+        <Tooltip tip={tip} />
+        {data.missing.length > 0 && (
+          <div className="mt-3 border-t border-line pt-2 font-mono text-[10.5px] leading-relaxed text-muted">
+            <p>
+              claimed on the resume, not yet committed publicly:{" "}
+              <span className="text-fg">{data.missing.join(", ")}</span>. the
+              embedded and coursework repos are private; the claim stands.
+            </p>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 /* ---------------- top games bars ---------------- */
 function TopGames({ data }: { data: NonNullable<StatsData["topGames"]> }) {
   const [tip, setTip] = useState<Tip>(null);
@@ -1403,6 +1487,8 @@ export function StatsCharts({ data }: { data: StatsData }) {
       {data.topGames && data.topGames.length > 0 && (
         <TopGames data={data.topGames} />
       )}
+      {data.build && <HowIBuild data={data.build} />}
+      <VisitCard />
     </div>
   );
 }

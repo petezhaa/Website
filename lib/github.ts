@@ -3,6 +3,10 @@ export const GITHUB_URL = "https://github.com/petezhaa";
 
 export type GithubStats = {
   repos: number;
+  // primary language -> how many (non-fork) repos lead with it. From the
+  // same single list call — no per-repo requests, the keyless rate limit
+  // is 60/hr and this site shares an egress IP with the whole planet.
+  languages: Record<string, number>;
 };
 
 const HEADERS = { "User-Agent": "peterzhao-site" };
@@ -14,9 +18,17 @@ export async function getGithubStats(): Promise<GithubStats | null> {
       { headers: HEADERS, next: { revalidate: 21600 } }
     );
     if (!res.ok) return null;
-    const repos = (await res.json()) as unknown[];
+    const repos = (await res.json()) as Array<{
+      language?: string | null;
+      fork?: boolean;
+    }>;
     if (!Array.isArray(repos) || repos.length === 0) return null;
-    return { repos: repos.length };
+    const languages: Record<string, number> = {};
+    for (const r of repos) {
+      if (r.fork || !r.language) continue;
+      languages[r.language] = (languages[r.language] ?? 0) + 1;
+    }
+    return { repos: repos.length, languages };
   } catch {
     return null;
   }
