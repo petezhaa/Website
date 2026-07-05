@@ -73,6 +73,34 @@
   --accent: #d9a83f;
   --accent-soft: rgba(217, 168, 63, 0.16);
 }
+/* the other secret: type "beer". the site has a few and starts swaying. */
+:root.beer {
+  --accent: #b07d18;
+  --accent-soft: rgba(176, 125, 24, 0.16);
+}
+:root.beer.dark {
+  --accent: #d9a83f;
+  --accent-soft: rgba(217, 168, 63, 0.18);
+}
+:root.beer main {
+  animation: beer-sway 7s ease-in-out infinite;
+  transform-origin: 50% 20%;
+}
+:root.beer h1,
+:root.beer h2 {
+  /* double vision, but legible: a faint offset ghost */
+  text-shadow: 3px 0 0 color-mix(in oklab, var(--accent) 35%, transparent);
+}
+@keyframes beer-sway {
+  0%, 100% { transform: rotate(-0.35deg); }
+  50% { transform: rotate(0.35deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root.beer main {
+    animation: none;
+  }
+}
+
 .cheese-drop {
   top: -8%;
   animation: cheese-fall 3.2s ease-in forwards;

@@ -236,11 +236,11 @@ export default function Home() {
             <Reveal delay={100}>
               <div className="flex flex-col gap-4">
                 <Polaroid
-                  src="/first-home.jpg"
-                  alt="The trailer in Pulaski, Wisconsin, where Peter grew up"
+                  src="/china-wok-family.png"
+                  alt="The family standing in front of China Wok, next to the delivery van"
                   caption="pulaski, wisconsin — where it started"
-                  width={316}
-                  height={234}
+                  width={339}
+                  height={357}
                 />
                 <div className="rounded-xl border border-line bg-surface p-6">
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">

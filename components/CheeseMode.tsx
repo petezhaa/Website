@@ -11,10 +11,11 @@ const KONAMI = [
   "b", "a",
 ];
 
-type Drop = { id: number; x: number; delay: number; size: number; spin: number };
+type Drop = { id: number; x: number; delay: number; size: number; spin: number; glyph: string };
 
 export function CheeseMode() {
   const [on, setOn] = useState(false);
+  const [beer, setBeer] = useState(false);
   const [drops, setDrops] = useState<Drop[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const typed = useRef("");
@@ -22,29 +23,56 @@ export function CheeseMode() {
   const nextId = useRef(0);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const rain = (glyph: string) => {
+    const batch: Drop[] = Array.from({ length: 26 }, (_, i) => ({
+      id: nextId.current++,
+      x: ((i * 61) % 100) + (((i * 13) % 7) - 3),
+      delay: ((i * 37) % 20) / 10,
+      size: 18 + ((i * 29) % 22),
+      spin: (((i * 53) % 2) === 0 ? 1 : -1) * (180 + ((i * 41) % 360)),
+      glyph,
+    }));
+    setDrops(batch);
+    setTimeout(() => setDrops([]), 5200);
+  };
+
+  const say = (msg: string) => {
+    setToast(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2800);
+  };
+
   const trigger = () => {
     setOn((prev) => {
       const next = !prev;
       document.documentElement.classList.toggle("cheese", next);
       if (next) {
         bumpVibe("chaos", 40);
-        const batch: Drop[] = Array.from({ length: 26 }, (_, i) => ({
-          id: nextId.current++,
-          x: ((i * 61) % 100) + (((i * 13) % 7) - 3),
-          delay: ((i * 37) % 20) / 10,
-          size: 18 + ((i * 29) % 22),
-          spin: (((i * 53) % 2) === 0 ? 1 : -1) * (180 + ((i * 41) % 360)),
-        }));
-        setDrops(batch);
-        setTimeout(() => setDrops([]), 5200);
+        rain("🧀");
       }
-      setToast(
+      say(
         next
           ? "cheese mode. wisconsin sends its regards."
           : "cheese mode off. the state thanks you for visiting."
       );
-      if (toastTimer.current) clearTimeout(toastTimer.current);
-      toastTimer.current = setTimeout(() => setToast(null), 2800);
+      return next;
+    });
+  };
+
+  // the other wisconsin food group. type "beer" and the site has a few.
+  const triggerBeer = () => {
+    setBeer((prev) => {
+      const next = !prev;
+      document.documentElement.classList.toggle("beer", next);
+      if (next) {
+        bumpVibe("chaos", 45);
+        rain("🍺");
+      }
+      say(
+        next
+          ? "beer mode. the site is 21, don't worry."
+          : "sober. the site remembers nothing."
+      );
       return next;
     });
   };
@@ -67,16 +95,22 @@ export function CheeseMode() {
         if (typed.current === "cheese") {
           typed.current = "";
           trigger();
+        } else if (typed.current.endsWith("beer")) {
+          typed.current = "";
+          triggerBeer();
         }
       }
     };
-    // the phone dispatches this when someone texts peter the magic word
+    // the phone dispatches these when someone texts peter a magic word
     const onEvent = () => trigger();
+    const onBeer = () => triggerBeer();
     window.addEventListener("keydown", onKey);
     window.addEventListener("cheesemode", onEvent);
+    window.addEventListener("beermode", onBeer);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("cheesemode", onEvent);
+      window.removeEventListener("beermode", onBeer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -96,7 +130,7 @@ export function CheeseMode() {
                 ["--spin" as string]: `${d.spin}deg`,
               }}
             >
-              🧀
+              {d.glyph}
             </span>
           ))}
         </div>

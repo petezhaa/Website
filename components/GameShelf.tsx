@@ -1,16 +1,28 @@
 import Image from "next/image";
-import { getSteamGames, getSteamMeta, STEAM_URL } from "@/lib/steam";
+import { getSteamGames, getSteamMeta, getRareAchievements, STEAM_URL } from "@/lib/steam";
 import { Reveal } from "@/components/Reveal";
 
-// Server component: what's actually being played right now, then the top
-// shelf by lifetime hours — with bars, because numbers alone undersell it.
+// Server component: what's actually being played right now, the damage in
+// numbers, where the hours actually went, then the top shelf.
 export async function GameShelf() {
-  const [games, meta] = await Promise.all([getSteamGames(), getSteamMeta()]);
+  const [games, meta, rare] = await Promise.all([
+    getSteamGames(),
+    getSteamMeta(),
+    getRareAchievements(),
+  ]);
   const top = games?.slice(0, 6) ?? [];
   const totalHours = games?.reduce((sum, g) => sum + g.hours, 0) ?? 0;
   const maxHours = top[0]?.hours ?? 1;
   const recent = meta?.recent ?? null;
   const recentGame = recent ? games?.find((g) => g.name === recent.name) : null;
+  const rarest = rare?.[0] ?? null;
+  // where the hours went: top five games' share of the whole library
+  const strip = top.slice(0, 5).map((g) => ({
+    name: g.name,
+    pct: totalHours > 0 ? (g.hours / totalHours) * 100 : 0,
+  }));
+  const stripRest = Math.max(0, 100 - strip.reduce((s, x) => s + x.pct, 0));
+  const stripColors = ["bg-accent", "bg-gold", "bg-moss", "bg-accent/60", "bg-gold/60"];
 
   return (
     <Reveal>
@@ -53,6 +65,69 @@ export async function GameShelf() {
               )}
             </div>
           </div>
+
+          {/* the damage, quantified */}
+          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-line bg-surface px-5 py-4">
+              <p className="font-mono text-2xl font-bold text-accent">
+                {Math.round(totalHours / 24)}
+              </p>
+              <p className="mt-0.5 text-xs text-muted">
+                full days played ({totalHours.toLocaleString()}h)
+              </p>
+            </div>
+            {meta && (
+              <div className="rounded-xl border border-line bg-surface px-5 py-4">
+                <p className="font-mono text-2xl font-bold text-accent">{meta.totalOwned}</p>
+                <p className="mt-0.5 text-xs text-muted">games owned</p>
+              </div>
+            )}
+            {meta && (
+              <div className="rounded-xl border border-line bg-surface px-5 py-4">
+                <p className="font-mono text-2xl font-bold text-accent">{meta.neverPlayed}</p>
+                <p className="mt-0.5 text-xs text-muted">never launched. the graveyard</p>
+              </div>
+            )}
+            {rarest && (
+              <div className="rounded-xl border border-line bg-surface px-5 py-4">
+                <p className="font-mono text-2xl font-bold text-gold">
+                  {rarest.globalPct.toFixed(1)}%
+                </p>
+                <p className="mt-0.5 truncate text-xs text-muted" title={`${rarest.name} — ${rarest.game}`}>
+                  of players have my rarest achievement
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* where the hours actually went */}
+          {totalHours > 0 && (
+            <div className="mb-6">
+              <div className="flex h-3 overflow-hidden rounded-full">
+                {strip.map((s, i) => (
+                  <div
+                    key={s.name}
+                    title={`${s.name} — ${Math.round(s.pct)}%`}
+                    className={`h-full ${stripColors[i]}`}
+                    style={{ width: `${s.pct}%` }}
+                  />
+                ))}
+                <div className="h-full bg-surface-2" style={{ width: `${stripRest}%` }} />
+              </div>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10px] text-muted">
+                {strip.map((s, i) => (
+                  <span key={s.name} className="flex items-center gap-1.5">
+                    <span className={`inline-block h-2 w-2 rounded-sm ${stripColors[i]}`} />
+                    {s.name} {Math.round(s.pct)}%
+                  </span>
+                ))}
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block h-2 w-2 rounded-sm bg-surface-2" />
+                  the other {games!.length - 5} games {Math.round(stripRest)}%
+                </span>
+              </div>
+            </div>
+          )}
 
           <p className="mb-6 font-mono text-xs text-muted">
             {totalHours.toLocaleString()} hours across {games!.length} games.
