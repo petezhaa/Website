@@ -314,13 +314,19 @@ export default function Home() {
             title="Watching"
             note="letterboxd, live"
           />
-          <FilmShelf />
+          {/* streamed: the page shell shouldn't wait on Letterboxd */}
+          <Suspense fallback={null}>
+            <FilmShelf />
+          </Suspense>
         </section>
 
         {/* ============ GAMES ============ */}
         <section className="py-24" id="games">
           <SectionLabel n="07" title="Playing" note="steam, live" />
-          <GameShelf />
+          {/* streamed: same deal for Steam */}
+          <Suspense fallback={null}>
+            <GameShelf />
+          </Suspense>
         </section>
 
         {/* ============ STATS ============ */}
@@ -373,7 +379,7 @@ export default function Home() {
                 </div>
                 <div className="flex flex-col items-center justify-center gap-8">
                   <Polaroid
-                    src="/china-wok-family.png"
+                    src="/china-wok-family.jpg"
                     alt="The family standing in front of China Wok, next to the delivery van"
                     caption="china wok, back then"
                     width={339}

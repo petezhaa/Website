@@ -1,0 +1,11 @@
+# Engines and map data are immutable per deploy: let repeat visitors skip
+# even the revalidation round-trip. (Deploys change the file contents, and
+# the service worker's versioned cache handles the swap.)
+/*.bin
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/*.wasm
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/*.class
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/maps/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
