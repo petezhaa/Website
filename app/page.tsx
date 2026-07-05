@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Reveal } from "@/components/Reveal";
+import { Polaroid } from "@/components/Polaroid";
 import { StatLine } from "@/components/StatLine";
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { GameChooser } from "@/components/GameChooser";
@@ -260,6 +261,13 @@ export default function Home() {
             </Reveal>
             <Reveal delay={100}>
               <div className="flex flex-col gap-4">
+                <Polaroid
+                  src="/first-home.jpg"
+                  alt="The trailer in Pulaski, Wisconsin, where Peter grew up"
+                  caption="pulaski, wisconsin — where it started"
+                  width={316}
+                  height={234}
+                />
                 <div className="rounded-xl border border-line bg-surface p-6">
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
                     Education

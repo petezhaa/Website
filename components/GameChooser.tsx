@@ -18,88 +18,52 @@ import { PendulumGame } from "@/components/PendulumGame";
 import { LogicPuzzle } from "@/components/LogicPuzzle";
 import { FilterDesigner } from "@/components/FilterDesigner";
 import { SmithChart } from "@/components/SmithChart";
+import { bumpVibe } from "@/lib/vibeBus";
 
-// The arcade. Each game is its own engine; only the selected one mounts (and
-// lazy-loads its binary). The EE rows follow the actual ECE area taxonomy,
-// because if you're going to build the whole curriculum you may as well file
-// it correctly. Adding a game = one entry here.
-type GameDef = { key: string; label: string; tag: string; render: () => ReactNode };
-const GROUPS: { label: string; games: GameDef[] }[] = [
-  {
-    label: "geography",
-    games: [{ key: "map", label: "Map game", tag: "Rust", render: () => <MapGame /> }],
-  },
-  {
-    label: "fields & waves",
-    games: [
-      { key: "em", label: "Electrodynamics", tag: "C++", render: () => <ChargeSim /> },
-      { key: "mag", label: "Magnetism", tag: "C++", render: () => <MagnetismSim /> },
-      { key: "wav", label: "EM waves", tag: "C++", render: () => <WaveSim /> },
-      { key: "smith", label: "Smith chart", tag: "C++", render: () => <SmithChart /> },
-    ],
-  },
-  {
-    label: "circuits & devices",
-    games: [
-      { key: "cir", label: "Circuits", tag: "C++", render: () => <CircuitSim /> },
-    ],
-  },
-  {
-    label: "power & machines",
-    games: [
-      { key: "ind", label: "Induction", tag: "C++", render: () => <InductionSim /> },
-    ],
-  },
-  {
-    label: "systems & control",
-    games: [
-      { key: "pid", label: "Segway balance", tag: "C++", render: () => <PendulumGame /> },
-    ],
-  },
-  {
-    label: "comms & signals",
-    games: [
-      { key: "fourier", label: "Fourier", tag: "C++", render: () => <EpicycleDrawer /> },
-      { key: "filter", label: "Filter designer", tag: "C++", render: () => <FilterDesigner /> },
-    ],
-  },
-  {
-    label: "computers & computing",
-    games: [
-      { key: "logic", label: "Logic gates", tag: "C++", render: () => <LogicPuzzle /> },
-    ],
-  },
-  {
-    label: "math",
-    games: [
-      { key: "fractal", label: "Mandelbrot", tag: "C++", render: () => <MandelbrotExplorer /> },
-      { key: "pd", label: "Prisoner's Dilemma", tag: "C++", render: () => <PrisonersDilemma /> },
-      { key: "eps", label: "ε–δ & Riemann", tag: "C++", render: () => <AnalysisGame /> },
-      { key: "nim", label: "Nim", tag: "Rust", render: () => <NimGame /> },
-    ],
-  },
-  {
-    label: "languages",
-    games: [
-      { key: "go", label: "Go", tag: "in Go", render: () => <GoGame /> },
-      { key: "java", label: "Snake", tag: "Java bytecode", render: () => <SnakeJava /> },
-    ],
-  },
+// The arcade: a grid of cabinets. Pick one and the grid gets out of the way;
+// "← all games" brings it back. Each game lazy-loads its engine only when
+// opened. The area captions follow the real ECE taxonomy, filed correctly.
+type GameDef = {
+  key: string;
+  label: string;
+  tag: string; // the language
+  area: string; // the department shelf it lives on
+  render: () => ReactNode;
+};
+
+const GAMES: GameDef[] = [
+  { key: "map", label: "Map game", tag: "Rust", area: "geography", render: () => <MapGame /> },
+  { key: "em", label: "Electrodynamics", tag: "C++", area: "fields & waves", render: () => <ChargeSim /> },
+  { key: "mag", label: "Magnetism", tag: "C++", area: "fields & waves", render: () => <MagnetismSim /> },
+  { key: "wav", label: "EM waves", tag: "C++", area: "fields & waves", render: () => <WaveSim /> },
+  { key: "smith", label: "Smith chart", tag: "C++", area: "fields & waves", render: () => <SmithChart /> },
+  { key: "cir", label: "Circuits", tag: "C++", area: "circuits & devices", render: () => <CircuitSim /> },
+  { key: "ind", label: "Induction", tag: "C++", area: "power & machines", render: () => <InductionSim /> },
+  { key: "pid", label: "Segway balance", tag: "C++", area: "systems & control", render: () => <PendulumGame /> },
+  { key: "fourier", label: "Fourier", tag: "C++", area: "comms & signals", render: () => <EpicycleDrawer /> },
+  { key: "filter", label: "Filter designer", tag: "C++", area: "comms & signals", render: () => <FilterDesigner /> },
+  { key: "logic", label: "Logic gates", tag: "C++", area: "computers & computing", render: () => <LogicPuzzle /> },
+  { key: "fractal", label: "Mandelbrot", tag: "C++", area: "math", render: () => <MandelbrotExplorer /> },
+  { key: "pd", label: "Prisoner's Dilemma", tag: "C++", area: "math", render: () => <PrisonersDilemma /> },
+  { key: "eps", label: "ε–δ & Riemann", tag: "C++", area: "math", render: () => <AnalysisGame /> },
+  { key: "nim", label: "Nim", tag: "Rust", area: "math", render: () => <NimGame /> },
+  { key: "go", label: "Go", tag: "written in Go", area: "languages", render: () => <GoGame /> },
+  { key: "java", label: "Snake", tag: "Java bytecode", area: "languages", render: () => <SnakeJava /> },
 ];
-const ALL = GROUPS.flatMap((g) => g.games);
 
 export function GameChooser() {
-  const [active, setActive] = useState("map");
-  const activeRef = useRef("map");
-  const game = ALL.find((g) => g.key === active) ?? ALL[0];
+  const [active, setActive] = useState<string | null>(null);
+  const activeRef = useRef<string | null>(null);
+  const game = GAMES.find((g) => g.key === active) ?? null;
 
-  const pick = (k: string) => {
+  const pick = (k: string | null) => {
     activeRef.current = k;
     setActive(k);
+    if (k) bumpVibe("gamer", 10);
   };
 
-  // the chatbot's {{act:play|...}} targets the map game; if another cabinet
-  // is active, switch to it and re-fire the event once MapGame has mounted
+  // the chatbot's {{act:play|...}} targets the map game; open that cabinet
+  // first if needed, then re-fire once MapGame has mounted
   useEffect(() => {
     const onLaunch = (e: Event) => {
       if (activeRef.current === "map") return; // MapGame handles it itself
@@ -109,36 +73,51 @@ export function GameChooser() {
     };
     window.addEventListener("mapgame:launch", onLaunch);
     return () => window.removeEventListener("mapgame:launch", onLaunch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  if (game) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-baseline gap-3">
+          <button
+            onClick={() => pick(null)}
+            className="rounded-lg border border-line px-3 py-1.5 font-mono text-[11px] text-muted transition hover:border-accent hover:text-accent"
+          >
+            ← all games
+          </button>
+          <span className="text-sm font-medium">{game.label}</span>
+          <span className="font-mono text-[10px] text-muted">
+            {game.tag} · {game.area}
+          </span>
+        </div>
+        {game.render()}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        {GROUPS.map((group) => (
-          <div key={group.label} className="flex flex-wrap items-center gap-2">
-            <span className="w-full shrink-0 font-mono text-[10px] uppercase tracking-widest text-muted sm:w-40">
-              {group.label}
+    <div className="flex flex-col gap-3">
+      <p className="font-mono text-[11px] text-muted">
+        {GAMES.length} machines · pick one
+      </p>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {GAMES.map((g) => (
+          <button
+            key={g.key}
+            onClick={() => pick(g.key)}
+            className="group flex flex-col items-start gap-1 rounded-xl border border-line bg-surface p-4 text-left transition hover:-translate-y-0.5 hover:border-accent"
+          >
+            <span className="text-sm font-medium leading-tight group-hover:text-accent">
+              {g.label}
             </span>
-            {group.games.map((g) => (
-              <button
-                key={g.key}
-                onClick={() => pick(g.key)}
-                className={`rounded-xl border px-3.5 py-1.5 text-sm transition ${
-                  active === g.key
-                    ? "border-accent bg-accent-soft text-accent"
-                    : "border-line text-muted hover:border-accent hover:text-accent"
-                }`}
-              >
-                {g.label}
-                <span className="ml-2 hidden font-mono text-[10px] opacity-70 sm:inline">
-                  {g.tag}
-                </span>
-              </button>
-            ))}
-          </div>
+            <span className="font-mono text-[10px] text-accent/80">{g.tag}</span>
+            <span className="font-mono text-[9px] uppercase tracking-widest text-muted">
+              {g.area}
+            </span>
+          </button>
         ))}
       </div>
-      {game.render()}
     </div>
   );
 }
