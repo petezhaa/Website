@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
         model,
         messages: [{ role: "system", content: system }, ...clean],
         max_tokens: 140,
-        temperature: drunk ? 1.05 : 0.85, // a few drinks loosen the sampler too
+        temperature: drunk ? 0.95 : 0.85, // drunk loosens the sampler a notch; more and it starts inventing facts
         stream: true,
       }),
     });
