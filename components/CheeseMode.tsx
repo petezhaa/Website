@@ -46,9 +46,12 @@ export function CheeseMode() {
   const BEVERAGES = ["🍺", "🍷", "🥃", "🍸", "🥂", "🍺"];
 
   // while drunk, the site occasionally does drunk things: a hiccup, a lean,
-  // a moment where it can't quite focus, a stray drink from somewhere
+  // a moment where it can't quite focus, a stray drink, the lights going funny
   const chaosTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // parity of drunk theme flips: theme is binary, so however the flips
+  // interleave with manual toggles, an odd count means one flip to undo
+  const chaosFlips = useRef(0);
   const drunkChaos = () => {
     if (!beerOn.current) return;
     if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -58,6 +61,8 @@ export function CheeseMode() {
         () => { root.classList.add("beer-lean"); pulseTimer.current = setTimeout(() => root.classList.remove("beer-lean"), 1400); },
         () => { root.classList.add("beer-blur"); pulseTimer.current = setTimeout(() => root.classList.remove("beer-blur"), 700); },
         () => rain([BEVERAGES[Math.floor(Math.random() * BEVERAGES.length)]], 1),
+        // day turns to night turns to day — same crossfade the real toggle uses
+        () => { chaosFlips.current++; window.dispatchEvent(new Event("theme-toggle")); },
       ];
       effects[Math.floor(Math.random() * effects.length)]();
     }
@@ -67,6 +72,9 @@ export function CheeseMode() {
     if (chaosTimer.current) clearTimeout(chaosTimer.current);
     if (pulseTimer.current) clearTimeout(pulseTimer.current);
     document.documentElement.classList.remove("beer-hiccup", "beer-lean", "beer-blur");
+    // the drunk borrowed the light switch; sober gives it back
+    if (chaosFlips.current % 2 === 1) window.dispatchEvent(new Event("theme-toggle"));
+    chaosFlips.current = 0;
   };
 
   const say = (msg: string) => {
