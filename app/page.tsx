@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Reveal } from "@/components/Reveal";
 import { Polaroid } from "@/components/Polaroid";
+import { FortuneCookie } from "@/components/FortuneCookie";
 import { StatLine } from "@/components/StatLine";
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { GameChooser } from "@/components/GameChooser";
@@ -354,33 +355,63 @@ export default function Home() {
               <p className="font-mono text-xs uppercase tracking-[0.25em] text-accent">
                 09 · One more thing
               </p>
-              <h2 className="mt-4 max-w-2xl font-serif text-3xl leading-snug tracking-tight sm:text-5xl">
-                My parents run a Chinese restaurant.
-              </h2>
-              <p className="mt-5 max-w-xl leading-relaxed text-muted">
-                China Wok, in Pulaski, Wisconsin. If you&apos;re ever near
-                Green Bay, ordering the General Tso&apos;s is the single most
-                effective way to support this website.
-              </p>
-              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-muted">
-                <span className="text-gold">4.7★ on Google</span>
-                <span>1170 Mountain Bay Dr, Pulaski, WI</span>
-                <span>$10–20</span>
-              </div>
-              <div className="relative mt-8 inline-block">
-                <Magnetic>
-                  <a
-                    href="https://order.chinawoktasty.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block rounded-lg bg-accent px-8 py-4 text-base font-medium text-accent-fg transition hover:opacity-90"
-                  >
-                    Order here →
-                  </a>
-                </Magnetic>
-                <HandNote className="absolute -right-36 top-1 hidden w-max sm:inline-block">
-                  seriously, order here
-                </HandNote>
+              <div className="mt-4 grid gap-10 lg:grid-cols-[1.5fr_1fr]">
+                <div>
+                  <h2 className="max-w-2xl font-serif text-3xl leading-snug tracking-tight sm:text-5xl">
+                    My parents run a Chinese restaurant.
+                  </h2>
+                  <p className="mt-5 max-w-xl leading-relaxed text-muted">
+                    China Wok, in Pulaski, Wisconsin. It paid for the
+                    calculators, the tuition gaps, and the work ethic. If
+                    you&apos;re ever near Green Bay, ordering the General
+                    Tso&apos;s is the single most effective way to support
+                    this website.
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-muted">
+                    <span className="text-gold">4.7★ on Google</span>
+                    <span>1170 Mountain Bay Dr, Pulaski, WI</span>
+                    <span>$10–20</span>
+                  </div>
+                  {/* the part of the menu that matters */}
+                  <div className="mt-6 max-w-xl rounded-xl border border-line bg-bg/50 p-4">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
+                      the menu, abridged
+                    </p>
+                    <div className="mt-2 space-y-1.5 font-mono text-xs text-muted">
+                      <p className="flex items-baseline justify-between gap-3">
+                        <span className="text-fg">General Tso&apos;s Chicken</span>
+                        <span className="font-hand text-base">the correct order</span>
+                      </p>
+                      <p className="flex items-baseline justify-between gap-3">
+                        <span className="text-fg">Crab Rangoon</span>
+                        <span className="font-hand text-base">objectively elite</span>
+                      </p>
+                      <p className="flex items-baseline justify-between gap-3">
+                        <span className="text-fg">Lo Mein</span>
+                        <span className="font-hand text-base">never once missed</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="relative mt-8 inline-block">
+                    <Magnetic>
+                      <a
+                        href="https://order.chinawoktasty.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block rounded-lg bg-accent px-8 py-4 text-base font-medium text-accent-fg transition hover:opacity-90"
+                      >
+                        Order here →
+                      </a>
+                    </Magnetic>
+                    <HandNote className="absolute -right-36 top-1 hidden w-max sm:inline-block">
+                      seriously, order here
+                    </HandNote>
+                  </div>
+                </div>
+                <div className="flex flex-col items-center justify-center gap-8">
+                  {/* family photo Polaroid drops in here when the file lands */}
+                  <FortuneCookie />
+                </div>
               </div>
             </div>
           </Reveal>

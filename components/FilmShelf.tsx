@@ -16,6 +16,58 @@ function StatTile({ value, label }: { value: string; label: string }) {
   );
 }
 
+// GitHub-contributions style: 16 weeks of diary activity, one cell per day.
+// Server-rendered divs; the RSS diary only reaches back ~50 films, which is
+// exactly the point — the gaps are honest.
+function WatchHeatmap({ films }: { films: LetterboxdData["films"] }) {
+  const counts = new Map<string, number>();
+  for (const f of films) {
+    if (f.watchedDate) counts.set(f.watchedDate, (counts.get(f.watchedDate) ?? 0) + 1);
+  }
+  const WEEKS = 16;
+  const today = new Date();
+  // end the grid on the current week's Sunday-start
+  const end = new Date(today);
+  const weeks: { date: string; n: number }[][] = [];
+  for (let w = WEEKS - 1; w >= 0; w--) {
+    const col: { date: string; n: number }[] = [];
+    for (let d = 6; d >= 0; d--) {
+      const day = new Date(end);
+      day.setDate(end.getDate() - (w * 7 + d));
+      const key = day.toISOString().slice(0, 10);
+      col.push({ date: key, n: counts.get(key) ?? 0 });
+    }
+    weeks.push(col);
+  }
+  const total = films.filter((f) => f.watchedDate).length;
+
+  return (
+    <div className="mb-8">
+      <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
+        the last {WEEKS} weeks
+      </p>
+      <div className="flex gap-1 overflow-x-auto pb-1">
+        {weeks.map((col, wi) => (
+          <div key={wi} className="flex flex-col gap-1">
+            {col.map((cell) => (
+              <div
+                key={cell.date}
+                title={`${cell.date}${cell.n ? ` — ${cell.n} film${cell.n > 1 ? "s" : ""}` : ""}`}
+                className={`h-3.5 w-3.5 rounded-[3px] ${
+                  cell.n >= 2 ? "bg-accent" : cell.n === 1 ? "bg-accent/45" : "bg-surface-2"
+                }`}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+      <p className="mt-2 font-mono text-[10px] text-muted">
+        {total} diary entries in view · darker = double feature
+      </p>
+    </div>
+  );
+}
+
 function Shelf({ data }: { data: LetterboxdData }) {
   const recent = data.films.slice(0, 8);
   const thisYear = new Date().getFullYear();
@@ -83,6 +135,9 @@ function Shelf({ data }: { data: LetterboxdData }) {
           />
         )}
       </div>
+
+      {/* the diary as a heatmap: one cell per day, github-contributions style */}
+      <WatchHeatmap films={data.films} />
 
       <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
         {recent.map((film, i) => (

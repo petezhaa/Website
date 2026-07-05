@@ -11,7 +11,8 @@ type Msg = { role: "user" | "assistant"; content: string };
 const STARTERS = [
   "Why is Zion in C-tier?",
   "What did you do at NVIDIA?",
-  "How does the map game work?",
+  "What can I play on here?",
+  "Read my vibe",
 ];
 
 // The bot can drive the page: it streams hidden tags like {{act:play|chip fabs}}
@@ -100,6 +101,19 @@ export function PeterBot() {
     tick();
     const id = setInterval(tick, 30_000);
     return () => clearInterval(id);
+  }, []);
+
+  // ...and so is the battery, where the browser allows it
+  const [battery, setBattery] = useState<number | null>(null);
+  useEffect(() => {
+    const nav = navigator as Navigator & {
+      getBattery?: () => Promise<{ level: number; addEventListener: (t: string, f: () => void) => void }>;
+    };
+    nav.getBattery?.().then((b) => {
+      const update = () => setBattery(Math.round(b.level * 100));
+      update();
+      b.addEventListener("levelchange", update);
+    }).catch(() => {});
   }, []);
 
   const send = async (text: string) => {
@@ -214,7 +228,21 @@ export function PeterBot() {
             <div className="relative flex items-center justify-between px-6 pb-1 pt-2.5">
               <span className="font-mono text-[10px] font-bold">{clock || " "}</span>
               <div className="absolute left-1/2 top-2 h-5 w-20 -translate-x-1/2 rounded-full bg-[#2a2620]" />
-              <span className="font-mono text-[9px] text-muted">5G ▂▄▆█</span>
+              <span className="flex items-center gap-1.5 font-mono text-[9px] text-muted">
+                5G ▂▄▆█
+                {battery !== null && (
+                  <span className={`flex items-center gap-0.5 ${battery <= 20 ? "text-accent" : ""}`}>
+                    {battery}%
+                    <span className="relative inline-block h-2.5 w-5 rounded-[3px] border border-current p-px">
+                      <span
+                        className="block h-full rounded-[1px] bg-current"
+                        style={{ width: `${battery}%` }}
+                      />
+                      <span className="absolute -right-[3px] top-1/2 h-1 w-[2px] -translate-y-1/2 rounded-r bg-current" />
+                    </span>
+                  </span>
+                )}
+              </span>
             </div>
 
             {/* contact header, iMessage style */}
@@ -257,32 +285,59 @@ export function PeterBot() {
                   ))}
                 </div>
               ) : (
-                messages.map((m, i) =>
-                  m.role === "user" ? (
-                    <div
-                      key={i}
-                      className="ml-auto max-w-[80%] rounded-2xl rounded-br-md bg-accent px-3.5 py-2 text-sm leading-relaxed text-accent-fg"
-                    >
-                      {m.content}
-                    </div>
-                  ) : (
-                    <div key={i} className="flex max-w-[85%] items-end gap-1.5">
-                      <PixelPeter size={22} />
-                      <div className="rounded-2xl rounded-bl-md bg-surface-2 px-3.5 py-2 text-sm leading-relaxed">
-                        {m.content}
-                        {busy && i === messages.length - 1 && (
-                          <span
-                            className={`typing-dots inline-flex gap-1 py-1 ${
-                              m.content ? "ml-1.5 align-baseline" : ""
-                            }`}
-                          >
-                            <span /><span /><span />
-                          </span>
+                <>
+                  <p className="text-center font-mono text-[10px] uppercase tracking-widest text-muted">
+                    today {clock}
+                  </p>
+                  {messages.map((m, i) => {
+                    const lastUser =
+                      m.role === "user" &&
+                      !messages.slice(i + 1).some((x) => x.role === "user");
+                    const delivered =
+                      lastUser && messages.slice(i + 1).some((x) => x.content !== "");
+                    return m.role === "user" ? (
+                      <div key={i} className="ml-auto max-w-[80%]">
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.7, y: 12 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          transition={{ type: "spring", stiffness: 380, damping: 24 }}
+                          style={{ transformOrigin: "bottom right" }}
+                          className="rounded-2xl rounded-br-md bg-accent px-3.5 py-2 text-sm leading-relaxed text-accent-fg"
+                        >
+                          {m.content}
+                        </motion.div>
+                        {delivered && (
+                          <p className="mt-0.5 text-right font-mono text-[9px] text-muted">
+                            Delivered
+                          </p>
                         )}
                       </div>
-                    </div>
-                  )
-                )
+                    ) : (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, scale: 0.7, y: 12 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        transition={{ type: "spring", stiffness: 380, damping: 24 }}
+                        style={{ transformOrigin: "bottom left" }}
+                        className="flex max-w-[85%] items-end gap-1.5"
+                      >
+                        <PixelPeter size={22} />
+                        <div className="rounded-2xl rounded-bl-md bg-surface-2 px-3.5 py-2 text-sm leading-relaxed">
+                          {m.content}
+                          {busy && i === messages.length - 1 && (
+                            <span
+                              className={`typing-dots inline-flex gap-1 py-1 ${
+                                m.content ? "ml-1.5 align-baseline" : ""
+                              }`}
+                            >
+                              <span /><span /><span />
+                            </span>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </>
               )}
               {/* your own typing bubble: eases in after a few characters,
                   eases out when you pause */}

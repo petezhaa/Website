@@ -39,7 +39,7 @@ export function Polaroid({
         whileHover={reduce ? undefined : { rotate: 0, scale: 1.04 }}
         whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 210, damping: 15 }}
-        className="block w-full cursor-zoom-in rounded-sm border border-line bg-[#fdfcf8] p-3 pb-2 shadow-lg"
+        className="block w-full cursor-zoom-in rounded-sm border border-line bg-surface p-3 pb-2 shadow-lg"
       >
         <Image
           src={src}
@@ -49,7 +49,7 @@ export function Polaroid({
           unoptimized
           className="w-full"
         />
-        <p className="mt-2 text-center font-hand text-lg text-[#4a463a]">{caption}</p>
+        <p className="mt-2 text-center font-hand text-lg text-muted">{caption}</p>
       </motion.button>
 
       <AnimatePresence>
@@ -66,7 +66,7 @@ export function Polaroid({
               animate={{ scale: 1, rotate: -1 }}
               exit={{ scale: 0.6, rotate: 5, opacity: 0 }}
               transition={{ type: "spring", stiffness: 220, damping: 18 }}
-              className="w-full max-w-lg rounded-sm border border-line bg-[#fdfcf8] p-4 pb-3 shadow-2xl"
+              className="w-full max-w-lg rounded-sm border border-line bg-surface p-4 pb-3 shadow-2xl"
             >
               <Image
                 src={src}
@@ -76,7 +76,7 @@ export function Polaroid({
                 unoptimized
                 className="w-full"
               />
-              <p className="mt-3 text-center font-hand text-2xl text-[#4a463a]">{caption}</p>
+              <p className="mt-3 text-center font-hand text-2xl text-muted">{caption}</p>
             </motion.div>
           </motion.div>
         )}
