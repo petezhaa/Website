@@ -88,6 +88,23 @@ export async function POST(req: NextRequest) {
     }`;
   }
 
+  // the visitor's live secret count: give the bot the real number so it
+  // never invents one ("you're at 0/20" to someone holding twelve)
+  const secretsRaw = Number((body as { secrets?: unknown })?.secrets);
+  const secrets = Number.isFinite(secretsRaw)
+    ? Math.min(20, Math.max(0, Math.floor(secretsRaw)))
+    : null;
+  const secretContext =
+    secrets === null
+      ? ""
+      : `\n\nSECRET COUNT (live): this visitor has found exactly ${secrets}/20 secrets so far. If secrets come up, use this number; never guess or assume a count.`;
+
+  // beer mode: the site is visibly drunk on their screen, and so are you
+  const drunk = (body as { drunk?: unknown })?.drunk === true;
+  const drunkContext = drunk
+    ? `\n\nDRUNK MODE (active right now): the visitor turned on beer mode, so the whole site is swaying and blurring on their screen, and you have had a few yourself. Stay in your normal voice but drunker: looser grammar, occasional lowercase drift, maybe one *hic* mid-sentence, lose your train of thought once in a while, get a little too sentimental about wisconsin or the parks. Still answer the actual question underneath it. Keep replies just as short. Never explain that this is a mode or break character. If you emit an action tag it must still be EXACTLY formatted.`
+    : "";
+
   const clean = messages
     .filter((m): m is Record<string, unknown> => !!m && typeof m === "object")
     .slice(-8)
@@ -99,7 +116,7 @@ export async function POST(req: NextRequest) {
     return new Response("bad request", { status: 400 });
   }
 
-  const system = PERSONA + (await liveContext()) + vibeContext;
+  const system = PERSONA + (await liveContext()) + vibeContext + secretContext + drunkContext;
   const callGroq = (model: string) =>
     fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -111,7 +128,7 @@ export async function POST(req: NextRequest) {
         model,
         messages: [{ role: "system", content: system }, ...clean],
         max_tokens: 140,
-        temperature: 0.85,
+        temperature: drunk ? 1.05 : 0.85, // a few drinks loosen the sampler too
         stream: true,
       }),
     });

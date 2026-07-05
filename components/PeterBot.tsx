@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { PixelPeter } from "@/components/PixelPeter";
 import { readMessage } from "@/components/VibeRadar";
-import { bumpVibe, foundSecret, getVibe, getVibeSamples } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret, getVibe, getVibeSamples, secretsFound } from "@/lib/vibeBus";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -122,7 +122,7 @@ export function PeterBot({ initialOpen = false }: { initialOpen?: boolean } = {}
     if (!content || busy) return;
     // texting a secret to peter counts as finding it
     if (/cheese/i.test(content)) window.dispatchEvent(new Event("cheesemode"));
-    else if (/\bbeers?\b/i.test(content)) window.dispatchEvent(new Event("beermode"));
+    else if (/\b(beers?|wine)\b/i.test(content)) window.dispatchEvent(new Event("beermode"));
     const next: Msg[] = [...messages, { role: "user", content }];
     // feed the visitor-vibe radar from this message's style
     const style = readMessage(content);
@@ -147,6 +147,12 @@ export function PeterBot({ initialOpen = false }: { initialOpen?: boolean } = {}
           // the bot can see the visitor's vibe graph
           vibe: getVibe(),
           vibeSamples: getVibeSamples(),
+          // ...their real secret count (so it never guesses "0/20")...
+          secrets: secretsFound(),
+          // ...and whether the site is currently drunk. the beermode dispatch
+          // above is synchronous, so the message that orders the beer already
+          // gets a drunk reply
+          drunk: document.documentElement.classList.contains("beer"),
         }),
       });
       if (res.status === 503) {
