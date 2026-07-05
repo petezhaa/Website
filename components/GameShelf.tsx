@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { getSteamGames, getSteamMeta, getRareAchievements, STEAM_URL } from "@/lib/steam";
 import { Reveal } from "@/components/Reveal";
+import { StardewPeter } from "@/components/StardewPeter";
 
 // Server component: what's actually being played right now, the damage in
 // numbers, where the hours actually went, then the top shelf.
@@ -46,7 +47,7 @@ export async function GameShelf() {
                 />
               </a>
             )}
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
                 right now
               </p>
@@ -63,6 +64,10 @@ export async function GameShelf() {
                   0 hours in the last two weeks. school won this round.
                 </p>
               )}
+            </div>
+            <div className="hidden shrink-0 flex-col items-center gap-1 pr-2 sm:flex">
+              <StardewPeter size={52} />
+              <p className="font-hand text-sm text-muted">me, in the valley</p>
             </div>
           </div>
 

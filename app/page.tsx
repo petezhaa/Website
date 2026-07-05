@@ -236,16 +236,17 @@ export default function Home() {
             <Reveal delay={100}>
               <div className="flex flex-col gap-4">
                 <Polaroid
-                  src="/china-wok-family.png"
-                  alt="The family standing in front of China Wok, next to the delivery van"
-                  caption="pulaski, wisconsin — where it started"
-                  width={339}
-                  height={357}
+                  src="/childhood.jpg"
+                  alt="Peter as a small child in an oversized soccer sweater"
+                  caption="age four, allegedly"
+                  width={480}
+                  height={480}
+                  round
                 />
                 <Polaroid
                   src="/first-home.jpg"
                   alt="The trailer in Pulaski, Wisconsin, where Peter grew up"
-                  caption="the trailer park years"
+                  caption="pulaski, wisconsin — where it started"
                   width={316}
                   height={234}
                 />

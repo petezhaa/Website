@@ -14,12 +14,14 @@ export function Polaroid({
   caption,
   width,
   height,
+  round = false,
 }: {
   src: string;
   alt: string;
   caption: string;
   width: number;
   height: number;
+  round?: boolean; // clip the photo to a circle (for circular source images)
 }) {
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();
@@ -47,7 +49,7 @@ export function Polaroid({
           width={width}
           height={height}
           unoptimized
-          className="w-full"
+          className={round ? "w-full rounded-full" : "w-full"}
         />
         <p className="mt-2 text-center font-hand text-lg text-muted">{caption}</p>
       </motion.button>
@@ -74,7 +76,7 @@ export function Polaroid({
                 width={width * 2}
                 height={height * 2}
                 unoptimized
-                className="w-full"
+                className={round ? "w-full rounded-full" : "w-full"}
               />
               <p className="mt-3 text-center font-hand text-2xl text-muted">{caption}</p>
             </motion.div>

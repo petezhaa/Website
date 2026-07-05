@@ -101,6 +101,20 @@
   }
 }
 
+/* pixel-sprite idle: a chunky two-frame bob, like standing in the valley */
+.sd-bob {
+  animation: sd-bob 0.9s steps(1) infinite;
+}
+@keyframes sd-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.5px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-bob {
+    animation: none;
+  }
+}
+
 .cheese-drop {
   top: -8%;
   animation: cheese-fall 3.2s ease-in forwards;
