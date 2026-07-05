@@ -11,6 +11,7 @@ import { CircuitSim } from "@/components/CircuitSim";
 import { InductionSim } from "@/components/InductionSim";
 import { WaveSim } from "@/components/WaveSim";
 import { AnalysisGame } from "@/components/AnalysisGame";
+import { NimGame } from "@/components/NimGame";
 import { GoGame } from "@/components/GoGame";
 import { SnakeJava } from "@/components/SnakeJava";
 
@@ -40,6 +41,7 @@ const GROUPS: { label: string; games: GameDef[] }[] = [
       { key: "fractal", label: "Mandelbrot", tag: "C++", render: () => <MandelbrotExplorer /> },
       { key: "pd", label: "Prisoner's Dilemma", tag: "C++", render: () => <PrisonersDilemma /> },
       { key: "eps", label: "ε–δ & Riemann", tag: "C++", render: () => <AnalysisGame /> },
+      { key: "nim", label: "Nim", tag: "Rust", render: () => <NimGame /> },
     ],
   },
   {

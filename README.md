@@ -6,23 +6,33 @@ My personal site. Next.js and Tailwind on the outside, a Rust game engine on the
 
 ## What's in it
 
-- **The map game.** A geography guessing game with seven modes (U.S. states, countries, historical battles, presidential birthplaces, chip fabs, world capitals, national parks). The engine (scoring, haversine distances, streaks, every coordinate) is Rust compiled to bare WebAssembly, no wasm-bindgen. React and d3-geo draw the map, including a 3D globe that spins with momentum.
-- **PeterBot.** A phone-simulation chat that texts like me. Groq behind it, my persona in front of it.
-- **Live stats.** Letterboxd and Steam data pulled server-side and run through actual statistics: hypothesis tests, control charts, a Lorenz curve, a survival curve of my backlog. The charts are hand-rolled SVG.
-- **A national park tier list** that argues back if you move Zion out of C tier.
+- **A 12-game arcade in 4 languages**, all in the browser, no plugins:
+  - **The map game** (Rust → bare wasm, no wasm-bindgen): geography guessing across 8 modes, a Wordle-style daily challenge, and stateless challenge-a-friend links with generated OG cards.
+  - **Physics sims** (freestanding C++ → wasm): electrodynamics with a draggable Gauss's-law surface, Lorentz-force magnetism, RC/RL/RLC circuits, Faraday induction, a 1D FDTD wave lab, and a Fourier epicycle drawer.
+  - **Math** (C++): a Mandelbrot explorer, an iterated Prisoner's Dilemma with an Axelrod tournament, and an ε–δ / Riemann-sum game.
+  - **Go, written in Go** (standard toolchain → wasm): 9×9 rules engine with a greedy bot.
+  - **Snake, in actual Java**: javac-compiled bytecode executed by a ~250-line JVM interpreter written in TypeScript (lib/jvm.ts).
+- **A live benchmark** racing the same hand-written haversine in C++, Rust, and JS.
+- **PeterBot.** A phone-simulation chat that texts like me — and can drive the page (launch games, flip the theme). Groq behind it, my persona in front of it.
+- **Live stats.** Letterboxd and Steam data pulled server-side and run through actual statistics: hypothesis tests, control charts, a Lorenz curve, a survival curve of my backlog, and a guess-my-rating game against a regression of my own taste. The charts are hand-rolled SVG.
+- **A national park tier list** that argues back if you move Zion out of C tier — and mints a shareable /heresy receipt if you publish your defiance anyway.
 - **A vibe radar** that graphs how you behave on the site. The bot can read it.
+- **A /now page**, half hand-written, half live data.
 - There is one secret. The bot will hint at it if you ask.
 
 ## Stack
 
-Next.js (App Router, webpack build), Tailwind v4, motion, d3-geo, Rust → wasm32-unknown-unknown, deployed to Cloudflare Workers via OpenNext.
+Next.js (App Router, webpack build), Tailwind v4, motion, d3-geo, Rust + C++ + Go + Java → WebAssembly/bytecode, deployed to Cloudflare Workers via OpenNext.
 
 ## Develop
 
 ```bash
-npm run dev        # dev server
-npm run build:wasm # rebuild the Rust engine -> public/mapgame.bin
-npm run build      # production build (webpack, not turbopack)
+npm run dev            # dev server
+npm run build:wasm     # rebuild the Rust map engine -> public/mapgame.bin
+npm run build:cppwasm  # rebuild all C++ engines + the Rust bench -> public/*.bin
+npm run build:goban    # rebuild the Go engine -> public/goban.wasm
+npm run build:java     # recompile Snake.java -> public/Snake.class
+npm run build          # production build (webpack, not turbopack)
 ```
 
 Deploy:

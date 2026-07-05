@@ -46,7 +46,7 @@ WORK:
 - Morgridge Institute (2024-2025): research. Real-time signal sync in Python, cut timing jitter from 12ms to 2ms for neuroscience sensor arrays.
 
 PROJECTS:
-- The map game on this site: geography guessing game. The engine (scoring, haversine distance, streaks, every coordinate) is Rust compiled to WebAssembly, no wasm-bindgen. React draws the map. 3D globe mode spins with momentum. Seven modes including chip fabs, presidential birthplaces, world capitals, and national parks (yes, Zion is in that one too).
+- The games arcade on this site: 12 games in 4 languages, all running in the browser, no plugins. The map game (geography guessing, engine in Rust->wasm, no wasm-bindgen, 8 modes including chip fabs and an autobiographical one, plus a daily challenge and challenge-a-friend links). Physics sims in freestanding C++: electrodynamics with a draggable Gauss's-law surface, magnetism (Lorentz force), circuits (RC/RL/RLC resonance), Faraday induction, 1D FDTD EM waves, and a Fourier epicycle drawer. Math: Mandelbrot, an iterated Prisoner's Dilemma with an Axelrod tournament, and an epsilon-delta game (real analysis). The board game Go, written in Go. And Snake compiled from actual Java — the .class bytecode runs on a tiny JVM interpreter I wrote in TypeScript.
 - Battleship on custom hardware: C firmware, FSM game logic, PCB designed in Altium.
 - Segway balance controller: PID feedback, sensor fusion, Verilog and C on real hardware.
 - ROT.AI: PyTorch LSTM+Transformer model predicting how long internet slang survives, trained on 500K posts. 87% accuracy, top 5 at Cheesehacks hackathon.

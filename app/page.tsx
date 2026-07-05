@@ -113,11 +113,11 @@ export default function Home() {
                     href="#play"
                     className="inline-block rounded-lg bg-accent px-6 py-3 text-sm font-medium text-accent-fg transition hover:opacity-90"
                   >
-                    Play the map game
+                    Play the games
                   </a>
                 </Magnetic>
                 <HandNote className="absolute -top-7 left-1/2 hidden w-max -translate-x-1/2 sm:inline-block">
-                  the engine is written in Rust
+                  Rust, C++, Go, and Java in there
                 </HandNote>
               </div>
               <Magnetic>
