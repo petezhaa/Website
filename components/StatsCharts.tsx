@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, type ReactNode } from "react";
 import { bumpVibe } from "@/lib/vibeBus";
 
@@ -59,6 +60,11 @@ export type StatsData = {
     intercept: number;
     minYear: number;
     maxYear: number;
+  } | null;
+  guessGame: {
+    films: { title: string; year: number; rating: number; poster: string }[];
+    slope: number;
+    intercept: number;
   } | null;
   momentum: {
     pairs: { a: number; b: number; from: string; to: string }[];
@@ -617,6 +623,183 @@ function Lorenz({ data }: { data: NonNullable<StatsData["lorenz"]> }) {
           </text>
         </svg>
         <Tooltip tip={tip} />
+      </div>
+    </Card>
+  );
+}
+
+/* ---------------- half-star rater (Letterboxd-style, clickable halves) ---------------- */
+function StarRater({
+  value,
+  onPick,
+  readOnly,
+}: {
+  value: number | null;
+  onPick?: (v: number) => void;
+  readOnly?: boolean;
+}) {
+  const [hover, setHover] = useState<number | null>(null);
+  const shown = hover ?? value ?? 0;
+  return (
+    <div
+      className="flex gap-1"
+      onMouseLeave={() => setHover(null)}
+      role={readOnly ? "img" : "radiogroup"}
+      aria-label={readOnly ? `rated ${(value ?? 0).toFixed(1)} of 5 stars` : "your rating"}
+    >
+      {[1, 2, 3, 4, 5].map((star) => {
+        const fill = Math.min(1, Math.max(0, shown - (star - 1)));
+        return (
+          <span key={star} className="relative inline-block h-7 w-7 text-[26px] leading-7">
+            <span className="absolute inset-0 text-center text-line">★</span>
+            <span
+              className="absolute left-0 top-0 h-full overflow-hidden text-gold"
+              style={{ width: `${fill * 100}%` }}
+            >
+              <span className="block w-7 text-center">★</span>
+            </span>
+            {!readOnly && onPick && (
+              <>
+                <button
+                  type="button"
+                  aria-label={`${star - 0.5} stars`}
+                  className="absolute inset-y-0 left-0 z-10 w-1/2 cursor-pointer"
+                  onMouseEnter={() => setHover(star - 0.5)}
+                  onClick={() => onPick(star - 0.5)}
+                />
+                <button
+                  type="button"
+                  aria-label={`${star} stars`}
+                  className="absolute inset-y-0 right-0 z-10 w-1/2 cursor-pointer"
+                  onMouseEnter={() => setHover(star)}
+                  onClick={() => onPick(star)}
+                />
+              </>
+            )}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+// one aligned "who : ★★★½ : 3.5★" comparison row (model value can be fractional)
+function RatingRow({ label, value }: { label: string; value: number }) {
+  return (
+    <p className="flex items-center gap-2">
+      <span className="w-12 shrink-0 text-fg">{label}</span>
+      <StarRater value={value} readOnly />
+      <span className="text-muted">{value.toFixed(1)}★</span>
+    </p>
+  );
+}
+
+/* ---------------- guess my rating: you vs. a model of my taste ---------------- */
+function GuessRating({ data }: { data: NonNullable<StatsData["guessGame"]> }) {
+  const [idx, setIdx] = useState(0);
+  const [guess, setGuess] = useState<number | null>(null);
+  const [revealed, setRevealed] = useState(false);
+  const [played, setPlayed] = useState(0);
+  const [sumErr, setSumErr] = useState(0);
+  const [sumModel, setSumModel] = useState(0);
+
+  const film = data.films[idx];
+  const predicted = Math.min(5, Math.max(0.5, data.slope * film.year + data.intercept));
+  const err = guess !== null ? Math.abs(guess - film.rating) : 0;
+  const modelErr = Math.abs(predicted - film.rating);
+
+  const reveal = () => {
+    if (guess === null || revealed) return;
+    setRevealed(true);
+    setPlayed((p) => p + 1);
+    setSumErr((s) => s + Math.abs(guess - film.rating));
+    setSumModel((s) => s + modelErr);
+    bumpVibe("gamer", 14);
+  };
+  const next = () => {
+    setIdx((i) => (i + 1) % data.films.length);
+    setGuess(null);
+    setRevealed(false);
+  };
+
+  return (
+    <Card
+      title="Guess my rating"
+      sub={`${data.films.length} films · you vs. a least-squares model of my taste`}
+      table={
+        <table className={tableCls}>
+          <tbody>
+            <tr><td className={tdCls}>rounds played</td><td className={tdCls}>{played}</td></tr>
+            <tr><td className={tdCls}>your avg error</td><td className={tdCls}>{played ? (sumErr / played).toFixed(2) : "—"}★</td></tr>
+            <tr><td className={tdCls}>model avg error</td><td className={tdCls}>{played ? (sumModel / played).toFixed(2) : "—"}★</td></tr>
+          </tbody>
+        </table>
+      }
+    >
+      {played > 0 && (
+        <p className="mb-3 font-mono text-[11px] text-muted">
+          after {played}: you {(sumErr / played).toFixed(2)}★ off · model {(sumModel / played).toFixed(2)}★ off ·{" "}
+          <span className="text-fg">{sumErr <= sumModel ? "you're ahead" : "the model's ahead"}</span>
+        </p>
+      )}
+      <div className="flex gap-4">
+        <div className="w-24 shrink-0">
+          <Image
+            src={film.poster}
+            alt={`${film.title} poster`}
+            width={230}
+            height={345}
+            className="h-auto w-full rounded-lg border border-line"
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-serif text-lg leading-tight">{film.title}</p>
+          <p className="font-mono text-[11px] text-muted">{film.year}</p>
+          {!revealed && (
+            <div className="mt-3">
+              <StarRater value={guess} onPick={setGuess} />
+            </div>
+          )}
+
+          {revealed ? (
+            <div className="mt-3 space-y-1.5 border-t border-line pt-3 font-mono text-[11px] text-muted">
+              <RatingRow label="you" value={guess ?? 0} />
+              <RatingRow label="Peter" value={film.rating} />
+              <RatingRow label="model" value={predicted} />
+              <p className="pt-1">
+                you missed by {err.toFixed(1)}★ · the model, by {modelErr.toFixed(1)}★.
+              </p>
+              <p className="text-fg">
+                {err < modelErr
+                  ? "you beat the model this round."
+                  : err > modelErr
+                  ? "the model won this round."
+                  : "dead tie with the model."}
+              </p>
+              <button
+                type="button"
+                onClick={next}
+                className="mt-1 rounded-lg border border-line px-3 py-1.5 text-[11px] text-muted transition hover:border-accent hover:text-accent"
+              >
+                next film →
+              </button>
+            </div>
+          ) : (
+            <div className="mt-3 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={reveal}
+                disabled={guess === null}
+                className="rounded-lg bg-accent px-4 py-1.5 text-[11px] font-medium text-accent-fg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                reveal
+              </button>
+              <span className="font-mono text-[11px] text-muted">
+                {guess !== null ? `you: ${guess.toFixed(1)}★` : "pick a rating"}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </Card>
   );
@@ -1208,6 +1391,7 @@ export function StatsCharts({ data }: { data: StatsData }) {
       {data.ratings && <Ratings data={data.ratings} />}
       {data.drift && <Drift data={data.drift} />}
       {data.nostalgia && <Nostalgia data={data.nostalgia} />}
+      {data.guessGame && <GuessRating data={data.guessGame} />}
       {data.momentum && <Momentum data={data.momentum} />}
       {data.weekday && <Weekday data={data.weekday} />}
       {data.hours && <HoursBox data={data.hours} />}

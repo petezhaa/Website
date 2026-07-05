@@ -18,6 +18,8 @@ import type { Topology, GeometryCollection } from "topojson-specification";
 import type { Feature, FeatureCollection } from "geojson";
 import { US_CAPITALS, WORLD_CAPITALS } from "@/lib/capitals";
 import { bumpVibe } from "@/lib/vibeBus";
+import { buildShare, dailyNumber, dailySeed, dayNumber, squares } from "@/lib/daily";
+import { encodeChallenge, type Challenge } from "@/lib/challenge";
 
 type Engine = {
   memory: WebAssembly.Memory;
@@ -147,7 +149,7 @@ function rankTitle(pct: number): string {
   return "We can pretend this one didn't happen.";
 }
 
-export function MapGame() {
+export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<Engine | null>(null);
   const worldRef = useRef<FeatureCollection | null>(null);
@@ -176,6 +178,14 @@ export function MapGame() {
   const roundStartRef = useRef(0);
   const baselineRef = useRef(0); // expected score of a random clicker so far
   const phaseRef = useRef<Phase>("loading");
+  const dailyRef = useRef(false); // is the current game today's daily challenge?
+  const roundPtsRef = useRef<number[]>([]); // per-round points, for the share block
+  const modesRef = useRef<string[]>([]); // mode names, for the chatbot's remote launch
+  const seedRef = useRef(0); // the seed of the current game (for challenge links)
+  const guessesRef = useRef<Pt[]>([]); // your [lon,lat] guesses this game
+  const challengeRef = useRef<Challenge | null>(challenge ?? null); // opponent to race
+  const challengeStartedRef = useRef(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const [phase, setPhaseState] = useState<Phase>("loading");
   const [modes, setModes] = useState<string[]>([]);
@@ -192,11 +202,50 @@ export function MapGame() {
   const [best, setBest] = useState<number | null>(null);
   const [confetti, setConfetti] = useState<number[]>([]);
   const [globeUi, setGlobeUi] = useState(true);
+  // daily challenge: menu button state + the finished share block
+  const [dailyInfo, setDailyInfo] = useState<{ num: number; played: boolean; streak: number }>({
+    num: 0,
+    played: false,
+    streak: 0,
+  });
+  const [dailyResult, setDailyResult] = useState<{ squares: string; streak: number } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const setPhase = (p: Phase) => {
     phaseRef.current = p;
     setPhaseState(p);
   };
+
+  // read today's daily status out of localStorage (client only)
+  const refreshDaily = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const d = dayNumber();
+    setDailyInfo({
+      num: dailyNumber(),
+      played: localStorage.getItem(`mapgame-daily-${d}`) !== null,
+      streak: Number(localStorage.getItem("mapgame-daily-streak")) || 0,
+    });
+  }, []);
+
+  const copyText = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // fallback for insecure contexts / old browsers
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand("copy");
+      } catch {}
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  }, []);
 
   const readString = useCallback((ptr: number): string => {
     const engine = engineRef.current;
@@ -440,18 +489,20 @@ export function MapGame() {
     }
     ctx.globalAlpha = 1;
 
-    // your guess: a map pin whose tip is the exact click point
-    const drawPin = (ll: Pt) => {
+    // your guess: a map pin whose tip is the exact click point.
+    // ghost=true draws a translucent opponent pin in a challenge race.
+    const drawPin = (ll: Pt, ghost = false) => {
       if (!isVisible(ll)) return;
       const pt = projection(ll);
       if (!pt) return;
       const [x, y] = pt;
       const u = Math.min(1.7, 0.85 + 0.15 * k) / k;
+      if (ghost) ctx.globalAlpha = 0.5;
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.arc(x, y - 6 * u, 4.5 * u, Math.PI * 0.82, Math.PI * 0.18, false);
       ctx.closePath();
-      ctx.fillStyle = P.guess;
+      ctx.fillStyle = ghost ? P.ink : P.guess;
       ctx.fill();
       ctx.strokeStyle = P.label;
       ctx.lineWidth = 1.4 * u;
@@ -460,6 +511,7 @@ export function MapGame() {
       ctx.arc(x, y - 6 * u, 1.6 * u, 0, Math.PI * 2);
       ctx.fillStyle = P.label;
       ctx.fill();
+      ctx.globalAlpha = 1;
     };
 
     // the answer: a flag planted at the true location
@@ -529,6 +581,12 @@ export function MapGame() {
         const t = Math.min(1, (p - 0.75) / 0.25);
         const pop = 1 + 0.5 * Math.sin(t * Math.PI);
         drawFlag(target, t * pop);
+      }
+      // challenge race: show the opponent's guess for this round as a ghost pin
+      const chal = challengeRef.current;
+      if (chal) {
+        const gg = chal.guesses[engine.current_round()];
+        if (gg) drawPin(gg as Pt, true);
       }
       drawPin(g);
     } else if (g) {
@@ -699,9 +757,11 @@ export function MapGame() {
         for (let m = 0; m < engine.mode_count(); m++) {
           names.push(readString(engine.mode_name(m)));
         }
+        modesRef.current = names;
         setModes(names);
         setRounds(engine.round_count());
         fitProjection(false);
+        refreshDaily();
         setPhase("menu");
         playIntro();
       })
@@ -749,6 +809,49 @@ export function MapGame() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  // ---------- the chatbot can launch a mode ({{act:play|...}}) ----------
+  useEffect(() => {
+    const onLaunch = (e: Event) => {
+      const query = (((e as CustomEvent).detail as string) || "").trim().toLowerCase();
+      // scrolling here also trips the IntersectionObserver that loads the wasm
+      document.getElementById("play")?.scrollIntoView({ behavior: "smooth" });
+      let tries = 0;
+      const attempt = () => {
+        const engine = engineRef.current;
+        if (!engine || phaseRef.current === "loading") {
+          if (tries++ < 24) setTimeout(attempt, 250); // wait out the wasm load
+          return;
+        }
+        const names = modesRef.current;
+        let idx = 0;
+        if (query) {
+          let found = names.findIndex((n) => n.toLowerCase().includes(query));
+          if (found < 0) {
+            const toks = query.split(/\s+/).filter((t) => t.length > 2);
+            found = names.findIndex((n) =>
+              toks.some((t) => n.toLowerCase().includes(t))
+            );
+          }
+          if (found >= 0) idx = found;
+        }
+        startGame(idx);
+      };
+      attempt();
+    };
+    window.addEventListener("mapgame:launch", onLaunch);
+    return () => window.removeEventListener("mapgame:launch", onLaunch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ---------- challenge mode: skip the menu, replay the opponent's rounds ----------
+  useEffect(() => {
+    if (!challenge || challengeStartedRef.current || phase !== "menu") return;
+    challengeStartedRef.current = true;
+    challengeRef.current = challenge;
+    startGame(challenge.mode, { seed: challenge.seed, keepChallenge: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, challenge]);
 
   // ---------- idle globe spin on the menu screen ----------
   const onScreenRef = useRef(true);
@@ -996,6 +1099,7 @@ export function MapGame() {
     }
 
     guessRef.current = [lon, lat];
+    guessesRef.current.push([lon, lat]); // for challenge links
     hoverRef.current = null;
     setLastBonus(engine.last_bonus());
     setLastDist(engine.last_distance_km());
@@ -1004,6 +1108,7 @@ export function MapGame() {
     setPhase("reveal");
 
     const pts = engine.last_points();
+    roundPtsRef.current.push(pts); // for the daily share block
     if (engine.last_distance_km() < 25) {
       // bullseye — small celebration
       setConfetti(Array.from({ length: 18 }, (_, i) => i));
@@ -1024,11 +1129,22 @@ export function MapGame() {
   };
 
   // ---------- flow ----------
-  const startGame = (m: number) => {
+  const startGame = (
+    m: number,
+    opts?: { seed?: number; daily?: boolean; keepChallenge?: boolean }
+  ) => {
     const engine = engineRef.current;
     if (!engine) return;
     bumpVibe("gamer", 20);
-    engine.game_start(m, (Date.now() & 0xffffffff) >>> 0);
+    const seed = opts?.seed ?? ((Date.now() & 0xffffffff) >>> 0);
+    seedRef.current = seed;
+    dailyRef.current = !!opts?.daily;
+    roundPtsRef.current = [];
+    guessesRef.current = [];
+    if (!opts?.keepChallenge) challengeRef.current = null;
+    setDailyResult(null);
+    setCopiedLink(false);
+    engine.game_start(m, seed);
     baselineRef.current = 0;
     setModeIdx(m);
     setScore(0);
@@ -1048,6 +1164,80 @@ export function MapGame() {
     playIntro();
   };
 
+  // record today's daily result once, and return the (possibly bumped) streak
+  const persistDaily = (total: number, pts: number[]): number => {
+    if (typeof window === "undefined") return 0;
+    const d = dayNumber();
+    if (localStorage.getItem(`mapgame-daily-${d}`) !== null) {
+      return Number(localStorage.getItem("mapgame-daily-streak")) || 0;
+    }
+    localStorage.setItem(`mapgame-daily-${d}`, String(total));
+    localStorage.setItem(`mapgame-daily-pts-${d}`, JSON.stringify(pts));
+    const last = Number(localStorage.getItem("mapgame-daily-last"));
+    const prev = Number(localStorage.getItem("mapgame-daily-streak")) || 0;
+    const streak = last === d - 1 ? prev + 1 : 1;
+    localStorage.setItem("mapgame-daily-streak", String(streak));
+    localStorage.setItem("mapgame-daily-last", String(d));
+    return streak;
+  };
+
+  const startDaily = () => {
+    const engine = engineRef.current;
+    if (!engine || !modes.length) return;
+    const num = dailyNumber();
+    // rotate through the modes, skipping the autobiographical one (strangers
+    // can't guess it). Same deploy + same UTC day → same mode for everyone.
+    const pool = modes.map((_, i) => i).filter((i) => modes[i] !== "Where's Peter?");
+    const m = pool.length ? pool[(((num - 1) % pool.length) + pool.length) % pool.length] : 0;
+    startGame(m, { seed: dailySeed(), daily: true });
+  };
+
+  // re-copy an already-finished daily from storage (menu "done" button)
+  const copyDailyShare = () => {
+    if (typeof window === "undefined") return;
+    const d = dayNumber();
+    const total = Number(localStorage.getItem(`mapgame-daily-${d}`)) || 0;
+    let pts: number[] = [];
+    try {
+      pts = JSON.parse(localStorage.getItem(`mapgame-daily-pts-${d}`) || "[]");
+    } catch {}
+    copyText(buildShare(pts, total, engineRef.current?.max_score() ?? 6000, dailyNumber()));
+  };
+
+  // mint a /c/<code> link encoding this game's mode, seed, and your guesses
+  const copyChallenge = () => {
+    const engine = engineRef.current;
+    if (typeof window === "undefined" || !engine) return;
+    const beat = baselineRef.current > 0 ? score / Math.max(baselineRef.current, 1) : 0;
+    const code = encodeChallenge({
+      mode: modeIdx,
+      seed: seedRef.current,
+      guesses: guessesRef.current,
+      score,
+      streak: engine.best_streak(),
+      beat,
+    });
+    const url = `${window.location.origin}/c/${code}`;
+    (async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        const ta = document.createElement("textarea");
+        ta.value = url;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand("copy");
+        } catch {}
+        document.body.removeChild(ta);
+      }
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 1800);
+    })();
+  };
+
   const advance = () => {
     const engine = engineRef.current;
     if (!engine) return;
@@ -1059,6 +1249,11 @@ export function MapGame() {
       if (total > prev) {
         localStorage.setItem(`mapgame-best-${modeIdx}`, String(total));
         setBest(total);
+      }
+      if (dailyRef.current) {
+        const streak = persistDaily(total, roundPtsRef.current);
+        setDailyResult({ squares: squares(roundPtsRef.current), streak });
+        refreshDaily();
       }
       setPhase("done");
       return;
@@ -1082,10 +1277,12 @@ export function MapGame() {
     cancelAnimationFrame(spinRafRef.current);
     guessRef.current = null;
     revealRef.current = 0;
+    dailyRef.current = false;
     // the menu is always a spinning globe, whatever mode you came from
     globeRef.current = true;
     setGlobeUi(true);
     fitProjection(false);
+    refreshDaily();
     setPhase("menu");
     requestAnimationFrame(() => draw());
   };
@@ -1229,8 +1426,30 @@ export function MapGame() {
             {/* m-auto centers when it fits and scrolls from the top when it doesn't
                 (justify-center would clip the overflow on short phone screens) */}
             <div className="m-auto flex flex-col items-center gap-3 sm:gap-6">
+              {/* daily challenge: same six rounds for everyone, once a day */}
+              <div className="flex flex-col items-center gap-1.5">
+                <button
+                  onClick={dailyInfo.played ? copyDailyShare : startDaily}
+                  className={`rounded-xl border-2 px-5 py-2.5 text-sm font-medium transition sm:text-base ${
+                    dailyInfo.played
+                      ? "border-line text-muted hover:border-accent hover:text-accent"
+                      : "border-accent bg-accent-soft text-accent hover:-translate-y-0.5"
+                  }`}
+                >
+                  {dailyInfo.played
+                    ? `Daily #${dailyInfo.num} done ✓${dailyInfo.streak > 1 ? ` · 🔥 ${dailyInfo.streak}` : ""}`
+                    : `🗓 Today's 6 — Daily #${dailyInfo.num}`}
+                </button>
+                <p className="font-mono text-[10px] text-muted">
+                  {dailyInfo.played
+                    ? copied
+                      ? "copied to clipboard"
+                      : "tap to copy your result · new one tomorrow"
+                    : "same six rounds for everyone, worldwide, today"}
+                </p>
+              </div>
               <p className="font-mono text-xs uppercase tracking-[0.25em] text-accent">
-                pick a map
+                or pick a map
               </p>
               <div className="flex max-w-xl flex-wrap justify-center gap-2 sm:gap-3">
                 {modes.map((name, m) => (
@@ -1321,6 +1540,26 @@ export function MapGame() {
               <span>best streak: {engineRef.current?.best_streak() ?? 0}</span>
               {best !== null && <span>personal best: {best}</span>}
             </div>
+            {challengeRef.current && (
+              <div className="w-full max-w-60 rounded-xl border border-line bg-surface p-3 font-mono text-[11px]">
+                <p className="uppercase tracking-widest text-accent">head to head</p>
+                <div className="mt-1.5 flex justify-between">
+                  <span className="text-muted">you</span>
+                  <span className="font-bold text-fg">{score}</span>
+                </div>
+                <div className="mt-0.5 flex justify-between text-muted">
+                  <span>them</span>
+                  <span>{challengeRef.current.score}</span>
+                </div>
+                <p className="mt-1.5 text-center text-fg">
+                  {score > challengeRef.current.score
+                    ? "you win. rub it in."
+                    : score < challengeRef.current.score
+                    ? "they win this one."
+                    : "a perfect tie. spooky."}
+                </p>
+              </div>
+            )}
             {baselineRef.current > 0 && (
               <div className="w-full max-w-60">
                 {[
@@ -1356,19 +1595,52 @@ export function MapGame() {
                 </p>
               </div>
             )}
-            <div className="mt-1 flex gap-3 sm:mt-2">
-              <button
-                onClick={() => startGame(modeIdx)}
-                className="rounded-lg bg-accent px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
-              >
-                play again
-              </button>
+            {dailyResult && (
+              <div className="w-full max-w-xs rounded-xl border border-accent/40 bg-accent-soft/40 p-3">
+                <p className="font-mono text-[11px] uppercase tracking-widest text-accent">
+                  Daily #{dailyInfo.num}
+                  {dailyResult.streak > 1 ? ` · 🔥 ${dailyResult.streak} day streak` : ""}
+                </p>
+                <p className="mt-1 text-2xl tracking-[0.2em]">{dailyResult.squares}</p>
+                <button
+                  onClick={() =>
+                    copyText(buildShare(roundPtsRef.current, score, maxScore, dailyInfo.num))
+                  }
+                  className="mt-2 rounded-lg bg-accent px-4 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+                >
+                  {copied ? "copied ✓" : "share result"}
+                </button>
+                <p className="mt-1.5 font-mono text-[10px] text-muted">
+                  new challenge tomorrow
+                </p>
+              </div>
+            )}
+            <div className="mt-1 flex flex-wrap justify-center gap-3 sm:mt-2">
+              {!dailyResult && (
+                <button
+                  onClick={() => startGame(modeIdx)}
+                  className="rounded-lg bg-accent px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+                >
+                  play again
+                </button>
+              )}
+              {!dailyResult && (
+                <button
+                  onClick={copyChallenge}
+                  title="copy a link that replays these exact rounds"
+                  className="rounded-lg border border-accent/50 px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-accent transition hover:bg-accent-soft"
+                >
+                  {copiedLink ? "link copied ✓" : "challenge a friend"}
+                </button>
+              )}
               <button
                 onClick={() => {
                   globeRef.current = true;
                   setGlobeUi(true);
                   fitProjection(false);
                   guessRef.current = null;
+                  dailyRef.current = false;
+                  refreshDaily();
                   setPhase("menu");
                   requestAnimationFrame(() => draw());
                 }}

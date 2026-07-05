@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { PARK_TIERS, PARK_FACTS, TIER_DEFENSE } from "@/lib/parks";
 import { bumpVibe } from "@/lib/vibeBus";
+import { encodeHeresy, parkIndexOf, tierDigit } from "@/lib/heresy";
 
 type Rebuttal = {
   park: string;
@@ -44,6 +45,10 @@ export function ParkTierList() {
   const dragParkRef = useRef<string | null>(null);
   const rebuttalCount = useRef(0);
   const revertTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  // the revert erases moves from `tiers`, so remember each park's INTENDED tier
+  const intendedRef = useRef(new Map<string, string>());
+  const [heresyLink, setHeresyLink] = useState<string | null>(null);
+  const [heresyCopied, setHeresyCopied] = useState(false);
 
   const originalTier = (park: string) =>
     PARK_TIERS.find((t) => t.parks.includes(park))?.label ?? "C";
@@ -55,6 +60,9 @@ export function ParkTierList() {
     const from = currentTier(park);
     if (from === to) return;
     bumpVibe("chaos", 15);
+    // record intent before the timed revert can erase it
+    intendedRef.current.set(park, to);
+    setHeresyLink(null); // a new edit invalidates the last published link
 
     setTiers((prev) => {
       const next = Object.fromEntries(
@@ -97,6 +105,46 @@ export function ParkTierList() {
     } else {
       setRebuttal(null);
     }
+  };
+
+  // parks whose intended tier differs from my canon — the heresy
+  const heresyChanges = () => {
+    const changes: { index: number; tier: number }[] = [];
+    intendedRef.current.forEach((toLabel, park) => {
+      if (toLabel !== originalTier(park)) {
+        const idx = parkIndexOf(park);
+        if (idx >= 0) changes.push({ index: idx, tier: tierDigit(toLabel) });
+      }
+    });
+    return changes;
+  };
+  const heresyCount = heresyChanges().length;
+
+  const publishHeresy = () => {
+    if (typeof window === "undefined") return;
+    const changes = heresyChanges();
+    if (changes.length === 0) return;
+    bumpVibe("menace", 20);
+    const url = `${window.location.origin}/heresy/${encodeHeresy(changes)}`;
+    setHeresyLink(url);
+    (async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        const ta = document.createElement("textarea");
+        ta.value = url;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand("copy");
+        } catch {}
+        document.body.removeChild(ta);
+      }
+      setHeresyCopied(true);
+      setTimeout(() => setHeresyCopied(false), 1800);
+    })();
   };
 
   return (
@@ -165,6 +213,42 @@ export function ParkTierList() {
       <p className="font-mono text-[11px] text-muted">
         drag a park to a different tier (or tap it, then tap a tier)
       </p>
+
+      {heresyCount > 0 && (
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={publishHeresy}
+            className="self-start rounded-lg border border-accent/50 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-accent transition hover:bg-accent-soft"
+          >
+            publish it anyway ({heresyCount})
+          </button>
+          {heresyLink && (
+            <div className="rounded-xl border border-accent/40 bg-surface p-3">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
+                your heresy is on the record
+              </p>
+              <p className="mt-1 text-sm text-muted">
+                {heresyCount} park{heresyCount === 1 ? "" : "s"} moved off my
+                canon. I reverted them here, but the receipt is permanent:
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  readOnly
+                  value={heresyLink}
+                  onFocus={(e) => e.currentTarget.select()}
+                  className="min-w-0 flex-1 rounded-lg border border-line bg-surface-2 px-3 py-1.5 font-mono text-[11px] text-muted"
+                />
+                <button
+                  onClick={publishHeresy}
+                  className="shrink-0 rounded-lg bg-accent px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent-fg transition hover:opacity-90"
+                >
+                  {heresyCopied ? "copied ✓" : "copy"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <AnimatePresence>
         {rebuttal && (

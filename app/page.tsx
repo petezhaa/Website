@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import { Reveal } from "@/components/Reveal";
 import { StatLine } from "@/components/StatLine";
 import { ScrollProgress } from "@/components/ScrollProgress";
-import { MapGame } from "@/components/MapGame";
+import { GameChooser } from "@/components/GameChooser";
+import { BenchPanel } from "@/components/BenchPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NavLinks } from "@/components/NavLinks";
 import { Magnetic } from "@/components/Magnetic";
@@ -82,7 +83,9 @@ export default function Home() {
           <Reveal>
             <p className="mb-6 flex items-center gap-2.5 font-mono text-xs text-muted">
               <span className="h-2 w-2 rounded-full bg-accent" />
-              Right now: NVIDIA, Santa Clara
+              <a href="/now" className="transition hover:text-accent">
+                Right now: NVIDIA, Santa Clara →
+              </a>
             </p>
           </Reveal>
           <Reveal delay={80}>
@@ -192,26 +195,35 @@ export default function Home() {
 
         {/* ============ MAP GAME ============ */}
         <section className="py-24" id="play">
-          <SectionLabel n="03" title="The map game" note="play at least one round" />
+          <SectionLabel n="03" title="Games" note="four languages, zero plugins" />
           <Reveal>
             <p className="mb-8 max-w-2xl leading-relaxed text-muted">
-              I like history, and I wanted to learn Rust, so I built a
-              geography game. Click where you think each place is; the closer
-              and faster you are, the more points you get. The game engine
-              (scoring, distances, every coordinate) is written in{" "}
+              A small arcade, each cabinet running a different language in your
+              browser: the map game&apos;s engine is{" "}
               <a
                 href={LINKS.github}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-accent underline decoration-accent/30 underline-offset-4 transition hover:decoration-accent"
               >
-                Rust and compiled to WebAssembly
+                Rust compiled to WebAssembly
               </a>
-              ; React draws the map.
+              , the physics and math sims are freestanding C++, the board game
+              Go is written in Go (obviously), and Snake is genuine Java
+              bytecode run by a little JVM I wrote for this site. React just
+              draws.
             </p>
           </Reveal>
           <Reveal delay={100}>
-            <MapGame />
+            <GameChooser />
+          </Reveal>
+          <Reveal delay={160}>
+            <div className="relative mt-6">
+              <BenchPanel />
+              <HandNote className="absolute -top-6 right-2 hidden w-max sm:inline-block">
+                yes, the C++ actually runs
+              </HandNote>
+            </div>
           </Reveal>
         </section>
 

@@ -7,6 +7,9 @@
     "prebuild": "node count-loc.mjs",
     "build": "next build --webpack",
     "build:wasm": "cd rust && cargo build --release --target wasm32-unknown-unknown && node -e \"require('fs').copyFileSync('target/wasm32-unknown-unknown/release/mapgame.wasm','../public/mapgame.bin')\"",
+    "build:cppwasm": "node build-cpp.mjs && rustc --target wasm32-unknown-unknown --crate-type cdylib -C opt-level=z -C lto=fat -C codegen-units=1 -C panic=abort -C strip=symbols -o public/benchrs.bin rust/bench.rs",
+    "build:goban": "cd golang && set GOOS=js&& set GOARCH=wasm&& go build -ldflags=\"-s -w\" -o ../public/goban.wasm .",
+    "build:java": "javac java/Snake.java && node -e \"require('fs').copyFileSync('java/Snake.class','public/Snake.class')\"",
     "start": "next start",
     "lint": "eslint"
   },

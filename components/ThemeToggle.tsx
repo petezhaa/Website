@@ -55,16 +55,36 @@ export function ThemeToggle() {
     setDark(document.documentElement.classList.contains("dark"));
   }, []);
 
-  const toggle = () => {
+  // Smooth full-frame cross-fade via the View Transitions API (the fade curve
+   // lives in globals.css). No support (Firefox) or reduced-motion → instant swap.
+  const runToggle = () => {
     const next = !document.documentElement.classList.contains("dark");
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
-    setDark(next);
+    const apply = () => {
+      document.documentElement.classList.toggle("dark", next);
+      localStorage.setItem("theme", next ? "dark" : "light");
+      setDark(next);
+    };
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => unknown;
+    };
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!doc.startViewTransition || reduce) {
+      apply();
+      return;
+    }
+    doc.startViewTransition(apply);
   };
+
+  // the chatbot can flip the theme via a window event ({{act:theme}})
+  useEffect(() => {
+    window.addEventListener("theme-toggle", runToggle);
+    return () => window.removeEventListener("theme-toggle", runToggle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <button
-      onClick={toggle}
+      onClick={runToggle}
       aria-label="Toggle dark mode"
       className="grid h-9 w-9 place-items-center rounded-full border border-line text-muted transition hover:border-accent hover:text-accent"
     >

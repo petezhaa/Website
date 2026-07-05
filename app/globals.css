@@ -58,6 +58,12 @@
   color: var(--accent-fg);
 }
 
+/* consistent, legible placeholder in both themes (not the washed-out UA gray) */
+::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
 /* the secret: type "cheese" (or the konami code) anywhere on the site */
 :root.cheese {
   --accent: #b8860b;
@@ -84,6 +90,22 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+/* theme toggle: a smooth full-frame cross-fade via the View Transitions API.
+   A hard-edged wipe used to slice diagonally through the bright contact-form
+   inputs mid-animation, which looked torn; a cross-fade dissolves the whole
+   page uniformly, so nothing seams. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.35s;
+  animation-timing-function: ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
 }
 
 body {

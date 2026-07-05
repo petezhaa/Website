@@ -14,6 +14,18 @@ const STARTERS = [
   "How does the map game work?",
 ];
 
+// The bot can drive the page: it streams hidden tags like {{act:play|chip fabs}}
+// that we parse out of the reply, run as actions, and strip before displaying.
+const ACTION_RE = /\{\{act:([a-z]+)(?:\|([^}]*))?\}\}/g;
+
+function cleanText(s: string): string {
+  let out = s.replace(ACTION_RE, "");
+  // hide a trailing, not-yet-closed tag so it never flashes mid-stream
+  const open = out.lastIndexOf("{{");
+  if (open !== -1 && !out.includes("}}", open)) out = out.slice(0, open);
+  return out.replace(/[ \t]+$/, "");
+}
+
 export function PeterBot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -44,6 +56,20 @@ export function PeterBot() {
   };
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const firedRef = useRef(0); // how many action tags in the current reply we've run
+
+  // run one of the bot's site-remote actions (see the persona's SITE REMOTE block)
+  const runAction = (type: string, arg: string) => {
+    const a = arg.trim().toLowerCase();
+    if (type === "play") {
+      document.getElementById("play")?.scrollIntoView({ behavior: "smooth" });
+      window.dispatchEvent(new CustomEvent("mapgame:launch", { detail: a }));
+    } else if (type === "goto") {
+      document.getElementById(a)?.scrollIntoView({ behavior: "smooth" });
+    } else if (type === "theme") {
+      window.dispatchEvent(new Event("theme-toggle"));
+    }
+  };
 
   const onType = (value: string) => {
     setInput(value);
@@ -94,6 +120,7 @@ export function PeterBot() {
     setTyping(false);
     if (typingTimer.current) clearTimeout(typingTimer.current);
     setBusy(true);
+    firedRef.current = 0;
 
     try {
       const res = await fetch("/api/chat", {
@@ -138,7 +165,13 @@ export function PeterBot() {
             const delta = JSON.parse(data).choices?.[0]?.delta?.content;
             if (delta) {
               acc += delta;
-              setMessages([...next, { role: "assistant", content: acc }]);
+              // fire any newly-completed action tags exactly once
+              const matches = [...acc.matchAll(ACTION_RE)];
+              for (let m = firedRef.current; m < matches.length; m++) {
+                runAction(matches[m][1], matches[m][2] ?? "");
+              }
+              firedRef.current = matches.length;
+              setMessages([...next, { role: "assistant", content: cleanText(acc) }]);
             }
           } catch {
             // partial JSON across chunks; ignore

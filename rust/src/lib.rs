@@ -142,6 +142,16 @@ static PARKS: &[Place] = &[
     place!("Crater Lake", 42.94, -122.10),
 ];
 
+// ---- mode 7: where's Peter? (an autobiographical tour of my actual life) ----
+static WHERES_PETER: &[Place] = &[
+    place!("where I grew up (Pulaski, WI)", 44.67, -88.24),
+    place!("my parents' restaurant, China Wok", 44.67, -88.21), // Pulaski, WI
+    place!("Green Bay — go Packers", 44.51, -88.02),
+    place!("UW–Madison, three majors", 43.08, -89.41),
+    place!("Amazon, summer 2025", 47.62, -122.34), // Seattle
+    place!("NVIDIA, where I am now", 37.37, -121.96), // Santa Clara
+];
+
 struct Mode {
     name: &'static [u8],
     places: &'static [Place],
@@ -157,6 +167,7 @@ static MODES: &[Mode] = &[
     Mode { name: b"Chip Fabs of the World\0", places: FABS, scale_km: 800.0, us_map: false },
     Mode { name: b"World Capitals\0", places: CAPITALS, scale_km: 600.0, us_map: false },
     Mode { name: b"National Parks\0", places: PARKS, scale_km: 300.0, us_map: true },
+    Mode { name: b"Where's Peter?\0", places: WHERES_PETER, scale_km: 300.0, us_map: true },
 ];
 
 // ---- game state (wasm is single-threaded; a static is honest about that) ----

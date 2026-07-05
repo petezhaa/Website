@@ -6,11 +6,11 @@ import { bumpVibe } from "@/lib/vibeBus";
 const SECTIONS = [
   { id: "work", label: "Work" },
   { id: "projects", label: "Projects" },
-  { id: "play", label: "Map game" },
+  { id: "play", label: "Games" },
   { id: "about", label: "About" },
   { id: "parks", label: "Parks" },
   { id: "films", label: "Films" },
-  { id: "games", label: "Games" },
+  { id: "games", label: "Video games" },
   { id: "stats", label: "Stats" },
   { id: "chinawok", label: "China Wok" },
   { id: "contact", label: "Contact" },

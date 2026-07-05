@@ -236,6 +236,46 @@ export async function StatsSection() {
     }
   }
 
+  // guess-my-rating: a playable card built from the same scraped posters and
+  // a self-contained least-squares fit (so it survives even when the Nostalgia
+  // chart's n>=10 gate fails). You guess my star rating; the model guesses too.
+  let guessGame: StatsData["guessGame"] = null;
+  const guessable = (lb?.films ?? [])
+    .filter((f) => f.rating !== null && f.poster && /^\d{4}$/.test(f.year))
+    .map((f) => ({
+      title: f.title,
+      year: parseInt(f.year, 10),
+      rating: f.rating as number,
+      poster: f.poster as string,
+    }));
+  if (guessable.length >= 8) {
+    const xs = guessable.map((p) => p.year);
+    const ys = guessable.map((p) => p.rating);
+    const r = pearson(xs, ys);
+    const mx = meanOf(xs);
+    const vx = varOf(xs, mx);
+    let slope = 0;
+    let intercept = meanOf(ys);
+    if (r !== null && vx > 0) {
+      slope = (r * Math.sqrt(varOf(ys, meanOf(ys)))) / Math.sqrt(vx);
+      intercept = meanOf(ys) - slope * mx;
+    }
+    // deterministic FNV-1a shuffle: stable order across renders/revalidations,
+    // no Math.random reaching the client
+    const hash = (s: string) => {
+      let h = 2166136261;
+      for (let i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    };
+    const films = [...guessable]
+      .sort((a, b) => hash(a.title + a.year) - hash(b.title + b.year))
+      .slice(0, 14);
+    guessGame = { films, slope, intercept };
+  }
+
   // momentum: does the previous rating leak into the next one? (lag-1)
   let momentum: StatsData["momentum"] = null;
   const chrono = (lb?.films ?? [])
@@ -327,6 +367,7 @@ export async function StatsSection() {
           ratings,
           drift,
           nostalgia,
+          guessGame,
           momentum,
           weekday,
           hours,
