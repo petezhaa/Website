@@ -1,4 +1,5 @@
 export type Role = {
+  tags?: string[];
   company: string;
   title: string;
   location: string;
@@ -24,6 +25,7 @@ export type SkillGroup = {
 export const ROLES: Role[] = [
   {
     company: "Microsoft",
+    tags: ["C++", "Python", "Azure Search"],
     title: "Software Engineer Intern, AI/ML",
     location: "Remote",
     dates: "Jul – Sep 2026",
@@ -33,6 +35,7 @@ export const ROLES: Role[] = [
   },
   {
     company: "NVIDIA",
+    tags: ["C++", "Python", "GPU simulation"],
     title: "Systems Software Engineering Intern",
     location: "Santa Clara, CA",
     dates: "May – Jul 2026",
@@ -46,6 +49,7 @@ export const ROLES: Role[] = [
   },
   {
     company: "Amazon",
+    tags: ["Java", "AWS Lambda", "DynamoDB", "TypeScript"],
     title: "Software Development Engineer Intern",
     location: "Seattle, WA",
     dates: "May – Aug 2025",
@@ -58,6 +62,7 @@ export const ROLES: Role[] = [
   },
   {
     company: "Linectra",
+    tags: ["Embedded C++", "STM32", "RS-485", "I2C"],
     title: "Founding Systems Software Engineer",
     location: "Madison, WI",
     dates: "Sep 2024 – May 2025",
@@ -69,6 +74,7 @@ export const ROLES: Role[] = [
   },
   {
     company: "Morgridge Institute for Research",
+    tags: ["Python", "NumPy", "Pandas"],
     title: "Optimization Software Researcher",
     location: "Madison, WI",
     dates: "Sep 2024 – May 2025",

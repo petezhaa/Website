@@ -10,7 +10,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { NavLinks } from "@/components/NavLinks";
 import { Magnetic } from "@/components/Magnetic";
 import { ProjectCard } from "@/components/ProjectCard";
-import { CompanyMark } from "@/components/CompanyMark";
+import { WorkRole } from "@/components/WorkRole";
 import { HandNote } from "@/components/Scribble";
 import { HeroLine } from "@/components/HeroLine";
 import { Stats } from "@/components/Stats";
@@ -147,37 +147,10 @@ export default function Home() {
         {/* ============ WORK ============ */}
         <section className="py-24" id="work">
           <SectionLabel n="01" title="Work" note="the resume part" />
-          <div className="flex flex-col">
+          <div className="flex flex-col lg:pl-5">
             {ROLES.map((role, i) => (
               <Reveal key={role.company + role.dates} delay={i * 50}>
-                <article className="grid gap-2 border-t border-line py-9 sm:grid-cols-[180px_1fr] sm:gap-8">
-                  <div>
-                    <p className="font-mono text-xs text-muted">{role.dates}</p>
-                    {role.status && (
-                      <span
-                        className={`mt-2 inline-block rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest ${
-                          role.status === "current"
-                            ? "border-accent/50 text-accent"
-                            : "border-line text-muted"
-                        }`}
-                      >
-                        {role.status}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <CompanyMark company={role.company} />
-                      <h3 className="font-serif text-2xl tracking-tight">
-                        {role.company}
-                      </h3>
-                      <p className="text-sm text-muted">
-                        {role.title} · {role.location}
-                      </p>
-                    </div>
-                    <p className="mt-2 max-w-2xl text-[15px]">{role.quip}</p>
-                  </div>
-                </article>
+                <WorkRole role={role} last={i === ROLES.length - 1} />
               </Reveal>
             ))}
           </div>
@@ -372,26 +345,6 @@ export default function Home() {
                     <span>1170 Mountain Bay Dr, Pulaski, WI</span>
                     <span>$10–20</span>
                   </div>
-                  {/* the part of the menu that matters */}
-                  <div className="mt-6 max-w-xl rounded-xl border border-line bg-bg/50 p-4">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
-                      the menu, abridged
-                    </p>
-                    <div className="mt-2 space-y-1.5 font-mono text-xs text-muted">
-                      <p className="flex items-baseline justify-between gap-3">
-                        <span className="text-fg">General Tso&apos;s Chicken</span>
-                        <span className="font-hand text-base">the correct order</span>
-                      </p>
-                      <p className="flex items-baseline justify-between gap-3">
-                        <span className="text-fg">Crab Rangoon</span>
-                        <span className="font-hand text-base">objectively elite</span>
-                      </p>
-                      <p className="flex items-baseline justify-between gap-3">
-                        <span className="text-fg">Lo Mein</span>
-                        <span className="font-hand text-base">never once missed</span>
-                      </p>
-                    </div>
-                  </div>
                   <div className="relative mt-8 inline-block">
                     <Magnetic>
                       <a
@@ -409,7 +362,13 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex flex-col items-center justify-center gap-8">
-                  {/* family photo Polaroid drops in here when the file lands */}
+                  <Polaroid
+                    src="/china-wok-family.png"
+                    alt="The family standing in front of China Wok, next to the delivery van"
+                    caption="china wok, back then"
+                    width={339}
+                    height={357}
+                  />
                   <FortuneCookie />
                 </div>
               </div>
