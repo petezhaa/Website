@@ -95,7 +95,7 @@ export async function GameShelf() {
             )}
             {rarest && (
               <div className="rounded-xl border border-line bg-surface px-5 py-4">
-                <p className="font-mono text-2xl font-bold text-gold">
+                <p className="font-mono text-2xl font-bold text-accent">
                   {rarest.globalPct.toFixed(1)}%
                 </p>
                 <p className="mt-0.5 truncate text-xs text-muted" title={`${rarest.name} — ${rarest.game}`}>
