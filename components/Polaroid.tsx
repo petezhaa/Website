@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { bumpVibe } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 
 // A snapshot that behaves like one: it pops up with a spring when you scroll
 // to it, sits at a lazy angle, straightens when you hover, and click blows it
@@ -33,6 +33,7 @@ export function Polaroid({
         onClick={() => {
           setOpen(true);
           bumpVibe("curiosity", 12);
+          foundSecret("family-album"); // you looked closer. that counts.
         }}
         aria-label={`enlarge photo: ${caption}`}
         initial={reduce ? false : { opacity: 0, scale: 0.6, rotate: -14, y: 26 }}

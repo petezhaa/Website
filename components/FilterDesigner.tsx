@@ -63,16 +63,11 @@ type Engine = {
   set_topology: (t: number) => void;
   set_rlc: (r: number, l: number, c: number) => void;
   sweep: () => void;
-  n_points: () => number;
   freq_ptr: () => number;
   mag_ptr: () => number;
-  phase_ptr: () => number;
-  h_at: (f: number) => number;
-  phase_at: (f: number) => number;
   mag_db_at: (f: number) => number;
   spec_pass: () => number;
   out_amp: (i: number) => number;
-  out_phase: (i: number) => number;
   sig_in: (t: number) => number;
   sig_out: (t: number) => number;
 };

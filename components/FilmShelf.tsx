@@ -25,17 +25,20 @@ function WatchHeatmap({ films }: { films: LetterboxdData["films"] }) {
     if (f.watchedDate) counts.set(f.watchedDate, (counts.get(f.watchedDate) ?? 0) + 1);
   }
   const WEEKS = 16;
-  const today = new Date();
-  // end the grid on the current week's Sunday-start
-  const end = new Date(today);
-  const weeks: { date: string; n: number }[][] = [];
-  for (let w = WEEKS - 1; w >= 0; w--) {
-    const col: { date: string; n: number }[] = [];
-    for (let d = 6; d >= 0; d--) {
-      const day = new Date(end);
-      day.setDate(end.getDate() - (w * 7 + d));
-      const key = day.toISOString().slice(0, 10);
-      col.push({ date: key, n: counts.get(key) ?? 0 });
+  // pure UTC calendar math throughout: diary dates are plain YYYY-MM-DD
+  // strings, so one calendar, no local-vs-UTC drift. Columns are true
+  // Sunday-to-Saturday weeks; cells after today simply don't render.
+  const DAY = 86_400_000;
+  const now = new Date();
+  const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const gridStart = todayUTC - (new Date(todayUTC).getUTCDay() + (WEEKS - 1) * 7) * DAY;
+  const weeks: { date: string; n: number; future: boolean }[][] = [];
+  for (let w = 0; w < WEEKS; w++) {
+    const col: { date: string; n: number; future: boolean }[] = [];
+    for (let d = 0; d < 7; d++) {
+      const ms = gridStart + (w * 7 + d) * DAY;
+      const key = new Date(ms).toISOString().slice(0, 10);
+      col.push({ date: key, n: counts.get(key) ?? 0, future: ms > todayUTC });
     }
     weeks.push(col);
   }
@@ -52,9 +55,15 @@ function WatchHeatmap({ films }: { films: LetterboxdData["films"] }) {
             {col.map((cell) => (
               <div
                 key={cell.date}
-                title={`${cell.date}${cell.n ? ` — ${cell.n} film${cell.n > 1 ? "s" : ""}` : ""}`}
+                title={cell.future ? undefined : `${cell.date}${cell.n ? ` — ${cell.n} film${cell.n > 1 ? "s" : ""}` : ""}`}
                 className={`h-3.5 w-3.5 rounded-[3px] ${
-                  cell.n >= 2 ? "bg-accent" : cell.n === 1 ? "bg-accent/45" : "bg-surface-2"
+                  cell.future
+                    ? "bg-transparent"
+                    : cell.n >= 2
+                    ? "bg-accent"
+                    : cell.n === 1
+                    ? "bg-accent/45"
+                    : "bg-surface-2"
                 }`}
               />
             ))}

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { PARK_TIERS, PARK_FACTS, TIER_DEFENSE } from "@/lib/parks";
 import { bumpVibe } from "@/lib/vibeBus";
 import { encodeHeresy, parkIndexOf, tierDigit } from "@/lib/heresy";
+import { copyToClipboard } from "@/lib/clipboard";
 
 type Rebuttal = {
   park: string;
@@ -127,24 +128,10 @@ export function ParkTierList() {
     bumpVibe("menace", 20);
     const url = `${window.location.origin}/heresy/${encodeHeresy(changes)}`;
     setHeresyLink(url);
-    (async () => {
-      try {
-        await navigator.clipboard.writeText(url);
-      } catch {
-        const ta = document.createElement("textarea");
-        ta.value = url;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-          document.execCommand("copy");
-        } catch {}
-        document.body.removeChild(ta);
-      }
+    void copyToClipboard(url).then(() => {
       setHeresyCopied(true);
       setTimeout(() => setHeresyCopied(false), 1800);
-    })();
+    });
   };
 
   return (

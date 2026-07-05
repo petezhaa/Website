@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { PixelPeter } from "@/components/PixelPeter";
 import { readMessage } from "@/components/VibeRadar";
-import { bumpVibe, getVibe, getVibeSamples } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret, getVibe, getVibeSamples } from "@/lib/vibeBus";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -61,6 +61,7 @@ export function PeterBot() {
 
   // run one of the bot's site-remote actions (see the persona's SITE REMOTE block)
   const runAction = (type: string, arg: string) => {
+    foundSecret("remote-control"); // you made the bot drive the page
     const a = arg.trim().toLowerCase();
     if (type === "play") {
       document.getElementById("play")?.scrollIntoView({ behavior: "smooth" });

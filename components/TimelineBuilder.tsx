@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { bumpVibe } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 
 // Timeline Builder — six shuffled events from the Rust history engine
 // (rust/history.rs), reordered by hand until they read oldest-to-newest.
@@ -119,6 +119,7 @@ export function TimelineBuilder() {
     setScore(s);
     setRevealed(true);
     bumpVibe("gamer", s === PAIRS ? 30 : 6 + Math.floor(s / 3));
+    if (s === PAIRS) foundSecret("flawless-chronology");
     if (best === null || s > best) {
       setBest(s);
       try {

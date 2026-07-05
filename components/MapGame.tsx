@@ -17,8 +17,9 @@ import { feature } from "topojson-client";
 import type { Topology, GeometryCollection } from "topojson-specification";
 import type { Feature, FeatureCollection } from "geojson";
 import { US_CAPITALS, WORLD_CAPITALS } from "@/lib/capitals";
-import { bumpVibe } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 import { buildShare, dailyNumber, dailySeed, dayNumber, squares } from "@/lib/daily";
+import { copyToClipboard } from "@/lib/clipboard";
 import { encodeChallenge, type Challenge } from "@/lib/challenge";
 
 type Engine = {
@@ -179,6 +180,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
   const baselineRef = useRef(0); // expected score of a random clicker so far
   const phaseRef = useRef<Phase>("loading");
   const dailyRef = useRef(false); // is the current game today's daily challenge?
+  const dailyDayRef = useRef(0); // the UTC day whose board is being played
   const roundPtsRef = useRef<number[]>([]); // per-round points, for the share block
   const modesRef = useRef<string[]>([]); // mode names, for the chatbot's remote launch
   const seedRef = useRef(0); // the seed of the current game (for challenge links)
@@ -228,21 +230,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
   }, []);
 
   const copyText = useCallback(async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      // fallback for insecure contexts / old browsers
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand("copy");
-      } catch {}
-      document.body.removeChild(ta);
-    }
+    await copyToClipboard(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   }, []);
@@ -847,9 +835,14 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
   // ---------- challenge mode: skip the menu, replay the opponent's rounds ----------
   useEffect(() => {
     if (!challenge || challengeStartedRef.current || phase !== "menu") return;
+    const engine = engineRef.current;
+    if (!engine) return;
     challengeStartedRef.current = true;
-    challengeRef.current = challenge;
-    startGame(challenge.mode, { seed: challenge.seed, keepChallenge: true });
+    // the engine clamps out-of-range modes internally; the UI must apply the
+    // same clamp or the map/scale/best-key disagree with what's being played
+    const mode = Math.min(Math.max(challenge.mode, 0), engine.mode_count() - 1);
+    challengeRef.current = { ...challenge, mode };
+    startGame(mode, { seed: challenge.seed, keepChallenge: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, challenge]);
 
@@ -1110,7 +1103,8 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
     const pts = engine.last_points();
     roundPtsRef.current.push(pts); // for the daily share block
     if (engine.last_distance_km() < 25) {
-      // bullseye — small celebration
+      // bullseye — small celebration (and it counts as a find)
+      foundSecret("bullseye");
       setConfetti(Array.from({ length: 18 }, (_, i) => i));
       setTimeout(() => setConfetti([]), 1500);
     }
@@ -1164,10 +1158,11 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
     playIntro();
   };
 
-  // record today's daily result once, and return the (possibly bumped) streak
+  // record the daily result once — under the day whose BOARD was played, so a
+  // game finishing just past UTC midnight files under the day it started
   const persistDaily = (total: number, pts: number[]): number => {
     if (typeof window === "undefined") return 0;
-    const d = dayNumber();
+    const d = dailyDayRef.current || dayNumber();
     if (localStorage.getItem(`mapgame-daily-${d}`) !== null) {
       return Number(localStorage.getItem("mapgame-daily-streak")) || 0;
     }
@@ -1184,6 +1179,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
   const startDaily = () => {
     const engine = engineRef.current;
     if (!engine || !modes.length) return;
+    dailyDayRef.current = dayNumber(); // pin the board's day at start
     const num = dailyNumber();
     // rotate through the modes, skipping the autobiographical one (strangers
     // can't guess it). Same deploy + same UTC day → same mode for everyone.
@@ -1218,24 +1214,10 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
       beat,
     });
     const url = `${window.location.origin}/c/${code}`;
-    (async () => {
-      try {
-        await navigator.clipboard.writeText(url);
-      } catch {
-        const ta = document.createElement("textarea");
-        ta.value = url;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-          document.execCommand("copy");
-        } catch {}
-        document.body.removeChild(ta);
-      }
+    void copyToClipboard(url).then(() => {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 1800);
-    })();
+    });
   };
 
   const advance = () => {
@@ -1634,16 +1616,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
                 </button>
               )}
               <button
-                onClick={() => {
-                  globeRef.current = true;
-                  setGlobeUi(true);
-                  fitProjection(false);
-                  guessRef.current = null;
-                  dailyRef.current = false;
-                  refreshDaily();
-                  setPhase("menu");
-                  requestAnimationFrame(() => draw());
-                }}
+                onClick={quitToMenu}
                 className="rounded-lg border border-line px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider transition hover:border-accent hover:text-accent"
               >
                 other maps

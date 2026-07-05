@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { bumpVibe } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 
 // field space is [0, XMAX] x [0, 1]; the canvas is that, scaled by H
 const XMAX = 1.6;
@@ -226,11 +226,16 @@ export function ChargeSim() {
       }
       // throttled readout so React state isn't hammered at 60fps
       if (++gaussTickRef.current % 12 === 0) {
-        setGaussInfo({
+        const info = {
           flux: eng.gauss_flux(gz.x, gz.y, gz.r),
           pred: eng.gauss_pred(gz.x, gz.y, gz.r),
           qin: eng.q_enclosed(gz.x, gz.y, gz.r),
-        });
+        };
+        setGaussInfo(info);
+        // verifying Gauss's law on a nonzero enclosed charge counts as a find
+        if (info.qin !== 0 && Math.abs(info.flux - info.pred) < 0.004) {
+          foundSecret("gauss-verified");
+        }
       }
     }
 
@@ -387,6 +392,10 @@ export function ChargeSim() {
   const seed = (name: string) => {
     const eng = engineRef.current;
     if (!eng) return;
+    // rebuilding the charge array invalidates any in-flight drag: the stale
+    // index would pin whichever new charge inherits that slot
+    dragRef.current = null;
+    gaussDragRef.current = false;
     eng.clear_all();
     if (name === "random") {
       for (let i = 0; i < 12; i++)
@@ -397,7 +406,12 @@ export function ChargeSim() {
     setN(eng.count());
     bumpVibe("curiosity", 8);
   };
-  const clear = () => { engineRef.current?.clear_all(); setN(0); };
+  const clear = () => {
+    dragRef.current = null; // same invalidation as seed()
+    gaussDragRef.current = false;
+    engineRef.current?.clear_all();
+    setN(0);
+  };
   const togglePause = () => { pausedRef.current = !pausedRef.current; setPaused(pausedRef.current); };
 
   const btn = (active: boolean) =>

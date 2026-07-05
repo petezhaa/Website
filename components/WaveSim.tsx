@@ -16,7 +16,6 @@ type Engine = {
   set_mode: (m: number) => void;
   set_freq: (lambda: number) => void;
   set_eps: (epsR: number) => void;
-  fire_pulse: () => void;
   poke: (cell: number, amp: number) => void;
   ez_ptr: () => number;
   hy_ptr: () => number;

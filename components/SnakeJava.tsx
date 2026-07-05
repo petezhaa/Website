@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MiniJVM } from "@/lib/jvm";
-import { bumpVibe } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 
 // Snake, running as REAL Java bytecode: java/Snake.java is compiled with
 // javac, the .class ships as a static asset, and lib/jvm.ts (a ~250-line JVM
@@ -106,6 +106,7 @@ export function SnakeJava() {
             const r = jvm.callInt("step");
             const s = jvm.callInt("getScore");
             setScore(s);
+            if (s >= 100) foundSecret("nokia-certified");
             if (r === 2) {
               aliveRef.current = false;
               setDead(true);

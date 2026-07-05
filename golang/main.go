@@ -248,6 +248,9 @@ func main() {
 					res["botY"] = b / N
 				}
 			}
+			// the bot's reply can capture, so the counters ride along here too
+			res["capsBlack"] = captures[1]
+			res["capsWhite"] = captures[2]
 			return js.ValueOf(res)
 		}),
 		"score": js.FuncOf(func(js.Value, []js.Value) interface{} {

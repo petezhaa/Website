@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
+import { foundSecret } from "@/lib/vibeBus";
 
 // Hand-drawn sun: a wobbly core with uneven rays.
 function DoodleSun() {
@@ -50,6 +51,7 @@ function DoodleMoon() {
 
 export function ThemeToggle() {
   const [dark, setDark] = useState<boolean | null>(null);
+  const flips = useRef<number[]>([]); // recent toggle timestamps
 
   useEffect(() => {
     setDark(document.documentElement.classList.contains("dark"));
@@ -58,6 +60,10 @@ export function ThemeToggle() {
   // Smooth full-frame cross-fade via the View Transitions API (the fade curve
    // lives in globals.css). No support (Firefox) or reduced-motion → instant swap.
   const runToggle = () => {
+    // four flips in five seconds: indecision, formally recognized
+    const now = Date.now();
+    flips.current = [...flips.current.filter((t) => now - t < 5000), now];
+    if (flips.current.length >= 4) foundSecret("indecisive");
     const next = !document.documentElement.classList.contains("dark");
     const apply = () => {
       document.documentElement.classList.toggle("dark", next);

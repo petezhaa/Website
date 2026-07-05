@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { bumpVibe } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 
 // Which came first? — streak mode against the history engine (rust/history.rs).
 // Two events, click the earlier one. The engine deals pairs whose year gap
@@ -121,6 +121,7 @@ export function WhichFirst() {
     const b = e.wf_b();
     if (e.wf_answer(side === "a" ? 1 : 0)) {
       bumpVibe("gamer", 6);
+      if (e.wf_streak() >= 10) foundSecret("chronologist");
       setFlash(true);
       if (flashTimer.current) clearTimeout(flashTimer.current);
       flashTimer.current = setTimeout(() => setFlash(false), 400);

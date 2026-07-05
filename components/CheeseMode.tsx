@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { bumpVibe } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret, SECRET_TOTAL } from "@/lib/vibeBus";
 
 // The site's one secret: type "cheese" anywhere (or the Konami code) and
 // Wisconsin takes over. Type it again to put the state away.
@@ -14,14 +14,17 @@ const KONAMI = [
 type Drop = { id: number; x: number; delay: number; size: number; spin: number; glyph: string };
 
 export function CheeseMode() {
-  const [on, setOn] = useState(false);
-  const [beer, setBeer] = useState(false);
   const [drops, setDrops] = useState<Drop[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const typed = useRef("");
   const konami = useRef(0);
   const nextId = useRef(0);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rainTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // mode flags are refs, not state: nothing renders off them (the CSS class
+  // on <html> is the render), and side effects don't belong in updaters
+  const cheeseOn = useRef(false);
+  const beerOn = useRef(false);
 
   const rain = (glyph: string) => {
     const batch: Drop[] = Array.from({ length: 26 }, (_, i) => ({
@@ -33,7 +36,9 @@ export function CheeseMode() {
       glyph,
     }));
     setDrops(batch);
-    setTimeout(() => setDrops([]), 5200);
+    // a fresh rain owns the sky: the previous clear-timer must not cut it short
+    if (rainTimer.current) clearTimeout(rainTimer.current);
+    rainTimer.current = setTimeout(() => setDrops([]), 5200);
   };
 
   const say = (msg: string) => {
@@ -43,38 +48,59 @@ export function CheeseMode() {
   };
 
   const trigger = () => {
-    setOn((prev) => {
-      const next = !prev;
-      document.documentElement.classList.toggle("cheese", next);
-      if (next) {
-        bumpVibe("chaos", 40);
-        rain("🧀");
-      }
-      say(
-        next
-          ? "cheese mode. wisconsin sends its regards."
-          : "cheese mode off. the state thanks you for visiting."
-      );
-      return next;
-    });
+    const next = !cheeseOn.current;
+    cheeseOn.current = next;
+    document.documentElement.classList.toggle("cheese", next);
+    if (next) {
+      bumpVibe("chaos", 40);
+      rain("🧀");
+    }
+    say(
+      next
+        ? "cheese mode. wisconsin sends its regards."
+        : "cheese mode off. the state thanks you for visiting."
+    );
   };
 
   // the other wisconsin food group. type "beer" and the site has a few.
   const triggerBeer = () => {
-    setBeer((prev) => {
-      const next = !prev;
-      document.documentElement.classList.toggle("beer", next);
-      if (next) {
-        bumpVibe("chaos", 45);
-        rain("🍺");
-      }
-      say(
-        next
-          ? "beer mode. the site is 21, don't worry."
-          : "sober. the site remembers nothing."
-      );
-      return next;
-    });
+    const next = !beerOn.current;
+    beerOn.current = next;
+    document.documentElement.classList.toggle("beer", next);
+    if (next) {
+      bumpVibe("chaos", 45);
+      rain("🍺");
+    }
+    say(
+      next
+        ? "beer mode. the site is 21, don't worry."
+        : "sober. the site remembers nothing."
+    );
+  };
+
+  const found = foundSecret;
+
+  // the lesser typed secrets: one effect, one dry line each
+  const MINOR: Record<string, () => void> = {
+    packers: () => {
+      rain("🏈");
+      bumpVibe("chaos", 20);
+      say("go pack go.");
+    },
+    sudo: () => {
+      bumpVibe("menace", 25);
+      say("permission denied. this site is static and unbribable.");
+    },
+    zion: () => {
+      bumpVibe("menace", 20);
+      document.getElementById("parks")?.scrollIntoView({ behavior: "smooth" });
+      say("zion stays in c-tier. the committee has been notified.");
+    },
+    tso: () => {
+      bumpVibe("explorer", 10);
+      document.getElementById("chinawok")?.scrollIntoView({ behavior: "smooth" });
+      say("the general will see you now.");
+    },
   };
 
   useEffect(() => {
@@ -86,31 +112,52 @@ export function CheeseMode() {
       konami.current = e.key === KONAMI[konami.current] ? konami.current + 1 : e.key === KONAMI[0] ? 1 : 0;
       if (konami.current === KONAMI.length) {
         konami.current = 0;
+        found("konami");
         trigger();
         return;
       }
 
       if (/^[a-z]$/i.test(e.key)) {
-        typed.current = (typed.current + e.key.toLowerCase()).slice(-6);
-        if (typed.current === "cheese") {
+        typed.current = (typed.current + e.key.toLowerCase()).slice(-8);
+        if (typed.current.endsWith("cheese")) {
           typed.current = "";
+          found("cheese");
           trigger();
         } else if (typed.current.endsWith("beer")) {
           typed.current = "";
+          found("beer");
           triggerBeer();
+        } else {
+          for (const word of Object.keys(MINOR)) {
+            if (typed.current.endsWith(word)) {
+              typed.current = "";
+              found(word);
+              MINOR[word]();
+              break;
+            }
+          }
         }
       }
     };
     // the phone dispatches these when someone texts peter a magic word
-    const onEvent = () => trigger();
-    const onBeer = () => triggerBeer();
+    const onEvent = () => { found("cheese"); trigger(); };
+    const onBeer = () => { found("beer"); triggerBeer(); };
+    // any component can log a secret; the toast is the site acknowledging it
+    const onSecret = (e: Event) => {
+      const d = (e as CustomEvent).detail as { count: number };
+      if (d?.count) {
+        setTimeout(() => say(`secret ${d.count}/${SECRET_TOTAL}, on the record.`), 900);
+      }
+    };
     window.addEventListener("keydown", onKey);
     window.addEventListener("cheesemode", onEvent);
     window.addEventListener("beermode", onBeer);
+    window.addEventListener("secret-found", onSecret);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("cheesemode", onEvent);
       window.removeEventListener("beermode", onBeer);
+      window.removeEventListener("secret-found", onSecret);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

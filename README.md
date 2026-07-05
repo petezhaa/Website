@@ -6,7 +6,7 @@ My personal site. Next.js and Tailwind on the outside, a Rust game engine on the
 
 ## What's in it
 
-- **A 12-game arcade in 4 languages**, all in the browser, no plugins:
+- **A browser arcade in 4 languages**, all in the browser, no plugins:
   - **The map game** (Rust → bare wasm, no wasm-bindgen): geography guessing across 8 modes, a Wordle-style daily challenge, and stateless challenge-a-friend links with generated OG cards.
   - **Physics sims** (freestanding C++ → wasm): electrodynamics with a draggable Gauss's-law surface, Lorentz-force magnetism, RC/RL/RLC circuits, Faraday induction, a 1D FDTD wave lab, and a Fourier epicycle drawer.
   - **Math** (C++): a Mandelbrot explorer, an iterated Prisoner's Dilemma with an Axelrod tournament, and an ε–δ / Riemann-sum game.

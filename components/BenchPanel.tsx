@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { benchRun } from "@/lib/bench";
-import { bumpVibe } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 
 type WasmBench = { bench_run: (n: number) => number };
 type Row = {
@@ -57,6 +57,7 @@ export function BenchPanel() {
     if (!cpp || !rust || running) return;
     setRunning(true);
     bumpVibe("curiosity", 16);
+    foundSecret("laboratory"); // ran the benchmark: a person of science
     // yield so the button paints "running…" before we hog the main thread
     await new Promise((r) => setTimeout(r, 40));
 

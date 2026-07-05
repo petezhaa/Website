@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { bumpVibe } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 
 // Crack a cookie, get a fortune. The fortunes are house-written and the
 // lucky numbers are load-bearing.
@@ -30,7 +30,10 @@ export function FortuneCookie() {
       while (next === prev) next = FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
       return next;
     });
-    setCount((c) => c + 1);
+    setCount((c) => {
+      if (c + 1 >= 5) foundSecret("fortunate"); // five cookies is commitment
+      return c + 1;
+    });
     bumpVibe("chaos", 8);
   };
 

@@ -231,6 +231,15 @@ export default function Home() {
                   and grand strategy games. I also hike, which is why
                   there&apos;s a national park tier list below this.
                 </p>
+                <div className="max-w-sm pt-2">
+                  <Polaroid
+                    src="/first-home.jpg"
+                    alt="The trailer in Pulaski, Wisconsin, where Peter grew up"
+                    caption="pulaski, wisconsin — where it started"
+                    width={316}
+                    height={234}
+                  />
+                </div>
               </div>
             </Reveal>
             <Reveal delay={100}>
@@ -242,13 +251,6 @@ export default function Home() {
                   width={480}
                   height={480}
                   round
-                />
-                <Polaroid
-                  src="/first-home.jpg"
-                  alt="The trailer in Pulaski, Wisconsin, where Peter grew up"
-                  caption="pulaski, wisconsin — where it started"
-                  width={316}
-                  height={234}
                 />
                 <div className="rounded-xl border border-line bg-surface p-6">
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">

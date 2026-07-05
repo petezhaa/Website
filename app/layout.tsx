@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://petezha.xyz"),
   title: "Peter Zhao · maps, GPUs, and a bot that texts back",
   description:
-    "Peter Zhao, a student engineer at UW–Madison studying computer science, electrical engineering, and math. GPU systems at NVIDIA, Azure Search at Microsoft, AWS at Amazon. Also: a 12-game arcade running Rust, C++, Go, and real Java bytecode in your browser.",
+    "Peter Zhao, a student engineer at UW–Madison studying computer science, electrical engineering, and math. GPU systems at NVIDIA, Azure Search at Microsoft, AWS at Amazon. Also: a browser arcade running Rust, C++, Go, and real Java bytecode.",
   openGraph: {
     title: "Peter Zhao",
     description:

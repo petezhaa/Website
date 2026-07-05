@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { bumpVibe } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 
 // The board game Go, engine written in Go (see golang/main.go), compiled to
 // wasm with the standard toolchain. This component owns only the wood.
@@ -14,7 +14,10 @@ type GoAPI = {
     ok: boolean; botPassed: boolean; botX: number; botY: number;
     capsBlack: number; capsWhite: number;
   };
-  pass: () => { botPassed: boolean; botX: number; botY: number };
+  pass: () => {
+    botPassed: boolean; botX: number; botY: number;
+    capsBlack: number; capsWhite: number;
+  };
   score: () => { black: number; white: number };
 };
 
@@ -31,7 +34,7 @@ const MARGIN = 40;
 let goLoaded: Promise<GoAPI> | null = null; // singleton across mounts
 function loadGo(): Promise<GoAPI> {
   if (goLoaded) return goLoaded;
-  goLoaded = (async () => {
+  const attempt = (async () => {
     if (!globalThis.Go) {
       await new Promise<void>((resolve, reject) => {
         const s = document.createElement("script");
@@ -51,6 +54,12 @@ function loadGo(): Promise<GoAPI> {
     }
     throw new Error("GoEngine never appeared");
   })();
+  // don't cache failure: a transient hiccup shouldn't brick the cabinet
+  // for the whole session — the next mount retries fresh
+  goLoaded = attempt.catch((err) => {
+    goLoaded = null;
+    throw err;
+  });
   return goLoaded;
 }
 
@@ -185,6 +194,7 @@ export function GoGame() {
     lastRef.current = { you: i, bot: res.botPassed ? -1 : res.botY * N + res.botX };
     boardRef.current = api.board();
     setCaps({ black: res.capsBlack, white: res.capsWhite });
+    if (res.capsBlack >= 5) foundSecret("atari");
     setScore(null);
     setNote(res.botPassed ? "the bot passed. finish your shapes." : "your move.");
     hoverRef.current = -1;
@@ -197,6 +207,7 @@ export function GoGame() {
     const res = api.pass();
     lastRef.current = { you: -1, bot: res.botPassed ? -1 : res.botY * N + res.botX };
     boardRef.current = api.board();
+    setCaps({ black: res.capsBlack, white: res.capsWhite });
     const s = api.score();
     setScore(s);
     setNote(res.botPassed ? "both passed — count it up." : "you passed; the bot didn't.");

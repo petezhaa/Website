@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { bumpVibe } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 
 // The Segway balance project (Nov 2025, real hardware), minus the hardware:
 // an inverted pendulum on a cart, simulated in C++ (cpp/pendulum.cpp). Your
@@ -31,6 +31,8 @@ export function PendulumGame() {
   const gainsRef = useRef({ p: 40, i: 2, d: 6 }); // deliberately mediocre start
   const nextPokeRef = useRef(0.5);
   const crashedRef = useRef(false);
+  // a poke only counts as survived after 4s upright (or the next poke lands)
+  const pendingPokeRef = useRef<{ p: number; timer: ReturnType<typeof setTimeout> } | null>(null);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [gains, setGains] = useState(gainsRef.current);
@@ -174,12 +176,26 @@ export function PendulumGame() {
     engineRef.current?.set_gains(g.p, g.i, g.d);
   };
 
+  const commitPending = () => {
+    const pending = pendingPokeRef.current;
+    if (pending && !crashedRef.current) {
+      setBestPoke((b) => Math.max(b, pending.p));
+      if (pending.p >= 3) foundSecret("well-tuned"); // survived a real shove
+    }
+    if (pending) clearTimeout(pending.timer);
+    pendingPokeRef.current = null;
+  };
+
   const doPoke = () => {
     const e = engineRef.current;
     if (!e || crashedRef.current) return;
+    commitPending(); // still standing → the previous poke was survived
     const p = nextPokeRef.current;
     e.poke(Math.random() < 0.5 ? p : -p); // direction is a surprise
-    setBestPoke((b) => Math.max(b, p));
+    pendingPokeRef.current = {
+      p,
+      timer: setTimeout(commitPending, 4000), // 4s upright = survived
+    };
     nextPokeRef.current = Math.min(8, p + 0.5);
     setNextPoke(nextPokeRef.current);
     bumpVibe("gamer", 8);
@@ -188,6 +204,9 @@ export function PendulumGame() {
   const restart = () => {
     const e = engineRef.current;
     if (!e) return;
+    // a poke that ended in a crash never counts
+    if (pendingPokeRef.current) clearTimeout(pendingPokeRef.current.timer);
+    pendingPokeRef.current = null;
     e.reset();
     e.set_gains(gainsRef.current.p, gainsRef.current.i, gainsRef.current.d);
     crashedRef.current = false;

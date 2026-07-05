@@ -35,7 +35,6 @@ type Engine = {
   flux: () => number;
   emf: () => number;
   current: () => number;
-  xlim: () => number;
   hist_len: () => number;
   hist_phi: (i: number) => number;
   hist_emf: (i: number) => number;

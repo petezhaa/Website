@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { bumpVibe } from "@/lib/vibeBus";
+import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 
 // Nim — combinatorial game theory with a Rust engine (rust/nim.rs). Take any
 // number of stones from one pile; last stone wins. The bot plays Bouton's
@@ -12,7 +12,6 @@ type Engine = {
   pile_count: () => number;
   pile: (i: number) => number;
   nim_sum: () => number;
-  turn: () => number;
   winner: () => number;
   take: (p: number, n: number) => number;
   bot_move: () => number;
@@ -85,6 +84,7 @@ export function NimGame() {
       setNote("you took the last stone. you beat the theorem-bot.");
       setRecord((r) => ({ ...r, you: r.you + 1 }));
       bumpVibe("gamer", 25);
+      if (!casual) foundSecret("bouton"); // beat perfect play = knew the theorem
       return;
     }
     // the bot replies after a beat, so it reads as a turn
@@ -121,8 +121,6 @@ export function NimGame() {
         <p className="animate-pulse font-mono text-sm text-muted">counting stones…</p>
       </div>
     );
-
-  const maxPile = Math.max(...piles, 1);
 
   return (
     <div className="flex flex-col gap-4">

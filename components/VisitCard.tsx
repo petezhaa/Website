@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getVibe, getVibeSamples, type Vibe } from "@/lib/vibeBus";
+import { getVibe, getVibeSamples, secretsFound, SECRET_TOTAL, type Vibe } from "@/lib/vibeBus";
 
 // The stats section quantifies Peter; this card quantifies you. Everything
 // here is computed in your browser from this visit and goes nowhere.
@@ -10,6 +10,7 @@ export function VisitCard() {
   const [depth, setDepth] = useState(0);
   const [vibe, setVibe] = useState<Vibe | null>(null);
   const [samples, setSamples] = useState(0);
+  const [secrets, setSecrets] = useState(0);
 
   useEffect(() => {
     const t0 = performance.now();
@@ -30,14 +31,18 @@ export function VisitCard() {
       setVibe(getVibe());
       setSamples(getVibeSamples());
     };
+    const onSecret = () => setSecrets(secretsFound());
     onScroll();
     onVibe();
+    onSecret();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("vibe", onVibe);
+    window.addEventListener("secret-found", onSecret);
     return () => {
       clearInterval(id);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("vibe", onVibe);
+      window.removeEventListener("secret-found", onSecret);
     };
   }, []);
 
@@ -56,7 +61,7 @@ export function VisitCard() {
       <p className="mb-4 font-mono text-[11px] text-muted">
         this visit, measured locally · nothing leaves your browser
       </p>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
           <p className="font-mono text-2xl font-bold text-accent">{timeStr}</p>
           <p className="mt-0.5 text-xs text-muted">on this page</p>
@@ -68,6 +73,14 @@ export function VisitCard() {
         <div>
           <p className="font-mono text-2xl font-bold text-accent">{samples}</p>
           <p className="mt-0.5 text-xs text-muted">interactions the radar counted</p>
+        </div>
+        <div>
+          <p className={`font-mono text-2xl font-bold ${secrets >= SECRET_TOTAL ? "text-gold" : "text-accent"}`}>
+            {secrets}/{SECRET_TOTAL}
+          </p>
+          <p className="mt-0.5 text-xs text-muted">
+            {secrets >= SECRET_TOTAL ? "secrets. all of them. respect." : "secrets found. keep looking"}
+          </p>
         </div>
       </div>
       <div className="mt-4 border-t border-line pt-3 font-mono text-[10.5px] leading-relaxed text-muted">
