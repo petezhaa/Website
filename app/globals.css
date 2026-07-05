@@ -83,8 +83,19 @@
   --accent-soft: rgba(217, 168, 63, 0.18);
 }
 :root.beer main {
-  animation: beer-sway 7s ease-in-out infinite;
-  transform-origin: 50% 20%;
+  /* the sway you can actually feel, plus vision that swims in and out of
+     focus — persistent while drunk, not just the occasional stumble */
+  animation:
+    beer-sway 6s ease-in-out infinite,
+    beer-focus 11s ease-in-out infinite;
+  transform-origin: 50% 15%;
+}
+@keyframes beer-focus {
+  0%, 100% { filter: blur(0); }
+  25% { filter: blur(0.8px); }
+  45% { filter: blur(0.15px); }
+  70% { filter: blur(1.1px); }
+  90% { filter: blur(0.1px); }
 }
 :root.beer h1,
 :root.beer h2 {
@@ -92,8 +103,8 @@
   text-shadow: 3px 0 0 color-mix(in oklab, var(--accent) 35%, transparent);
 }
 @keyframes beer-sway {
-  0%, 100% { transform: rotate(-0.35deg); }
-  50% { transform: rotate(0.35deg); }
+  0%, 100% { transform: rotate(-0.8deg) translateX(-4px); }
+  50% { transform: rotate(0.8deg) translateX(4px); }
 }
 /* the random drunk moments: a hiccup, a lean, losing focus for a beat */
 :root.beer-hiccup main {
