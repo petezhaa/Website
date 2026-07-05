@@ -24,6 +24,15 @@
     // page and refetches Letterboxd/Steam/GitHub live
     { "binding": "NEXT_INC_CACHE_KV", "id": "813fe64247f649aa9304164f6368ac93" }
   ],
+  "durable_objects": {
+    "bindings": [
+      // ISR revalidation queue — refreshes happen here, not in request paths
+      { "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["DOQueueHandler"] }
+  ],
   "observability": {
     "enabled": true
   }

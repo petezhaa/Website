@@ -143,6 +143,11 @@ html {
   animation-duration: 0.35s;
   animation-timing-function: ease;
 }
+/* while a theme flip animates, the page underneath must swap instantly —
+   its own color transition running under the snapshot reads as a glitch */
+:root.theme-flip body {
+  transition: none !important;
+}
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
   ::view-transition-new(root) {

@@ -69,6 +69,9 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <script dangerouslySetInnerHTML={{ __html: swInit }} />
         <link rel="manifest" href="/manifest.json" />
+        {/* the shelves' images come from these two; shave the handshakes */}
+        <link rel="preconnect" href="https://cdn.cloudflare.steamstatic.com" />
+        <link rel="preconnect" href="https://a.ltrbxd.com" />
       </head>
       <body className="min-h-full flex flex-col font-sans">
         {children}

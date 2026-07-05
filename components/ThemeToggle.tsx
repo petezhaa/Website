@@ -58,27 +58,40 @@ export function ThemeToggle() {
   }, []);
 
   // Smooth full-frame cross-fade via the View Transitions API (the fade curve
-   // lives in globals.css). No support (Firefox) or reduced-motion → instant swap.
+  // lives in globals.css). No support (Firefox) or reduced-motion → instant swap.
+  const inFlight = useRef(false);
   const runToggle = () => {
     // four flips in five seconds: indecision, formally recognized
     const now = Date.now();
     flips.current = [...flips.current.filter((t) => now - t < 5000), now];
     if (flips.current.length >= 4) foundSecret("indecisive");
-    const next = !document.documentElement.classList.contains("dark");
+    const root = document.documentElement;
+    const next = !root.classList.contains("dark");
     const apply = () => {
-      document.documentElement.classList.toggle("dark", next);
+      root.classList.toggle("dark", next);
       localStorage.setItem("theme", next ? "dark" : "light");
       setDark(next);
     };
     const doc = document as Document & {
-      startViewTransition?: (cb: () => void) => unknown;
+      startViewTransition?: (cb: () => void) => { finished: Promise<void> };
     };
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!doc.startViewTransition || reduce) {
+    // no support, reduced motion, or a flip already animating → instant.
+    // stacking view transitions is exactly the flicker it looks like.
+    if (!doc.startViewTransition || reduce || inFlight.current) {
       apply();
       return;
     }
-    doc.startViewTransition(apply);
+    inFlight.current = true;
+    // the body's own 0.25s color transition would keep fading UNDER the
+    // crossfade snapshot (a double animation that reads as a glitch) —
+    // suppress it for the duration so the crossfade is the only motion
+    root.classList.add("theme-flip");
+    const vt = doc.startViewTransition(apply);
+    vt.finished.finally(() => {
+      root.classList.remove("theme-flip");
+      inFlight.current = false;
+    });
   };
 
   // the chatbot can flip the theme via a window event ({{act:theme}})
