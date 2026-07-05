@@ -1,0 +1,14 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch();
+const ctx = await b.newContext();
+const p = await ctx.newPage();
+const times = new Map();
+p.on('request', r => times.set(r.url(), Date.now()));
+p.on('requestfinished', r => { const t = times.get(r.url()); if (t) times.set(r.url(), Date.now() - t); });
+p.on('requestfailed', r => { const t = times.get(r.url()); if (t) times.set(r.url(), -(Date.now() - t)); });
+const t0 = Date.now();
+await p.goto('https://petezha.xyz/', { waitUntil: 'load', timeout: 90000 });
+console.log('load:', Date.now() - t0, 'ms');
+const slow = [...times.entries()].filter(([,v]) => Math.abs(v) > 1500).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+for (const [u, v] of slow.slice(0, 8)) console.log(`${v}ms  ${u.slice(0, 110)}`);
+await b.close();

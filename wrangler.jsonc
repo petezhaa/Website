@@ -18,8 +18,11 @@
     { "pattern": "www.petezha.xyz", "custom_domain": true }
   ],
   "kv_namespaces": [
-    // the daily-challenge leaderboard: the site's first (and only) backend state
-    { "binding": "LEADERBOARD", "id": "7852cf36d91d4467a144a1f23cad3954" }
+    // the daily-challenge leaderboard
+    { "binding": "LEADERBOARD", "id": "7852cf36d91d4467a144a1f23cad3954" },
+    // OpenNext's ISR/fetch cache — without it every visit re-renders the
+    // page and refetches Letterboxd/Steam/GitHub live
+    { "binding": "NEXT_INC_CACHE_KV", "id": "813fe64247f649aa9304164f6368ac93" }
   ],
   "observability": {
     "enabled": true

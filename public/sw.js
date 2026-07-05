@@ -2,12 +2,14 @@
 // - navigations: network first, cached home as the offline fallback
 // - engines + static chunks: cache first (they're immutable per deploy)
 // - everything else same-origin: network, backfilling the cache
-const VERSION = "v1";
+const VERSION = "v2";
 const CACHE = `petezha-${VERSION}`;
 
-// the heavy immutable bits worth having before the wifi dies
+// Precache ONLY the tiny engines (~180 KB total): first-visit bandwidth
+// belongs to the page, not the plane scenario. The heavy pieces (goban.wasm
+// 2.1 MB, the map JSONs) cache on first use via the fetch handler below —
+// open a cabinet once and it's yours offline.
 const PRECACHE = [
-  "/",
   "/mapgame.bin",
   "/charges.bin",
   "/epicycles.bin",
@@ -26,11 +28,8 @@ const PRECACHE = [
   "/history.bin",
   "/bench.bin",
   "/benchrs.bin",
-  "/goban.wasm",
   "/wasm_exec.js",
   "/Snake.class",
-  "/maps/countries-110m.json",
-  "/maps/states-10m.json",
 ];
 
 self.addEventListener("install", (e) => {
@@ -88,14 +87,6 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // default: network, backfill cache, fall back to cache offline
-  e.respondWith(
-    fetch(e.request)
-      .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
-        return res;
-      })
-      .catch(() => caches.match(e.request))
-  );
+  // everything else (RSC payloads, images, API-adjacent): untouched. The
+  // browser's own path is faster than a clone-and-cache detour.
 });
