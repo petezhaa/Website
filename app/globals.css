@@ -95,8 +95,35 @@
   0%, 100% { transform: rotate(-0.35deg); }
   50% { transform: rotate(0.35deg); }
 }
+/* the random drunk moments: a hiccup, a lean, losing focus for a beat */
+:root.beer-hiccup main {
+  animation: beer-hiccup 0.45s ease-out;
+}
+@keyframes beer-hiccup {
+  0% { transform: translateY(0); }
+  30% { transform: translateY(-9px) rotate(-0.2deg); }
+  55% { transform: translateY(2px); }
+  100% { transform: translateY(0); }
+}
+:root.beer-lean main {
+  animation: beer-lean 1.4s ease-in-out;
+}
+@keyframes beer-lean {
+  0%, 100% { transform: rotate(0deg); }
+  40% { transform: rotate(1.1deg) translateX(4px); }
+}
+:root.beer-blur main {
+  animation: beer-blur 0.7s ease-in-out;
+}
+@keyframes beer-blur {
+  0%, 100% { filter: blur(0); }
+  50% { filter: blur(1.5px); }
+}
 @media (prefers-reduced-motion: reduce) {
-  :root.beer main {
+  :root.beer main,
+  :root.beer-hiccup main,
+  :root.beer-lean main,
+  :root.beer-blur main {
     animation: none;
   }
 }

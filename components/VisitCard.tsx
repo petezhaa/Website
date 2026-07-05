@@ -75,11 +75,30 @@ export function VisitCard() {
           <p className="mt-0.5 text-xs text-muted">interactions the radar counted</p>
         </div>
         <div>
-          <p className={`font-mono text-2xl font-bold ${secrets >= SECRET_TOTAL ? "text-gold" : "text-accent"}`}>
+          <p
+            className={`font-mono text-2xl font-bold ${
+              secrets >= SECRET_TOTAL
+                ? "text-gold"
+                : secrets >= 10
+                ? "text-gold/80"
+                : "text-accent"
+            }`}
+          >
             {secrets}/{SECRET_TOTAL}
           </p>
-          <p className="mt-0.5 text-xs text-muted">
-            {secrets >= SECRET_TOTAL ? "secrets. all of them. respect." : "secrets found. keep looking"}
+          {/* the bar goldens as the hunt progresses — every find moves it */}
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-2">
+            <div
+              className={`h-full rounded-full transition-all duration-700 ${secrets >= 10 ? "bg-gold" : "bg-accent"}`}
+              style={{ width: `${(secrets / SECRET_TOTAL) * 100}%` }}
+            />
+          </div>
+          <p className="mt-1 text-xs text-muted">
+            {secrets >= SECRET_TOTAL
+              ? "secrets. all of them. respect."
+              : secrets >= 10
+              ? "secrets found. past halfway"
+              : "secrets found. keep looking"}
           </p>
         </div>
       </div>
