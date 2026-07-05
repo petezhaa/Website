@@ -1,27 +1,39 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { MapGame } from "@/components/MapGame";
-import { ChargeSim } from "@/components/ChargeSim";
-import { EpicycleDrawer } from "@/components/EpicycleDrawer";
-import { MandelbrotExplorer } from "@/components/MandelbrotExplorer";
-import { PrisonersDilemma } from "@/components/PrisonersDilemma";
-import { MagnetismSim } from "@/components/MagnetismSim";
-import { CircuitSim } from "@/components/CircuitSim";
-import { InductionSim } from "@/components/InductionSim";
-import { WaveSim } from "@/components/WaveSim";
-import { AnalysisGame } from "@/components/AnalysisGame";
-import { NimGame } from "@/components/NimGame";
-import { GoGame } from "@/components/GoGame";
-import { SnakeJava } from "@/components/SnakeJava";
-import { PendulumGame } from "@/components/PendulumGame";
-import { LogicPuzzle } from "@/components/LogicPuzzle";
-import { GuessYear } from "@/components/GuessYear";
-import { WhichFirst } from "@/components/WhichFirst";
-import { TimelineBuilder } from "@/components/TimelineBuilder";
-import { FilterDesigner } from "@/components/FilterDesigner";
-import { SmithChart } from "@/components/SmithChart";
+import dynamic from "next/dynamic";
 import { bumpVibe } from "@/lib/vibeBus";
+
+// Each cabinet is its own code-split chunk: opening a game fetches its JS,
+// and nothing else. Twenty statically-imported games was one heavy bundle.
+const booting = () => (
+  <div className="grid h-40 place-items-center rounded-2xl border border-line bg-surface">
+    <p className="animate-pulse font-mono text-sm text-muted">booting the cabinet…</p>
+  </div>
+);
+const cab = (loader: () => Promise<{ [k: string]: React.ComponentType }>, name: string) =>
+  dynamic(() => loader().then((m) => m[name]), { ssr: false, loading: booting });
+
+const MapGame = cab(() => import("@/components/MapGame"), "MapGame");
+const ChargeSim = cab(() => import("@/components/ChargeSim"), "ChargeSim");
+const EpicycleDrawer = cab(() => import("@/components/EpicycleDrawer"), "EpicycleDrawer");
+const MandelbrotExplorer = cab(() => import("@/components/MandelbrotExplorer"), "MandelbrotExplorer");
+const PrisonersDilemma = cab(() => import("@/components/PrisonersDilemma"), "PrisonersDilemma");
+const MagnetismSim = cab(() => import("@/components/MagnetismSim"), "MagnetismSim");
+const CircuitSim = cab(() => import("@/components/CircuitSim"), "CircuitSim");
+const InductionSim = cab(() => import("@/components/InductionSim"), "InductionSim");
+const WaveSim = cab(() => import("@/components/WaveSim"), "WaveSim");
+const AnalysisGame = cab(() => import("@/components/AnalysisGame"), "AnalysisGame");
+const NimGame = cab(() => import("@/components/NimGame"), "NimGame");
+const GoGame = cab(() => import("@/components/GoGame"), "GoGame");
+const SnakeJava = cab(() => import("@/components/SnakeJava"), "SnakeJava");
+const PendulumGame = cab(() => import("@/components/PendulumGame"), "PendulumGame");
+const LogicPuzzle = cab(() => import("@/components/LogicPuzzle"), "LogicPuzzle");
+const GuessYear = cab(() => import("@/components/GuessYear"), "GuessYear");
+const WhichFirst = cab(() => import("@/components/WhichFirst"), "WhichFirst");
+const TimelineBuilder = cab(() => import("@/components/TimelineBuilder"), "TimelineBuilder");
+const FilterDesigner = cab(() => import("@/components/FilterDesigner"), "FilterDesigner");
+const SmithChart = cab(() => import("@/components/SmithChart"), "SmithChart");
 
 // The arcade: a grid of cabinets. Pick one and the grid gets out of the way;
 // "← all games" brings it back. Each game lazy-loads its engine only when
@@ -75,7 +87,9 @@ export function GameChooser() {
       if (activeRef.current === "map") return; // MapGame handles it itself
       pick("map");
       const detail = (e as CustomEvent).detail;
-      setTimeout(() => window.dispatchEvent(new CustomEvent("mapgame:launch", { detail })), 400);
+      // the cabinet is code-split now: give its chunk a moment to arrive
+      // (MapGame's own listener then waits out the wasm load itself)
+      setTimeout(() => window.dispatchEvent(new CustomEvent("mapgame:launch", { detail })), 1200);
     };
     window.addEventListener("mapgame:launch", onLaunch);
     return () => window.removeEventListener("mapgame:launch", onLaunch);

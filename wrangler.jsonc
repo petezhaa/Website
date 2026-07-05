@@ -17,6 +17,10 @@
     { "pattern": "www.peterwzhao.com", "custom_domain": true },
     { "pattern": "www.petezha.xyz", "custom_domain": true }
   ],
+  "kv_namespaces": [
+    // the daily-challenge leaderboard: the site's first (and only) backend state
+    { "binding": "LEADERBOARD", "id": "7852cf36d91d4467a144a1f23cad3954" }
+  ],
   "observability": {
     "enabled": true
   }

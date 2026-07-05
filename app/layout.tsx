@@ -51,6 +51,9 @@ export const metadata: Metadata = {
 // set the theme class before paint so there's no flash
 const themeInit = `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}})()`;
 
+// the arcade works offline: register the service worker after load
+const swInit = `if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){})})}`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -64,6 +67,8 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        <script dangerouslySetInnerHTML={{ __html: swInit }} />
+        <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="min-h-full flex flex-col font-sans">
         {children}

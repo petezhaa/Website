@@ -1,0 +1,101 @@
+// Service worker: the arcade works on a plane.
+// - navigations: network first, cached home as the offline fallback
+// - engines + static chunks: cache first (they're immutable per deploy)
+// - everything else same-origin: network, backfilling the cache
+const VERSION = "v1";
+const CACHE = `petezha-${VERSION}`;
+
+// the heavy immutable bits worth having before the wifi dies
+const PRECACHE = [
+  "/",
+  "/mapgame.bin",
+  "/charges.bin",
+  "/epicycles.bin",
+  "/mandelbrot.bin",
+  "/dilemma.bin",
+  "/magnet.bin",
+  "/circuits.bin",
+  "/faraday.bin",
+  "/waves.bin",
+  "/analysis.bin",
+  "/pendulum.bin",
+  "/filter.bin",
+  "/smith.bin",
+  "/logic.bin",
+  "/nim.bin",
+  "/history.bin",
+  "/bench.bin",
+  "/benchrs.bin",
+  "/goban.wasm",
+  "/wasm_exec.js",
+  "/Snake.class",
+  "/maps/countries-110m.json",
+  "/maps/states-10m.json",
+];
+
+self.addEventListener("install", (e) => {
+  e.waitUntil(
+    caches
+      .open(CACHE)
+      .then((c) => c.addAll(PRECACHE))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener("activate", (e) => {
+  e.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+const CACHE_FIRST = /\.(bin|wasm|class|woff2?)$|\/maps\/|\/_next\/static\//;
+
+self.addEventListener("fetch", (e) => {
+  const url = new URL(e.request.url);
+  if (e.request.method !== "GET" || url.origin !== location.origin) return;
+  // never cache the API (the leaderboard is live data)
+  if (url.pathname.startsWith("/api/")) return;
+
+  if (e.request.mode === "navigate") {
+    // fresh page when online; the cached home when the plane door closes
+    e.respondWith(
+      fetch(e.request)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put("/", copy)).catch(() => {});
+          return res;
+        })
+        .catch(() => caches.match("/"))
+    );
+    return;
+  }
+
+  if (CACHE_FIRST.test(url.pathname)) {
+    e.respondWith(
+      caches.match(e.request).then(
+        (hit) =>
+          hit ||
+          fetch(e.request).then((res) => {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
+            return res;
+          })
+      )
+    );
+    return;
+  }
+
+  // default: network, backfill cache, fall back to cache offline
+  e.respondWith(
+    fetch(e.request)
+      .then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
+        return res;
+      })
+      .catch(() => caches.match(e.request))
+  );
+});

@@ -212,6 +212,11 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
   });
   const [dailyResult, setDailyResult] = useState<{ squares: string; streak: number } | null>(null);
   const [copied, setCopied] = useState(false);
+  // the daily leaderboard: everyone plays the same board, so they can compare
+  const [board, setBoard] = useState<{ name: string; score: number }[] | null>(null);
+  const [rank, setRank] = useState<number | null>(null);
+  const [playerName, setPlayerName] = useState("");
+  const [lbState, setLbState] = useState<"idle" | "sending" | "done" | "failed">("idle");
 
   const setPhase = (p: Phase) => {
     phaseRef.current = p;
@@ -1220,6 +1225,28 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
     });
   };
 
+  // post today's score under a chosen name; the board answers with your rank
+  const submitScore = async () => {
+    if (lbState === "sending" || lbState === "done") return;
+    setLbState("sending");
+    try {
+      localStorage.setItem("daily-name", playerName);
+      const res = await fetch("/api/daily", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ day: dailyDayRef.current, name: playerName, score }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      const d = await res.json();
+      setRank(d.rank ?? null);
+      setBoard(d.entries ?? []);
+      setLbState("done");
+      bumpVibe("gamer", 12);
+    } catch {
+      setLbState("failed");
+    }
+  };
+
   const advance = () => {
     const engine = engineRef.current;
     if (!engine) return;
@@ -1236,6 +1263,15 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
         const streak = persistDaily(total, roundPtsRef.current);
         setDailyResult({ squares: squares(roundPtsRef.current), streak });
         refreshDaily();
+        // pull today's board while the confetti settles
+        setBoard(null);
+        setRank(null);
+        setLbState("idle");
+        setPlayerName(localStorage.getItem("daily-name") ?? "");
+        fetch(`/api/daily?day=${dailyDayRef.current}`)
+          .then((r) => r.json())
+          .then((d) => setBoard(d.entries?.slice(0, 10) ?? []))
+          .catch(() => setBoard([]));
       }
       setPhase("done");
       return;
@@ -1595,6 +1631,49 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
                 <p className="mt-1.5 font-mono text-[10px] text-muted">
                   new challenge tomorrow
                 </p>
+
+                {/* the leaderboard: same board, whole planet */}
+                <div className="mt-3 border-t border-accent/20 pt-3 text-left">
+                  {lbState !== "done" ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        value={playerName}
+                        onChange={(e) => setPlayerName(e.target.value)}
+                        maxLength={16}
+                        placeholder="name for the board"
+                        className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-1.5 font-mono text-[11px] outline-none transition focus:border-accent"
+                      />
+                      <button
+                        onClick={submitScore}
+                        disabled={lbState === "sending"}
+                        className="shrink-0 rounded-lg border border-accent/50 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-accent transition hover:bg-accent-soft disabled:opacity-50"
+                      >
+                        {lbState === "sending" ? "posting…" : lbState === "failed" ? "retry" : "post score"}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="font-mono text-[11px] text-accent">
+                      {rank ? `#${rank} today, worldwide.` : "posted."}
+                    </p>
+                  )}
+                  {board && board.length > 0 && (
+                    <div className="mt-2 space-y-0.5 font-mono text-[10.5px] text-muted">
+                      {board.slice(0, 10).map((e, i) => (
+                        <p key={`${e.name}-${i}`} className="flex justify-between gap-3">
+                          <span className="truncate">
+                            {i + 1}. {e.name}
+                          </span>
+                          <span className="tabular-nums">{e.score.toLocaleString()}</span>
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                  {board && board.length === 0 && lbState !== "done" && (
+                    <p className="mt-2 font-mono text-[10px] text-muted">
+                      nobody on today&apos;s board yet. claim it.
+                    </p>
+                  )}
+                </div>
               </div>
             )}
             <div className="mt-1 flex flex-wrap justify-center gap-3 sm:mt-2">
