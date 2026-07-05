@@ -1,60 +1,57 @@
-// Stardew Peter: the PixelPeter portrait grown a body, farmer build —
-// flannel in the site's rust, denim overalls, boots. 16x28, front-facing
-// idle, same palette family as the 16x16 portrait so it reads as the same
-// guy who moved to the valley.
+// Stardew Peter, drawn from the "age four, allegedly" photo: buzz cut, gray
+// sweatshirt with the red lettering band and the little chest crest, black
+// sleeve panels, dark pants with the 83 patch — and the hands-on-hips scowl,
+// which is the whole point. 16x25, front-facing idle.
 const GRID = [
   "....HHHHHHHH....",
   "...HHHHHHHHHH...",
-  "..HHhhHHHHhhHH..",
   "..HHHHHHHHHHHH..",
-  "..HHHHHHHHHHHH..",
-  "..HHHHssssHHHH..",
   "..HHssssssssHH..",
-  "..HssssssssssH..",
-  "..HsseesseessH..",
+  "..ssssssssssss..",
+  "..sssHssssHsss..",
+  "..sseesssseess..",
+  "..ssssssssssss..",
   "..sbssssssssbs..",
+  "..SsssmmmmsssS..",
   "..SssssssssssS..",
-  "..SssttttttssS..",
   "...SssssssssS...",
   ".....ssssss.....",
-  "...FFFFFFFFFF...",
-  "..FFFFFFFFFFFF..",
-  "..FFFkDFFDkFFF..",
-  "..FFFDDFFDDFFF..",
-  "..sFDDDDDDDDFs..",
-  "..ssDDDDDDDDss..",
-  "....DDDDDDDD....",
-  "....DDDdDDDD....",
-  "....DDDDDDDD....",
-  "....DDD..DDD....",
-  "....DDD..DDD....",
-  "....ddd..ddd....",
+  "...GGGGGGGGGG...",
+  "..NNGGGGGGGGNN..",
+  ".NNGGGGGGGGkGNN.",
+  ".NsGRRRRRRRRGsN.",
+  "..sGGGGGGGGGGs..",
+  "....GGGGGGGG....",
+  "....PPPPPPPP....",
+  "....PPPPPPwwP...",
+  "....PPP..PPP....",
+  "....PPP..PPP....",
   "....BBB..BBB....",
   "...BBBB..BBBB...",
 ];
 
 const COLORS: Record<string, string> = {
-  H: "#3a2c1f", // hair
-  h: "#5b4630", // hair highlight
+  H: "#2a2018", // buzz-cut black hair (and the scowl brows)
   s: "#f0c298", // skin
   S: "#d99e73", // skin shade
-  b: "#eb9d80", // blush
+  b: "#eb9d80", // toddler cheeks
   e: "#382a1d", // eyes
-  t: "#fffdf5", // the smile
-  F: "#bf5b32", // flannel (the site's rust, naturally)
-  f: "#97462a", // flannel shade
-  k: "#e3cd76", // overall buckles
-  D: "#3f5d8c", // denim
-  d: "#2f4668", // denim shade
-  B: "#5f4126", // boots
+  m: "#b06e4e", // the pout. not a smile. he was four and unimpressed.
+  G: "#8a8a8f", // gray sweatshirt
+  N: "#26242a", // black shoulder panels
+  R: "#c03a2e", // the red lettering band
+  k: "#e3cd76", // the chest crest
+  P: "#1f1d22", // pants
+  w: "#f5f3ec", // the 83 patch
+  B: "#15131a", // shoes
 };
 
 export function StardewPeter({ size = 64 }: { size?: number }) {
   return (
     <svg
       width={size}
-      height={(size / 16) * 28}
-      viewBox="0 0 16 28"
+      height={(size / 16) * 25}
+      viewBox="0 0 16 25"
       shapeRendering="crispEdges"
       aria-hidden
       className="sd-bob shrink-0"
