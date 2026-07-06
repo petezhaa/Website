@@ -15,6 +15,8 @@ type Engine = {
   coach_equity: () => number;
   coach_pot_odds: () => number;
   coach_advice: () => number;
+  now_cat: () => number;
+  outs: () => number;
   last_grade: () => number;
   last_advised: () => number;
   last_equity: () => number;
@@ -121,6 +123,9 @@ type Snap = {
   coachEq: number;
   coachPo: number;
   coachAdv: number;
+  nowCat: number;
+  outs: number;
+  street: number;
   log: string[];
 };
 
@@ -183,6 +188,9 @@ export function PokerTrainer() {
       coachEq: withCoach && heroTurn ? e.coach_equity() : -1,
       coachPo: withCoach && heroTurn ? e.coach_pot_odds() : -1,
       coachAdv: withCoach && heroTurn ? e.coach_advice() : -1,
+      nowCat: heroTurn ? e.now_cat() : -1,
+      outs: heroTurn ? e.outs() : -1,
+      street: e.get_street(),
       log,
     };
   }, []);
@@ -240,6 +248,33 @@ export function PokerTrainer() {
   const accuracyDen = s.nBest + s.nOk + s.nBad;
   const accuracy = accuracyDen ? Math.round(((s.nBest + s.nOk) / accuracyDen) * 100) : 100;
 
+  // what the hero holds, in words
+  const holdingLine = () => {
+    if (s.street === 0) {
+      const [a, b] = s.hero;
+      const ra = a >> 2, rb = b >> 2;
+      if (ra === rb) return `You hold a pair of ${RANKS[ra]}s in the hole.`;
+      const hi = RANKS[Math.max(ra, rb)], lo = RANKS[Math.min(ra, rb)];
+      const suited = (a & 3) === (b & 3);
+      return `You hold ${hi}${lo} ${suited ? "suited" : "offsuit"}.`;
+    }
+    if (s.nowCat <= 0) return "You have no made hand yet, just high cards.";
+    return `You have ${CATS[s.nowCat]} right now.`;
+  };
+  // outs, with the rule of 4 and 2
+  const outsLine = () => {
+    if (s.outs <= 0 || s.street < 1 || s.street > 2) return null;
+    const mult = s.street === 1 ? 4 : 2;
+    const pct = Math.min(95, s.outs * mult);
+    return `About ${s.outs} cards improve your hand. The shortcut: ${s.outs} outs times ${mult} is roughly ${pct}% to hit ${s.street === 1 ? "by the river" : "on the river"}.`;
+  };
+  // the call, priced in chips
+  const evLine = () => {
+    if (s.toCall <= 0 || s.coachEq < 0) return null;
+    const ev = Math.round((s.coachEq / 1000) * (s.pot + s.toCall) - s.toCall);
+    return `Calling ${s.toCall} into a ${s.pot} pot: at ${(s.coachEq / 10).toFixed(0)}% equity that call averages ${ev >= 0 ? "+" : ""}${ev} chips.`;
+  };
+
   const resultLine = () => {
     if (!s.over) return null;
     if (s.byFold) return s.result === 1 ? "The bot folded. You win the pot." : "You folded.";
@@ -252,13 +287,17 @@ export function PokerTrainer() {
     if (s.grade < 0 || s.lastEq < 0) return null;
     const eq = (s.lastEq / 10).toFixed(0);
     const po = (s.lastPo / 10).toFixed(0);
-    if (s.grade === 2)
-      return { cls: "text-moss", text: `Good decision. Your equity was ${eq}% and the pot odds were ${po}%, so ${ADVICE[s.lastAdv]} was right.` };
+    const edge = Math.abs((s.lastEq - s.lastPo) / 10).toFixed(0);
+    if (s.grade === 2) {
+      if (s.lastPo > 0)
+        return { cls: "text-moss", text: `Good decision. You had ${eq}% equity against a ${po}% price, a ${edge} point edge. Decisions like that are where the profit comes from.` };
+      return { cls: "text-moss", text: `Good decision. With ${eq}% equity, ${ADVICE[s.lastAdv]} was the right line there.` };
+    }
     if (s.grade === 1)
-      return { cls: "text-gold", text: `Close enough. The coach preferred ${ADVICE[s.lastAdv]} there (equity ${eq}%, pot odds ${po}%).` };
+      return { cls: "text-gold", text: `Reasonable, but the coach preferred ${ADVICE[s.lastAdv]}. At ${eq}% equity you can play that hand harder than you did.` };
     if (s.lastCls === 0)
-      return { cls: "text-accent", text: `Mistake. You folded with ${eq}% equity when the pot odds only needed ${po}%. That fold loses money over time.` };
-    return { cls: "text-accent", text: `Mistake. Your equity was ${eq}% but the pot odds needed ${po}%, so putting in chips there loses money over time.` };
+      return { cls: "text-accent", text: `Mistake. You folded with ${eq}% equity when the price only asked for ${po}%. You were ${edge} points ahead and let it go; folds like that quietly drain a bankroll.` };
+    return { cls: "text-accent", text: `Mistake. You put chips in with ${eq}% equity against a ${po}% price. You were ${edge} points short, and no single lucky river changes that math.` };
   };
   const fb = feedback();
 
@@ -364,6 +403,10 @@ export function PokerTrainer() {
             </div>
             {coachOn && !s.over && s.heroTurn && s.coachEq >= 0 && (
               <div className="mt-3 space-y-2.5">
+                <p className="text-xs leading-relaxed text-fg">{holdingLine()}</p>
+                {outsLine() && (
+                  <p className="text-xs leading-relaxed text-muted">{outsLine()}</p>
+                )}
                 <div>
                   <div className="mb-0.5 flex justify-between font-mono text-[11px]">
                     <span className="text-muted">your equity</span>
@@ -384,9 +427,11 @@ export function PokerTrainer() {
                     </div>
                   </div>
                 )}
+                {evLine() && (
+                  <p className="text-xs leading-relaxed text-muted">{evLine()}</p>
+                )}
                 <p className="text-xs text-muted">
                   Coach says: <span className="font-medium text-fg">{ADVICE[s.coachAdv]}</span>.
-                  {s.toCall > 0 && " Your equity needs to beat the pot odds for a call to make money."}
                 </p>
               </div>
             )}
@@ -434,14 +479,26 @@ export function PokerTrainer() {
         </div>
       )}
 
-      <p className="max-w-2xl text-xs leading-relaxed text-muted">
-        How the training works: at every decision the engine deals thousands of
-        random opponent hands and runouts in C++ to estimate your equity, then
-        compares it to the pot odds you are being offered. If you call with
-        less equity than the price requires, that is a losing play no matter
-        how the hand turns out, and the coach counts it as a mistake. Blinds
-        are 5/10 and stacks reset to 1000 every hand.
-      </p>
+      <div className="max-w-2xl space-y-2 text-xs leading-relaxed text-muted">
+        <p>
+          How the training works: at every decision the C++ engine deals
+          thousands of random opponent hands and runouts to estimate your
+          equity, which is the share of the pot your hand wins on average. It
+          compares that to the pot odds, which is the price a call is asking
+          you to pay. If your equity beats the price, calling makes money in
+          the long run. If it does not, the call loses money no matter how the
+          hand turns out, and the coach counts it as a mistake.
+        </p>
+        <p>
+          The coach also counts your outs, the cards that improve your hand,
+          and uses the rule of 4 and 2: multiply your outs by 4 on the flop or
+          by 2 on the turn and you get a rough percentage to hit. It is the
+          same shortcut people use at real tables. Blinds are 5/10, stacks
+          reset to 1000 every hand, and the profit line tracks the whole
+          session. Turn the coach off when you want to test yourself; it
+          keeps grading silently.
+        </p>
+      </div>
     </div>
   );
 }

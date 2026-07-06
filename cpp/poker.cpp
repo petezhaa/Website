@@ -343,6 +343,73 @@ static void coach_compute() {
   coachValid = 1;
 }
 
+// ---- hand-reading helpers for the coach ----
+// hero's best current score using only the visible board
+static int now_score() {
+  if (boardCount == 0) {
+    int r0 = heroCards[0] >> 2, r1 = heroCards[1] >> 2;
+    if (r0 == r1) return (1 << 20) | (r0 << 16); // pocket pair
+    int hi = r0 > r1 ? r0 : r1, lo = r0 > r1 ? r1 : r0;
+    return (hi << 16) | (lo << 12); // high card
+  }
+  int cs[7];
+  cs[0] = heroCards[0]; cs[1] = heroCards[1];
+  for (int i = 0; i < boardCount; i++) cs[2 + i] = board[i];
+  int n = 2 + boardCount;
+  if (n == 5) return eval5(cs);
+  if (n == 6) {
+    int best = -1, five[5];
+    for (int skip = 0; skip < 6; skip++) {
+      int k = 0;
+      for (int i = 0; i < 6; i++)
+        if (i != skip) five[k++] = cs[i];
+      int s = eval5(five);
+      if (s > best) best = s;
+    }
+    return best;
+  }
+  return eval7(cs);
+}
+
+// rough outs count on the flop or turn: unseen cards that raise the hero's
+// hand category. Cards that only pair the board (helping any two cards
+// equally) are not counted unless the hero holds that rank too.
+static int count_outs() {
+  if (boardCount < 3 || boardCount > 4) return -1;
+  int baseCat = now_score() >> 20;
+  int used[52] = {0};
+  used[heroCards[0]] = used[heroCards[1]] = 1;
+  for (int i = 0; i < boardCount; i++) used[board[i]] = 1;
+  int hr0 = heroCards[0] >> 2, hr1 = heroCards[1] >> 2;
+  int n = 0;
+  for (int c = 0; c < 52; c++) {
+    if (used[c]) continue;
+    int r = c >> 2;
+    int onBoard = 0;
+    for (int i = 0; i < boardCount; i++)
+      if ((board[i] >> 2) == r) onBoard = 1;
+    if (onBoard && r != hr0 && r != hr1) continue; // pairs the board, not us
+    // evaluate with the extra card
+    int cs[7];
+    cs[0] = heroCards[0]; cs[1] = heroCards[1];
+    for (int i = 0; i < boardCount; i++) cs[2 + i] = board[i];
+    cs[2 + boardCount] = c;
+    int m = 3 + boardCount; // 6 or 7
+    int best = -1, five[5];
+    if (m == 6) {
+      for (int skip = 0; skip < 6; skip++) {
+        int k = 0;
+        for (int i = 0; i < 6; i++)
+          if (i != skip) five[k++] = cs[i];
+        int s = eval5(five);
+        if (s > best) best = s;
+      }
+    } else best = eval7(cs);
+    if ((best >> 20) > baseCat) n++;
+  }
+  return n;
+}
+
 // ---- exports ----
 extern "C" EXPORT("new_session") void new_session(u32 seed) {
   rng = seed ? seed : 0x2545F491u;
@@ -397,6 +464,10 @@ extern "C" EXPORT("hero_act") int hero_act(int cls, int to) {
 extern "C" EXPORT("coach_equity") int coach_equity() { coach_compute(); return coachEqPm; }
 extern "C" EXPORT("coach_pot_odds") int coach_pot_odds() { coach_compute(); return coachPoPm; }
 extern "C" EXPORT("coach_advice") int coach_advice() { coach_compute(); return coachAdv; }
+// what the hero currently holds (category with the visible board) and a
+// rough outs count on the flop/turn (-1 when it doesn't apply)
+extern "C" EXPORT("now_cat") int now_cat() { return now_score() >> 20; }
+extern "C" EXPORT("outs") int outs() { return count_outs(); }
 
 // last graded decision
 extern "C" EXPORT("last_grade") int last_grade() { return lastGrade; }
