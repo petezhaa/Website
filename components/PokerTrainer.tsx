@@ -20,6 +20,9 @@ type Engine = {
   set_players: (n: number) => void;
   get_players: () => number;
   set_level: (l: number) => void;
+  set_mode: (m: number) => void;
+  hero_rebuys: () => number;
+  can_raise: () => number;
   coach_equity: () => number;
   coach_pot_odds: () => number;
   coach_advice: () => number;
@@ -132,6 +135,26 @@ function Card({
   );
 }
 
+// inline text cards for the hand-history rows
+function CardsTxt({ cs }: { cs: number[] }) {
+  return (
+    <span className="font-mono text-xs">
+      {cs.map((c, i) =>
+        c < 0 ? null : (
+          <span
+            key={i}
+            className="mr-1"
+            style={{ color: (c & 3) === 1 || (c & 3) === 2 ? "#b0483f" : "var(--fg)" }}
+          >
+            {RANKS[c >> 2]}
+            {SUITS[c & 3]}
+          </span>
+        )
+      )}
+    </span>
+  );
+}
+
 type Seat = {
   c0: number;
   c1: number;
@@ -172,8 +195,27 @@ type Snap = {
   outs: number;
   chen: number;
   street: number;
+  canRaise: boolean;
+  rebuys: number;
   log: string[];
 };
+
+// one graded hero decision, kept for the hand-history review
+type Decision = { street: number; cls: number; grade: number; eq: number; po: number; adv: number };
+type HandRecord = {
+  n: number;
+  hero: [number, number];
+  board: number[];
+  delta: number;
+  won: boolean;
+  byFold: boolean;
+  heroFolded: boolean;
+  cat: number;
+  decisions: Decision[];
+};
+// lifetime leak counters: [street 0..3][0 = folded too much, 1 = called/raised too loose]
+type Leaks = number[][];
+const emptyLeaks = (): Leaks => [[0, 0], [0, 0], [0, 0], [0, 0]];
 
 type Fly = { id: number; fx: number; fy: number; tx: number; ty: number; label: string; delay: number };
 type Float = { id: number; x: number; y: number; text: string; color: string };
@@ -297,6 +339,14 @@ function Guide({ onClose }: { onClose: () => void }) {
           opponent, and add players or difficulty when your accuracy stays
           high.
         </p>
+        <p>
+          Two stakes settings: in practice, every stack resets to 1000 each
+          hand so every decision starts from the same place. In bankroll,
+          stacks carry from hand to hand, going broke costs a rebuy, and
+          side pots work the way they do in a real room. The hand history
+          below the table keeps your last thirty hands with every graded
+          decision, so you can go back and see exactly where the money went.
+        </p>
       </div>
 
       <button onClick={onClose} className="btn-solid px-5 py-2.5 text-sm">
@@ -327,8 +377,16 @@ export function PokerTrainer() {
   const [raiseTo, setRaiseTo] = useState(0);
   const [level, setLevel] = useState(1);
   const [numPlayers, setNumPlayers] = useState(2);
+  const [mode, setMode] = useState(0); // 0 practice, 1 bankroll
   const streakRef = useRef(0);
   const [streak, setStreak] = useState(0);
+  // hand history + leak tracking
+  const curDecRef = useRef<Decision[]>([]);
+  const histRef = useRef<HandRecord[]>([]);
+  const [history, setHistory] = useState<HandRecord[]>([]);
+  const [openHand, setOpenHand] = useState<number | null>(null);
+  const leaksRef = useRef<Leaks>(emptyLeaks());
+  const [leaks, setLeaks] = useState<Leaks>(leaksRef.current);
   // first visit: explain the game before dealing; reopenable any time
   const [showGuide, setShowGuide] = useState(false);
   useEffect(() => {
@@ -356,6 +414,18 @@ export function PokerTrainer() {
       if (lvl === 0 || lvl === 1 || lvl === 2) setLevel(lvl);
       const np = Number(localStorage.getItem("poker-players"));
       if (np >= 2 && np <= 5) setNumPlayers(np);
+      const md = Number(localStorage.getItem("poker-mode"));
+      if (md === 1) setMode(1);
+      const hist = localStorage.getItem("poker-history");
+      if (hist) {
+        histRef.current = JSON.parse(hist);
+        setHistory([...histRef.current]);
+      }
+      const lk = localStorage.getItem("poker-leaks");
+      if (lk) {
+        leaksRef.current = JSON.parse(lk);
+        setLeaks(leaksRef.current.map((r) => [...r]));
+      }
     } catch {}
   }, []);
 
@@ -423,6 +493,8 @@ export function PokerTrainer() {
       outs: heroTurn ? e.outs() : -1,
       chen: e.hand_chen(),
       street: e.get_street(),
+      canRaise: !!e.can_raise(),
+      rebuys: e.hero_rebuys(),
       log,
     };
   }, []);
@@ -458,6 +530,42 @@ export function PokerTrainer() {
           if ([5, 10, 20, 50, 100].includes(streakRef.current)) milestone = streakRef.current;
         }
         setStreak(streakRef.current);
+        // record the decision for the hand review, and count leaks
+        const decided =
+          next.nBest + next.nOk + next.nBad > prev.nBest + prev.nOk + prev.nBad;
+        if (decided && next.lastEq >= 0) {
+          curDecRef.current.push({
+            street: prev.street,
+            cls: next.lastCls,
+            grade: next.grade,
+            eq: next.lastEq,
+            po: next.lastPo,
+            adv: next.lastAdv,
+          });
+          if (next.grade === 0) {
+            leaksRef.current[prev.street][next.lastCls === 0 ? 0 : 1] += 1;
+            try { localStorage.setItem("poker-leaks", JSON.stringify(leaksRef.current)); } catch {}
+            setLeaks(leaksRef.current.map((row) => [...row]));
+          }
+        }
+        // close out the hand record
+        if (!prev.over && next.over) {
+          histRef.current.unshift({
+            n: next.hands,
+            hero: [next.seats[0].c0, next.seats[0].c1],
+            board: [...next.board],
+            delta: next.profit - prev.profit,
+            won: !!(next.winners & 1),
+            byFold: next.byFold,
+            heroFolded: next.seats[0].folded,
+            cat: next.seats[0].cat,
+            decisions: [...curDecRef.current],
+          });
+          if (histRef.current.length > 30) histRef.current.length = 30;
+          try { localStorage.setItem("poker-history", JSON.stringify(histRef.current)); } catch {}
+          setHistory([...histRef.current]);
+          curDecRef.current = [];
+        }
       }
       // the latest bot action becomes a small speech bubble
       if (prev && next.log.length > prev.log.length) {
@@ -578,6 +686,7 @@ export function PokerTrainer() {
     setBotSay(null);
     e.new_hand();
     lastRef.current = null; // a fresh hand diffs against nothing
+    curDecRef.current = [];
     setHandId((n) => n + 1);
     pushSnap(true);
     scheduleBot();
@@ -595,6 +704,12 @@ export function PokerTrainer() {
     try { localStorage.setItem("poker-players", String(n)); } catch {}
     if (engRef.current && ready) deal(); // applies with a fresh hand
   };
+  const pickMode = (m: number) => {
+    setMode(m);
+    engRef.current?.set_mode(m);
+    try { localStorage.setItem("poker-mode", String(m)); } catch {}
+    if (engRef.current && ready) deal();
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -603,7 +718,7 @@ export function PokerTrainer() {
         // the ?v pairs this JS with the engine build it needs: the engine is
         // cached hard (browser + service worker), so any change to the
         // exports must bump this together with the .bin
-        const buf = await fetch("/poker.bin?v=6").then((r) => r.arrayBuffer());
+        const buf = await fetch("/poker.bin?v=7").then((r) => r.arrayBuffer());
         if (cancelled) return;
         const e = (await WebAssembly.instantiate(buf)).instance.exports as unknown as Engine;
         engRef.current = e;
@@ -612,6 +727,7 @@ export function PokerTrainer() {
         if (lvl === 0 || lvl === 2) e.set_level(lvl);
         const np = Number(localStorage.getItem("poker-players"));
         if (np >= 2 && np <= 5) e.set_players(np);
+        if (Number(localStorage.getItem("poker-mode")) === 1) e.set_mode(1);
         setReady(true);
       } catch {
         if (!cancelled) setFailed(true);
@@ -722,6 +838,17 @@ export function PokerTrainer() {
     return `${botName(w)} wins with ${CATS[s.seats[w].cat] ?? ""}${yours}.`;
   };
 
+  // the player's most common graded mistake, from lifetime leak counters
+  const leakLine = () => {
+    const names = ["preflop", "on the flop", "on the turn", "on the river"];
+    let bs = -1, bt = -1, bc = 2; // only speak up after 3 of the same mistake
+    for (let st = 0; st < 4; st++)
+      for (let ty = 0; ty < 2; ty++)
+        if (leaks[st][ty] > bc) { bc = leaks[st][ty]; bs = st; bt = ty; }
+    if (bs < 0) return null;
+    return `Your most common mistake: ${bt === 0 ? "folding too much" : "putting chips in too loose"} ${names[bs]} (${bc} times).`;
+  };
+
   const feedback = () => {
     if (s.grade < 0 || s.lastEq < 0) return null;
     const eq = (s.lastEq / 10).toFixed(0);
@@ -777,6 +904,22 @@ export function PokerTrainer() {
               onClick={() => pickLevel(i)}
               className={`rounded-md border px-2.5 py-1 text-[11px] transition ${
                 level === i
+                  ? "border-accent bg-accent-soft text-accent"
+                  : "border-line text-muted hover:border-accent hover:text-accent"
+              }`}
+            >
+              {name}
+            </button>
+          ))}
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="text-[11px] uppercase tracking-wide text-muted">stakes</span>
+          {["practice", "bankroll"].map((name, i) => (
+            <button
+              key={name}
+              onClick={() => pickMode(i)}
+              className={`rounded-md border px-2.5 py-1 text-[11px] transition ${
+                mode === i
                   ? "border-accent bg-accent-soft text-accent"
                   : "border-line text-muted hover:border-accent hover:text-accent"
               }`}
@@ -970,7 +1113,7 @@ export function PokerTrainer() {
                 >
                   {s.toCall > 0 ? `Call ${Math.min(s.toCall, hero.stack)}` : "Check"}
                 </motion.button>
-                {s.maxTo > s.toCall && (
+                {s.maxTo > s.toCall && s.canRaise && (
                   <>
                     <motion.button whileTap={{ scale: 0.94 }} onClick={() => act(2, clamp(halfPotTo))} disabled={!s.heroTurn} className="btn-term px-3.5 py-2.5 text-sm disabled:opacity-40">
                       {s.toCall > 0 ? "Raise" : "Bet"} ½ pot
@@ -1108,11 +1251,22 @@ export function PokerTrainer() {
               <span className="text-right tabular-nums text-gold">{s.nOk}</span>
               <span className="text-muted">mistakes</span>
               <span className="text-right tabular-nums text-accent">{s.nBad}</span>
+              {mode === 1 && (
+                <>
+                  <span className="text-muted">rebuys</span>
+                  <span className="text-right tabular-nums">{s.rebuys}</span>
+                </>
+              )}
               <span className="text-muted">streak</span>
               <span className={`text-right tabular-nums ${streak >= 5 ? "text-gold" : ""}`}>{streak}</span>
               <span className="text-muted">accuracy</span>
               <span className="text-right tabular-nums">{accuracy}%</span>
             </div>
+            {leakLine() && (
+              <p className="mt-3 border-t border-line pt-2.5 text-xs leading-relaxed text-gold">
+                {leakLine()}
+              </p>
+            )}
             {lifetime.hands > 0 && (
               <div className="mt-3 border-t border-line pt-2.5">
                 <p className="text-[10px] uppercase tracking-widest text-muted">lifetime</p>
@@ -1141,6 +1295,81 @@ export function PokerTrainer() {
         <div className="panel max-h-28 overflow-y-auto p-4">
           <p className="mb-1.5 text-[10px] uppercase tracking-widest text-muted">this hand</p>
           <p className="font-mono text-[11px] leading-relaxed text-muted">{s.log.join(" · ")}</p>
+        </div>
+      )}
+
+      {/* hand history review */}
+      {history.length > 0 && (
+        <div className="panel max-h-80 overflow-y-auto p-4">
+          <p className="mb-2 text-[10px] uppercase tracking-widest text-muted">
+            hand history · tap a hand to review it
+          </p>
+          <div className="space-y-0.5">
+            {history.map((h) => {
+              const mistakes = h.decisions.filter((d) => d.grade === 0).length;
+              const open = openHand === h.n;
+              return (
+                <div key={h.n}>
+                  <button
+                    onClick={() => setOpenHand(open ? null : h.n)}
+                    className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-md px-2 py-1.5 text-left text-xs transition hover:bg-surface-2"
+                  >
+                    <span className="font-mono text-muted">#{h.n}</span>
+                    <CardsTxt cs={h.hero} />
+                    <span className={`font-mono tabular-nums ${h.delta >= 0 ? "text-moss" : "text-accent"}`}>
+                      {h.delta >= 0 ? "+" : ""}{h.delta}
+                    </span>
+                    {mistakes > 0 ? (
+                      <span className="text-accent">{mistakes} mistake{mistakes > 1 ? "s" : ""}</span>
+                    ) : h.decisions.length > 0 ? (
+                      <span className="text-moss">clean</span>
+                    ) : null}
+                    <span className="ml-auto text-muted">{open ? "hide" : "review"}</span>
+                  </button>
+                  {open && (
+                    <div className="space-y-1.5 px-2 pb-3 pt-1 text-xs leading-relaxed text-muted">
+                      <p>
+                        board:{" "}
+                        {h.board.some((c) => c >= 0) ? (
+                          <CardsTxt cs={h.board} />
+                        ) : (
+                          "never came, the hand ended preflop"
+                        )}
+                      </p>
+                      <p>
+                        {h.heroFolded
+                          ? "You folded."
+                          : h.won && h.byFold
+                          ? "Everyone folded to you."
+                          : h.won
+                          ? `You won with ${CATS[h.cat] ?? "the best hand"}.`
+                          : h.cat >= 0
+                          ? `You lost with ${CATS[h.cat]}.`
+                          : "You lost the hand."}
+                      </p>
+                      {h.decisions.map((d, i) => (
+                        <p
+                          key={i}
+                          className={d.grade === 0 ? "text-accent" : d.grade === 1 ? "text-gold" : "text-moss"}
+                        >
+                          {["preflop", "flop", "turn", "river"][d.street]}: you{" "}
+                          {d.cls === 0 ? "folded" : d.cls === 1 ? "checked or called" : "raised"} with{" "}
+                          {(d.eq / 10).toFixed(0)}% equity
+                          {d.po > 0 ? ` against a ${(d.po / 10).toFixed(0)}% price` : ""}.{" "}
+                          {d.grade === 2
+                            ? "Good."
+                            : d.grade === 1
+                            ? `The coach preferred ${ADVICE[d.adv]}.`
+                            : `Mistake: the math said ${ADVICE[d.adv]}.`}
+                        </p>
+                      ))}
+                      {h.decisions.length === 0 && <p>No decisions were graded this hand.</p>}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
