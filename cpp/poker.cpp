@@ -84,19 +84,22 @@ static int eval5(const int *cs) {
   return s;
 }
 
-// best 5-card score out of 7 cards
-static int eval7(const int *cs) {
-  int best = -1, five[5];
+// best 5-card score out of 7 cards; optionally reports which five were used
+// as a bitmask over the input order (for the showdown highlight)
+static int eval7_mask(const int *cs, int *maskOut) {
+  int best = -1, bmask = 0, five[5];
   for (int a = 0; a < 7; a++)
     for (int b = a + 1; b < 7; b++) {
       int n = 0;
       for (int i = 0; i < 7; i++)
         if (i != a && i != b) five[n++] = cs[i];
       int s = eval5(five);
-      if (s > best) best = s;
+      if (s > best) { best = s; bmask = 0x7F & ~((1 << a) | (1 << b)); }
     }
+  if (maskOut) *maskOut = bmask;
   return best;
 }
+static int eval7(const int *cs) { return eval7_mask(cs, 0); }
 
 // ---- preflop hand strength: the Chen formula, doubled to stay integer ----
 // AA=40, AKs=24, 72o=-2... used to filter range-weighted sampling and to
@@ -145,6 +148,8 @@ static int result_ = 0;      // 0 ongoing, 1 hero won, 2 bot won, 3 split
 static int byFold = 0;
 static int showdown = 0;     // bot cards revealed
 static int heroCat = -1, botCat = -1;
+static int heroMask = 0, botMask = 0; // which 5 of 7 made each best hand
+static int level = 1;        // 0 easy, 1 normal, 2 hard
 static int heroStackAtDeal = 0;
 
 // session
@@ -243,7 +248,7 @@ static void do_showdown() {
   h7[0] = heroCards[0]; h7[1] = heroCards[1];
   b7[0] = botCards[0];  b7[1] = botCards[1];
   for (int i = 0; i < 5; i++) { h7[2 + i] = board[i]; b7[2 + i] = board[i]; }
-  int hs = eval7(h7), bs = eval7(b7);
+  int hs = eval7_mask(h7, &heroMask), bs = eval7_mask(b7, &botMask);
   heroCat = hs >> 20; botCat = bs >> 20;
   showdown = 1;
   logev(2, 10, 0);
@@ -345,8 +350,26 @@ static void apply(int p, int cls, int to) {
 // habits: it opens the button, continuation-bets, bluffs occasionally,
 // slowplays monsters sometimes, and mixes its bet sizes.
 static void bot_act() {
-  int e = equity_pm(botCards, BOT_ITERS, CLS_MIN[rangeCls[0]]);
-  e += rnd(60) - 30; // +-3% so it isn't a fixed book
+  // difficulty knobs. easy: loose-passive, reads nothing, calls too much.
+  // normal: the balanced default. hard: sharper reads, more pressure.
+  // "hard" is not "wilder": it reads more accurately, folds with discipline,
+  // bluffs LESS (bluffs only beat players who over-fold), and value-bets
+  // thinner. "easy" is a loose-passive calling station that reads nothing.
+  const int vsMin = level == 0 ? CLS_MIN[0] : CLS_MIN[rangeCls[0]];
+  const int jw = level == 0 ? 50 : level == 1 ? 30 : 12; // equity jitter
+  const int trapRoll = level == 0 ? 0 : level == 2 ? 20 : 25;
+  const int raiseHi = level == 0 ? 760 : 700;
+  const int semiRoll = level == 0 ? 0 : level == 2 ? 30 : 40;
+  const int rebluffRoll = level == 0 ? 0 : level == 2 ? 4 : 6;
+  const int stickyMargin = level == 0 ? 90 : 40;
+  const int stickyRoll = level == 0 ? 60 : level == 2 ? 8 : 25;
+  const int cbetRoll = level == 0 ? 0 : level == 2 ? 50 : 60;
+  const int lateBluffRoll = level == 0 ? 0 : level == 2 ? 6 : 10;
+  const int valueBet = level == 0 ? 660 : level == 2 ? 600 : 620;
+  const int thinRoll = level == 0 ? 0 : 33;
+
+  int e = equity_pm(botCards, BOT_ITERS, vsMin);
+  e += rnd(2 * jw) - jw;
   int tc = to_call_of(1);
   int potNow = pot + bet_[0] + bet_[1];
   int roll = rnd(100);
@@ -358,16 +381,16 @@ static void bot_act() {
   if (tc > 0) {
     int po = tc * 1000 / (potNow + tc);
     // monsters sometimes just call to trap
-    if (e > 780 && roll < 25) { apply(1, 1, 0); return; }
-    if (e > 700 || (e > 560 && roll < 40)) {
+    if (e > 780 && roll < trapRoll) { apply(1, 1, 0); return; }
+    if (e > raiseHi || (e > 560 && roll < semiRoll)) {
       apply(1, 2, bet_[0] + potNow); // pot-size raise
       return;
     }
     if (e >= po) { apply(1, 1, 0); return; }
     // priced out: usually fold, occasionally bluff-raise
-    if (roll < 6 && stack_[1] > potNow) { apply(1, 2, bet_[0] + potNow); return; }
+    if (roll < rebluffRoll && stack_[1] > potNow) { apply(1, 2, bet_[0] + potNow); return; }
     // sticky peel: slightly wrong calls, sometimes, like a human
-    if (e >= po - 40 && roll < 25) { apply(1, 1, 0); return; }
+    if (e >= po - stickyMargin && roll < stickyRoll) { apply(1, 1, 0); return; }
     apply(1, 0, 0);
     return;
   }
@@ -375,17 +398,17 @@ static void bot_act() {
   // no bet to face
   if (street == 0) {
     // preflop, checked around to the bot in the big blind: punish limps
-    if (e > 580 || (e > 480 && roll < 30)) { apply(1, 2, 3 * BB); return; }
+    if (e > 580 || (e > 480 && roll < (level == 0 ? 0 : 30))) { apply(1, 2, 3 * BB); return; }
     apply(1, 1, 0);
     return;
   }
   // continuation bet: it raised preflop, so it usually keeps betting the flop
-  if (street == 1 && prefAgg == 1 && roll < 60) {
+  if (street == 1 && prefAgg == 1 && roll < cbetRoll) {
     apply(1, 2, bet_[1] + sized);
     return;
   }
   // value bet strength, and a small pure-bluff rate on later streets
-  if (e > 620 || (e > 540 && roll < 33) || (street >= 2 && roll < 10)) {
+  if (e > valueBet || (e > 540 && roll < thinRoll) || (street >= 2 && roll < lateBluffRoll)) {
     apply(1, 2, bet_[1] + sized);
     return;
   }
@@ -502,6 +525,7 @@ extern "C" EXPORT("new_hand") void new_hand() {
   acted[0] = acted[1] = 0;
   lastRaise = BB;
   rangeCls[0] = rangeCls[1] = 0; prefAgg = -1;
+  heroMask = 0; botMask = 0;
   over = 0; result_ = 0; byFold = 0; showdown = 0;
   heroCat = -1; botCat = -1;
   logN = 0;
@@ -549,6 +573,12 @@ extern "C" EXPORT("outs") int outs() { return count_outs(); }
 extern "C" EXPORT("hand_chen") int hand_chen() { return chen2(heroCards[0], heroCards[1]); }
 extern "C" EXPORT("bot_range") int bot_range() { return rangeCls[1]; }
 extern "C" EXPORT("hero_range") int hero_range() { return rangeCls[0]; }
+// difficulty: 0 easy, 1 normal, 2 hard
+extern "C" EXPORT("set_level") void set_level(int l) { level = l < 0 ? 0 : l > 2 ? 2 : l; }
+// which 5 of the 7 cards made each best hand at showdown, as bitmasks over
+// [hole0, hole1, board0..board4]; 0 before showdown
+extern "C" EXPORT("hero_mask") int hero_mask() { return showdown ? heroMask : 0; }
+extern "C" EXPORT("bot_mask") int bot_mask() { return showdown ? botMask : 0; }
 
 // last graded decision
 extern "C" EXPORT("last_grade") int last_grade() { return lastGrade; }

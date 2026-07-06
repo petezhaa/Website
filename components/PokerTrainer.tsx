@@ -23,6 +23,9 @@ type Engine = {
   hand_chen: () => number;
   bot_range: () => number;
   hero_range: () => number;
+  set_level: (l: number) => void;
+  hero_mask: () => number;
+  bot_mask: () => number;
   last_grade: () => number;
   last_advised: () => number;
   last_equity: () => number;
@@ -69,7 +72,21 @@ const ADVICE = ["fold", "check or call", "bet or raise"];
 const STREETS = ["", "Flop", "Turn", "River"];
 
 // A card deals in with a small flip-and-drop; `delay` staggers a spread.
-function Card({ c, hidden = false, delay = 0 }: { c: number; hidden?: boolean; delay?: number }) {
+// At showdown `glow` rings the five cards that make the winning hand and
+// `dim` fades everything that didn't play.
+function Card({
+  c,
+  hidden = false,
+  delay = 0,
+  dim = false,
+  glow = false,
+}: {
+  c: number;
+  hidden?: boolean;
+  delay?: number;
+  dim?: boolean;
+  glow?: boolean;
+}) {
   const reduce = useReducedMotion();
   if (c < 0 && !hidden)
     return <div className="h-16 w-11 rounded-md border border-dashed border-line sm:h-20 sm:w-14" />;
@@ -77,7 +94,7 @@ function Card({ c, hidden = false, delay = 0 }: { c: number; hidden?: boolean; d
   return (
     <motion.div
       initial={reduce ? false : { opacity: 0, y: -22, rotateY: 90, scale: 0.85 }}
-      animate={{ opacity: 1, y: 0, rotateY: 0, scale: 1 }}
+      animate={{ opacity: dim ? 0.4 : 1, y: 0, rotateY: 0, scale: glow ? 1.04 : 1 }}
       transition={{ type: "spring", stiffness: 320, damping: 24, delay }}
       style={{ transformPerspective: 600 }}
     >
@@ -90,7 +107,11 @@ function Card({ c, hidden = false, delay = 0 }: { c: number; hidden?: boolean; d
           }}
         />
       ) : (
-        <div className="flex h-16 w-11 flex-col items-center justify-center rounded-md border border-line bg-surface shadow-sm sm:h-20 sm:w-14">
+        <div
+          className={`flex h-16 w-11 flex-col items-center justify-center rounded-md border bg-surface shadow-sm sm:h-20 sm:w-14 ${
+            glow ? "border-accent ring-2 ring-accent/50" : "border-line"
+          }`}
+        >
           <span
             className={`font-serif text-lg font-semibold leading-none sm:text-xl ${red ? "" : "text-fg"}`}
             style={red ? { color: "#b0483f" } : undefined}
@@ -143,6 +164,8 @@ type Snap = {
   outs: number;
   chen: number;
   botRange: number;
+  heroMask: number;
+  botMask: number;
   street: number;
   log: string[];
 };
@@ -173,6 +196,9 @@ export function PokerTrainer() {
   const [flash, setFlash] = useState<{ id: number; label: string } | null>(null);
   const [botSay, setBotSay] = useState<{ id: number; text: string } | null>(null);
   const [raiseTo, setRaiseTo] = useState(0);
+  const [level, setLevel] = useState(1);
+  const streakRef = useRef(0);
+  const [streak, setStreak] = useState(0);
   // lifetime totals survive across visits
   const ltRef = useRef({ hands: 0, profit: 0, best: 0, ok: 0, bad: 0 });
   const [lifetime, setLifetime] = useState(ltRef.current);
@@ -185,8 +211,16 @@ export function PokerTrainer() {
         ltRef.current = { ...ltRef.current, ...JSON.parse(raw) };
         setLifetime({ ...ltRef.current });
       }
+      const lvl = Number(localStorage.getItem("poker-level"));
+      if (lvl === 0 || lvl === 1 || lvl === 2) setLevel(lvl);
     } catch {}
   }, []);
+
+  const pickLevel = (l: number) => {
+    setLevel(l);
+    engRef.current?.set_level(l);
+    try { localStorage.setItem("poker-level", String(l)); } catch {}
+  };
 
   const snap = useCallback((withCoach: boolean): Snap => {
     const e = engRef.current!;
@@ -242,6 +276,8 @@ export function PokerTrainer() {
       outs: heroTurn ? e.outs() : -1,
       chen: e.hand_chen(),
       botRange: e.bot_range(),
+      heroMask: e.hero_mask(),
+      botMask: e.bot_mask(),
       street: e.get_street(),
       log,
     };
@@ -253,6 +289,7 @@ export function PokerTrainer() {
       const prev = lastRef.current;
       const next = snap(withCoach);
       // lifetime totals (decision deltas any time, profit at hand end)
+      let milestone = 0;
       if (prev) {
         const lt = ltRef.current;
         lt.best += Math.max(0, next.nBest - prev.nBest);
@@ -264,6 +301,13 @@ export function PokerTrainer() {
         }
         try { localStorage.setItem("poker-lifetime", JSON.stringify(lt)); } catch {}
         setLifetime({ ...lt });
+        // streak of decisions without a mistake
+        if (next.nBad > prev.nBad) streakRef.current = 0;
+        else if (next.nBest + next.nOk > prev.nBest + prev.nOk) {
+          streakRef.current += 1;
+          if ([5, 10, 20, 50, 100].includes(streakRef.current)) milestone = streakRef.current;
+        }
+        setStreak(streakRef.current);
       }
       // the bot's latest visible action becomes a small speech bubble
       if (prev && next.log.length > prev.log.length) {
@@ -334,6 +378,18 @@ export function PokerTrainer() {
               ]);
             }
           }
+          if (milestone) {
+            setFloats((fl) => [
+              ...fl,
+              {
+                id: ++fxId.current,
+                x: A.hero.x + 60,
+                y: A.hero.y - 44,
+                text: `${milestone} good calls in a row`,
+                color: "var(--gold)",
+              },
+            ]);
+          }
         }
         if (next.street > prev.street && prev.hands === next.hands) {
           const id = ++fxId.current;
@@ -387,11 +443,13 @@ export function PokerTrainer() {
         // the ?v pairs this JS with the engine build it needs: the engine is
         // cached hard (browser + service worker), so any change to the
         // exports must bump this together with the .bin
-        const buf = await fetch("/poker.bin?v=4").then((r) => r.arrayBuffer());
+        const buf = await fetch("/poker.bin?v=5").then((r) => r.arrayBuffer());
         if (cancelled) return;
         const e = (await WebAssembly.instantiate(buf)).instance.exports as unknown as Engine;
         engRef.current = e;
         e.new_session((Date.now() & 0xffffffff) >>> 0);
+        const lvl = Number(localStorage.getItem("poker-level"));
+        if (lvl === 0 || lvl === 2) e.set_level(lvl);
         setReady(true);
       } catch {
         if (!cancelled) setFailed(true);
@@ -506,8 +564,35 @@ export function PokerTrainer() {
   };
   const fb = feedback();
 
+  // showdown highlight: ring the winner's five cards, dim what didn't play
+  const showdownNow = s.over && !s.byFold && s.bot[0] >= 0;
+  const winMask = showdownNow ? (s.result === 2 ? s.botMask : s.heroMask) : 0;
+  const heroUsed = (i: number) => showdownNow && s.result !== 2 && !!((winMask >> i) & 1);
+  const botUsed = (i: number) => showdownNow && s.result === 2 && !!((winMask >> i) & 1);
+  const boardUsed = (i: number) => showdownNow && !!((winMask >> (2 + i)) & 1);
+
   return (
     <div className="flex flex-col gap-4">
+      {/* opponent difficulty */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] uppercase tracking-wide text-muted">opponent</span>
+        {["easy", "normal", "hard"].map((name, i) => (
+          <button
+            key={name}
+            onClick={() => pickLevel(i)}
+            className={`rounded-md border px-2.5 py-1 text-[11px] transition ${
+              level === i
+                ? "border-accent bg-accent-soft text-accent"
+                : "border-line text-muted hover:border-accent hover:text-accent"
+            }`}
+          >
+            {name}
+          </button>
+        ))}
+        <span className="text-[10px] text-muted">
+          {level === 0 ? "loose and passive, reads nothing" : level === 1 ? "reads your betting" : "reads sharper, wastes nothing"}
+        </span>
+      </div>
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
         {/* ---- the table ---- */}
         <div ref={tableRef} className="panel relative overflow-hidden p-5">
@@ -576,8 +661,8 @@ export function PokerTrainer() {
             <div className="flex items-center gap-3">
               {/* keyed on the card value too: at showdown the backs remount
                   as faces, which plays the flip */}
-              <Card key={`b0-${handId}-${s.bot[0]}`} c={s.bot[0]} hidden={s.bot[0] < 0} delay={0.16} />
-              <Card key={`b1-${handId}-${s.bot[1]}`} c={s.bot[1]} hidden={s.bot[1] < 0} delay={0.24} />
+              <Card key={`b0-${handId}-${s.bot[0]}`} c={s.bot[0]} hidden={s.bot[0] < 0} delay={0.16} glow={botUsed(0)} dim={showdownNow && !botUsed(0)} />
+              <Card key={`b1-${handId}-${s.bot[1]}`} c={s.bot[1]} hidden={s.bot[1] < 0} delay={0.24} glow={botUsed(1)} dim={showdownNow && !botUsed(1)} />
               <div>
                 <p className="flex items-center gap-2 text-sm font-medium">
                   Bot {!s.heroButton && <span className="rounded-full border border-line px-1.5 text-[9px] uppercase tracking-wide text-muted">dealer</span>}
@@ -621,15 +706,15 @@ export function PokerTrainer() {
           {/* board: each street's new cards deal in with a stagger */}
           <div className="my-5 flex justify-center gap-2">
             {s.board.map((c, i) => (
-              <Card key={`bd-${handId}-${i}-${c}`} c={c} delay={boardDelays.current[i]} />
+              <Card key={`bd-${handId}-${i}-${c}`} c={c} delay={boardDelays.current[i]} glow={boardUsed(i)} dim={showdownNow && c >= 0 && !boardUsed(i)} />
             ))}
           </div>
 
           {/* hero row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Card key={`h0-${handId}`} c={s.hero[0]} />
-              <Card key={`h1-${handId}`} c={s.hero[1]} delay={0.08} />
+              <Card key={`h0-${handId}`} c={s.hero[0]} glow={heroUsed(0)} dim={showdownNow && !heroUsed(0)} />
+              <Card key={`h1-${handId}`} c={s.hero[1]} delay={0.08} glow={heroUsed(1)} dim={showdownNow && !heroUsed(1)} />
               <div>
                 <p className="text-sm font-medium">
                   You {s.heroButton && <span className="ml-1 rounded-full border border-line px-1.5 text-[9px] uppercase tracking-wide text-muted">dealer</span>}
@@ -812,6 +897,8 @@ export function PokerTrainer() {
               <span className="text-right tabular-nums text-gold">{s.nOk}</span>
               <span className="text-muted">mistakes</span>
               <span className="text-right tabular-nums text-accent">{s.nBad}</span>
+              <span className="text-muted">streak</span>
+              <span className={`text-right tabular-nums ${streak >= 5 ? "text-gold" : ""}`}>{streak}</span>
               <span className="text-muted">accuracy</span>
               <span className="text-right tabular-nums">{accuracy}%</span>
             </div>
