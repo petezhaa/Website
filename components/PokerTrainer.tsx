@@ -853,8 +853,8 @@ export function PokerTrainer() {
             )}
           </AnimatePresence>
 
-          {/* bot seats */}
-          <div className={`flex ${s.np > 3 ? "justify-between" : "justify-start gap-10"}`}>
+          {/* bot seats (wraps on small screens so nobody gets clipped) */}
+          <div className={`flex flex-wrap items-start gap-y-3 ${s.np > 3 ? "gap-x-4 sm:justify-between" : "gap-x-10"}`}>
             {s.seats.slice(1).map((b, k) => {
               const p = k + 1;
               const revealed = b.c0 >= 0;
