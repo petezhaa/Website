@@ -81,7 +81,7 @@ export default function Home() {
               rel="noopener noreferrer"
               className="btn-term hidden whitespace-nowrap px-3.5 py-1.5 text-sm xl:inline-block"
             >
-              Résumé
+              Resume
             </a>
             <a
               href={`mailto:${LINKS.email}`}
@@ -157,7 +157,7 @@ export default function Home() {
         </section>
 
         {/* ============ WORK ============ */}
-        <Section id="work" title="Work" note="Five engineering roles, most recent first. The résumé, in brief.">
+        <Section id="work" title="Work" note="Five engineering roles, most recent first. The resume, in brief.">
           <div className="flex flex-col lg:pl-5">
             {ROLES.map((role, i) => (
               <Reveal key={role.company + role.dates} delay={i * 50}>
@@ -217,7 +217,7 @@ export default function Home() {
         </Section>
 
         {/* ============ ABOUT ============ */}
-        <Section id="about" title="About" note="The part that isn't on the résumé.">
+        <Section id="about" title="About" note="The part that isn't on the resume.">
           <div className="grid gap-12 lg:grid-cols-[1.5fr_1fr]">
             <Reveal>
               <div className="space-y-5 leading-relaxed text-muted">
@@ -382,7 +382,7 @@ export default function Home() {
                 <div className="mt-6 flex gap-6 text-sm text-muted">
                   <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">LinkedIn</a>
                   <a href={LINKS.github} target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">GitHub</a>
-                  <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">Résumé</a>
+                  <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">Resume</a>
                 </div>
               </div>
             </Reveal>
