@@ -20,6 +20,9 @@ type Engine = {
   coach_advice: () => number;
   now_cat: () => number;
   outs: () => number;
+  hand_chen: () => number;
+  bot_range: () => number;
+  hero_range: () => number;
   last_grade: () => number;
   last_advised: () => number;
   last_equity: () => number;
@@ -138,6 +141,8 @@ type Snap = {
   coachAdv: number;
   nowCat: number;
   outs: number;
+  chen: number;
+  botRange: number;
   street: number;
   log: string[];
 };
@@ -166,7 +171,22 @@ export function PokerTrainer() {
   const [floats, setFloats] = useState<Float[]>([]);
   const [confetti, setConfetti] = useState<Confetto[]>([]);
   const [flash, setFlash] = useState<{ id: number; label: string } | null>(null);
+  const [botSay, setBotSay] = useState<{ id: number; text: string } | null>(null);
+  const [raiseTo, setRaiseTo] = useState(0);
+  // lifetime totals survive across visits
+  const ltRef = useRef({ hands: 0, profit: 0, best: 0, ok: 0, bad: 0 });
+  const [lifetime, setLifetime] = useState(ltRef.current);
   const reduce = useReducedMotion();
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("poker-lifetime");
+      if (raw) {
+        ltRef.current = { ...ltRef.current, ...JSON.parse(raw) };
+        setLifetime({ ...ltRef.current });
+      }
+    } catch {}
+  }, []);
 
   const snap = useCallback((withCoach: boolean): Snap => {
     const e = engRef.current!;
@@ -220,6 +240,8 @@ export function PokerTrainer() {
       coachAdv: withCoach && heroTurn ? e.coach_advice() : -1,
       nowCat: heroTurn ? e.now_cat() : -1,
       outs: heroTurn ? e.outs() : -1,
+      chen: e.hand_chen(),
+      botRange: e.bot_range(),
       street: e.get_street(),
       log,
     };
@@ -230,6 +252,28 @@ export function PokerTrainer() {
     (withCoach: boolean) => {
       const prev = lastRef.current;
       const next = snap(withCoach);
+      // lifetime totals (decision deltas any time, profit at hand end)
+      if (prev) {
+        const lt = ltRef.current;
+        lt.best += Math.max(0, next.nBest - prev.nBest);
+        lt.ok += Math.max(0, next.nOk - prev.nOk);
+        lt.bad += Math.max(0, next.nBad - prev.nBad);
+        if (!prev.over && next.over) {
+          lt.hands += 1;
+          lt.profit += next.profit - prev.profit;
+        }
+        try { localStorage.setItem("poker-lifetime", JSON.stringify(lt)); } catch {}
+        setLifetime({ ...lt });
+      }
+      // the bot's latest visible action becomes a small speech bubble
+      if (prev && next.log.length > prev.log.length) {
+        const fresh = next.log.slice(prev.log.length).filter((l) => l.startsWith("Bot "));
+        if (fresh.length) {
+          const id = ++fxId.current;
+          setBotSay({ id, text: fresh[fresh.length - 1].slice(4) });
+          window.setTimeout(() => setBotSay((b) => (b && b.id === id ? null : b)), 2000);
+        }
+      }
       // stagger newly revealed board cards (flop spreads, runouts roll out)
       const prevBc = prev ? prev.board.filter((c) => c >= 0).length : 0;
       const bc = next.board.filter((c) => c >= 0).length;
@@ -343,7 +387,7 @@ export function PokerTrainer() {
         // the ?v pairs this JS with the engine build it needs: the engine is
         // cached hard (browser + service worker), so any change to the
         // exports must bump this together with the .bin
-        const buf = await fetch("/poker.bin?v=3").then((r) => r.arrayBuffer());
+        const buf = await fetch("/poker.bin?v=4").then((r) => r.arrayBuffer());
         if (cancelled) return;
         const e = (await WebAssembly.instantiate(buf)).instance.exports as unknown as Engine;
         engRef.current = e;
@@ -363,6 +407,14 @@ export function PokerTrainer() {
   useEffect(() => {
     if (ready && !s) deal();
   }, [ready, s, deal]);
+
+  // default the raise slider to a half-pot raise whenever it's our turn
+  useEffect(() => {
+    if (!s || !s.heroTurn) return;
+    const heroBetNow = s.maxTo - s.heroStack;
+    const half = heroBetNow + s.toCall + Math.round((s.pot + s.toCall) * 0.5);
+    setRaiseTo(Math.max(s.minTo, Math.min(s.maxTo, Math.round(half / 5) * 5)));
+  }, [s]);
 
   const act = (cls: number, to = 0) => {
     const e = engRef.current;
@@ -396,14 +448,24 @@ export function PokerTrainer() {
     if (s.street === 0) {
       const [a, b] = s.hero;
       const ra = a >> 2, rb = b >> 2;
-      if (ra === rb) return `You hold a pair of ${RANKS[ra]}s in the hole.`;
+      const strength =
+        s.chen >= 18 ? "a premium starting hand"
+        : s.chen >= 12 ? "a strong starting hand"
+        : s.chen >= 7 ? "a playable starting hand"
+        : "a below-average starting hand";
+      if (ra === rb) return `You hold a pair of ${RANKS[ra]}s, ${strength}.`;
       const hi = RANKS[Math.max(ra, rb)], lo = RANKS[Math.min(ra, rb)];
       const suited = (a & 3) === (b & 3);
-      return `You hold ${hi}${lo} ${suited ? "suited" : "offsuit"}.`;
+      return `You hold ${hi}${lo} ${suited ? "suited" : "offsuit"}, ${strength}.`;
     }
     if (s.nowCat <= 0) return "You have no made hand yet, just high cards.";
     return `You have ${CATS[s.nowCat]} right now.`;
   };
+  // the coach reads ranges: say so when it matters
+  const rangeLine = () =>
+    s.botRange >= 2
+      ? "The bot has shown aggression, so your equity here is measured against the stronger hands its betting represents, not a random hand."
+      : null;
   // outs, with the rule of 4 and 2
   const outsLine = () => {
     if (s.outs <= 0 || s.street < 1 || s.street > 2) return null;
@@ -524,6 +586,19 @@ export function PokerTrainer() {
                       <span /><span /><span />
                     </span>
                   )}
+                  <AnimatePresence>
+                    {botSay && !thinking && (
+                      <motion.span
+                        key={botSay.id}
+                        initial={{ opacity: 0, y: 4, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        className="rounded-full border border-line bg-surface-2 px-2 py-0.5 text-[10px] font-normal italic text-muted"
+                      >
+                        {botSay.text}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </p>
                 <p className="font-mono text-xs text-muted">{s.botStack}</p>
               </div>
@@ -612,6 +687,28 @@ export function PokerTrainer() {
                     <motion.button whileTap={{ scale: 0.94 }} onClick={() => act(2, s.maxTo)} disabled={!s.heroTurn} className="btn-term px-3.5 py-2.5 text-sm disabled:opacity-40">
                       All in
                     </motion.button>
+                    {/* pick any size */}
+                    <div className="flex w-full items-center gap-3 pt-1">
+                      <input
+                        type="range"
+                        min={s.minTo}
+                        max={s.maxTo}
+                        step={5}
+                        value={raiseTo}
+                        onChange={(ev) => setRaiseTo(Number(ev.target.value))}
+                        disabled={!s.heroTurn}
+                        className="h-1.5 flex-1 cursor-pointer accent-[var(--accent)] disabled:opacity-40"
+                        aria-label="raise size"
+                      />
+                      <motion.button
+                        whileTap={{ scale: 0.94 }}
+                        onClick={() => act(2, clamp(raiseTo))}
+                        disabled={!s.heroTurn}
+                        className="btn-term whitespace-nowrap px-3.5 py-1.5 text-xs disabled:opacity-40"
+                      >
+                        {s.toCall > 0 ? "Raise to" : "Bet"} {raiseTo}
+                      </motion.button>
+                    </div>
                   </>
                 )}
               </>
@@ -634,6 +731,9 @@ export function PokerTrainer() {
             {coachOn && !s.over && s.heroTurn && s.coachEq >= 0 && (
               <div className="mt-3 space-y-2.5">
                 <p className="text-xs leading-relaxed text-fg">{holdingLine()}</p>
+                {rangeLine() && (
+                  <p className="text-xs leading-relaxed text-gold">{rangeLine()}</p>
+                )}
                 {outsLine() && (
                   <p className="text-xs leading-relaxed text-muted">{outsLine()}</p>
                 )}
@@ -715,6 +815,25 @@ export function PokerTrainer() {
               <span className="text-muted">accuracy</span>
               <span className="text-right tabular-nums">{accuracy}%</span>
             </div>
+            {lifetime.hands > 0 && (
+              <div className="mt-3 border-t border-line pt-2.5">
+                <p className="text-[10px] uppercase tracking-widest text-muted">lifetime</p>
+                <div className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-1.5 font-mono text-[12px]">
+                  <span className="text-muted">hands</span>
+                  <span className="text-right tabular-nums">{lifetime.hands}</span>
+                  <span className="text-muted">profit</span>
+                  <span className={`text-right tabular-nums ${lifetime.profit >= 0 ? "text-moss" : "text-accent"}`}>
+                    {lifetime.profit >= 0 ? "+" : ""}{(lifetime.profit / 10).toFixed(1)} BB
+                  </span>
+                  <span className="text-muted">accuracy</span>
+                  <span className="text-right tabular-nums">
+                    {lifetime.best + lifetime.ok + lifetime.bad > 0
+                      ? Math.round(((lifetime.best + lifetime.ok) / (lifetime.best + lifetime.ok + lifetime.bad)) * 100)
+                      : 100}%
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -730,12 +849,16 @@ export function PokerTrainer() {
       <div className="max-w-2xl space-y-2 text-xs leading-relaxed text-muted">
         <p>
           How the training works: at every decision the C++ engine deals
-          thousands of random opponent hands and runouts to estimate your
-          equity, which is the share of the pot your hand wins on average. It
-          compares that to the pot odds, which is the price a call is asking
-          you to pay. If your equity beats the price, calling makes money in
-          the long run. If it does not, the call loses money no matter how the
-          hand turns out, and the coach counts it as a mistake.
+          thousands of opponent hands and runouts to estimate your equity,
+          which is the share of the pot your hand wins on average. The
+          opponent hands are not random: they are weighted toward the range
+          the bot&apos;s betting represents, so when it raises, your equity is
+          measured against stronger hands. The coach compares that equity to
+          the pot odds, which is the price a call is asking you to pay. If
+          your equity beats the price, calling makes money in the long run.
+          If it does not, the call loses money no matter how the hand turns
+          out, and the coach counts it as a mistake. The bot reads your
+          betting the same way, so it notices when you only raise good hands.
         </p>
         <p>
           The coach also counts your outs, the cards that improve your hand,

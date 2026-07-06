@@ -98,6 +98,37 @@ static int eval7(const int *cs) {
   return best;
 }
 
+// ---- preflop hand strength: the Chen formula, doubled to stay integer ----
+// AA=40, AKs=24, 72o=-2... used to filter range-weighted sampling and to
+// tell the player how strong their starting hand is.
+static int chen2(int c0, int c1) {
+  int r0 = c0 >> 2, r1 = c1 >> 2;
+  int hi = r0 > r1 ? r0 : r1, lo = r0 > r1 ? r1 : r0;
+  // high-card points x2: A=20 K=16 Q=14 J=12, ten and below = rank number
+  int base;
+  if (hi == 12) base = 20;
+  else if (hi == 11) base = 16;
+  else if (hi == 10) base = 14;
+  else if (hi == 9) base = 12;
+  else base = hi + 2; // rank number (T=10 ... 2=2)
+  if (r0 == r1) {
+    int p = base * 2;
+    return p < 10 ? 10 : p; // pairs: double, minimum 5 points
+  }
+  int s = base;
+  if ((c0 & 3) == (c1 & 3)) s += 4; // suited
+  int gap = hi - lo - 1;
+  if (gap == 1) s -= 2;
+  else if (gap == 2) s -= 4;
+  else if (gap == 3) s -= 8;
+  else if (gap >= 4) s -= 10;
+  if (gap <= 1 && hi < 10) s += 2; // connected low cards can straighten
+  return s;
+}
+// range classes: 0 = anything, 1 = called (playable), 2 = raised (strong),
+// 3 = re-raised or barrelled (very strong). Minimum chen2 per class:
+static const int CLS_MIN[4] = {-100, 7, 12, 17};
+
 // ---- game state ----
 static int heroCards[2], botCards[2], board[5];
 static int boardCount = 0;   // visible board cards
@@ -106,6 +137,8 @@ static int button = 1;       // player index on the button (0 hero, 1 bot); alte
 static int stack_[2], bet_[2], acted[2];
 static int pot = 0;          // chips from completed streets
 static int lastRaise = BB;   // size of the last raise on this street
+static int rangeCls[2] = {0, 0}; // range class each player's actions represent
+static int prefAgg = -1;         // who raised last preflop (for c-bet logic)
 static int turn = 0;         // whose turn (0 hero, 1 bot)
 static int over = 1;         // hand over flag
 static int result_ = 0;      // 0 ongoing, 1 hero won, 2 bot won, 3 split
@@ -140,8 +173,10 @@ static void logev(int actor, int act, int amt) {
   }
 }
 
-// ---- Monte Carlo equity: my two cards + visible board vs one random hand ----
-static int equity_pm(const int *mine, int iters) {
+// ---- Monte Carlo equity: my two cards + visible board vs a sampled hand.
+// vsMin filters the villain's hole cards by Chen score, so the simulation
+// runs against the range their betting represents instead of pure random.
+static int equity_pm(const int *mine, int iters, int vsMin) {
   int used[52] = {0};
   used[mine[0]] = used[mine[1]] = 1;
   for (int i = 0; i < boardCount; i++) used[board[i]] = 1;
@@ -151,21 +186,32 @@ static int equity_pm(const int *mine, int iters) {
 
   int need = 2 + (5 - boardCount);
   int win2 = 0; // wins*2 + ties
-  int pick[7];
   for (int it = 0; it < iters; it++) {
-    // partial Fisher-Yates: draw `need` cards from avail
-    for (int i = 0; i < need; i++) {
+    // rejection-sample the villain's two cards into their range (bail out
+    // after a few tries so a blocked-out range can't loop forever)
+    for (int tries = 0; tries < 24; tries++) {
+      int a = rnd(na), b = rnd(na - 1);
+      if (b >= a) b++;
+      if (chen2(avail[a], avail[b]) >= vsMin || tries == 23) {
+        int t = avail[0]; avail[0] = avail[a]; avail[a] = t;
+        // careful: position b may have moved if b == 0 got swapped away
+        if (b == 0) b = a;
+        t = avail[1]; avail[1] = avail[b]; avail[b] = t;
+        break;
+      }
+    }
+    // complete the board from the rest
+    for (int i = 2; i < need; i++) {
       int j = i + rnd(na - i);
       int t = avail[i]; avail[i] = avail[j]; avail[j] = t;
-      pick[i] = avail[i];
     }
     int h7[7], v7[7];
     h7[0] = mine[0]; h7[1] = mine[1];
-    v7[0] = pick[0]; v7[1] = pick[1];
+    v7[0] = avail[0]; v7[1] = avail[1];
     for (int i = 0; i < boardCount; i++) { h7[2 + i] = board[i]; v7[2 + i] = board[i]; }
     for (int i = 0; i < 5 - boardCount; i++) {
-      h7[2 + boardCount + i] = pick[2 + i];
-      v7[2 + boardCount + i] = pick[2 + i];
+      h7[2 + boardCount + i] = avail[2 + i];
+      v7[2 + boardCount + i] = avail[2 + i];
     }
     int hs = eval7(h7), vs = eval7(v7);
     if (hs > vs) win2 += 2;
@@ -264,6 +310,8 @@ static void apply(int p, int cls, int to) {
     stack_[p] -= pay;
     bet_[p] += pay;
     logev(p, tc > 0 ? 2 : 1, pay);
+    // calling a real bet narrows your range a little
+    if (tc > 0 && rangeCls[p] < 1) rangeCls[p] = 1;
     acted[p] = 1;
     if (!maybe_advance()) turn = 1 - p;
     return;
@@ -283,40 +331,62 @@ static void apply(int p, int cls, int to) {
   stack_[p] -= add;
   bet_[p] += add;
   logev(p, tc > 0 ? 4 : 3, to);
+  // aggression narrows the range this player represents
+  rangeCls[p] = rangeCls[p] < 2 ? 2 : 3;
+  if (street == 0) prefAgg = p;
   acted[p] = 1;
   acted[1 - p] = 0;
   if (!maybe_advance()) turn = 1 - p;
 }
 
 // ---- the bot ----
+// It reads the hero the same way the coach reads it: equity is computed
+// against the range the hero's actions represent. On top of the math it has
+// habits: it opens the button, continuation-bets, bluffs occasionally,
+// slowplays monsters sometimes, and mixes its bet sizes.
 static void bot_act() {
-  int e = equity_pm(botCards, BOT_ITERS); // per-mille vs a random hand
+  int e = equity_pm(botCards, BOT_ITERS, CLS_MIN[rangeCls[0]]);
+  e += rnd(60) - 30; // +-3% so it isn't a fixed book
   int tc = to_call_of(1);
-  int jitter = rnd(60) - 30; // +-3% so it isn't a fixed book
-  e += jitter;
+  int potNow = pot + bet_[0] + bet_[1];
+  int roll = rnd(100);
+  // mixed bet sizing: half pot, two-thirds, or full pot
+  int frac = roll % 3; // reuse the roll as a cheap size mixer
+  int sized = frac == 0 ? potNow / 2 : frac == 1 ? (potNow * 2) / 3 : potNow;
+  if (sized < BB) sized = BB;
+
   if (tc > 0) {
-    int po = tc * 1000 / (pot + bet_[0] + bet_[1] + tc);
-    if (e < po - 30) { apply(1, 0, 0); return; }
-    if (e > 700 || (e > 560 && rnd(2))) {
-      int target = bet_[0] + (pot + bet_[0] + bet_[1]); // pot-size raise
-      apply(1, 2, target);
+    int po = tc * 1000 / (potNow + tc);
+    // monsters sometimes just call to trap
+    if (e > 780 && roll < 25) { apply(1, 1, 0); return; }
+    if (e > 700 || (e > 560 && roll < 40)) {
+      apply(1, 2, bet_[0] + potNow); // pot-size raise
       return;
     }
-    apply(1, 1, 0);
+    if (e >= po) { apply(1, 1, 0); return; }
+    // priced out: usually fold, occasionally bluff-raise
+    if (roll < 6 && stack_[1] > potNow) { apply(1, 2, bet_[0] + potNow); return; }
+    // sticky peel: slightly wrong calls, sometimes, like a human
+    if (e >= po - 40 && roll < 25) { apply(1, 1, 0); return; }
+    apply(1, 0, 0);
     return;
   }
+
   // no bet to face
-  if (street == 0 && button == 0 && bet_[0] == BB && bet_[1] == BB) {
-    // limped pot, bot in BB: raise strong hands
-    if (e > 580) { apply(1, 2, 3 * BB); return; }
+  if (street == 0) {
+    // preflop, checked around to the bot in the big blind: punish limps
+    if (e > 580 || (e > 480 && roll < 30)) { apply(1, 2, 3 * BB); return; }
     apply(1, 1, 0);
     return;
   }
-  if (e > 620 || (e > 540 && rnd(3) == 0)) {
-    int p = pot + bet_[0] + bet_[1];
-    int b = (p * 2) / 3;
-    if (b < BB) b = BB;
-    apply(1, 2, bet_[1] + b);
+  // continuation bet: it raised preflop, so it usually keeps betting the flop
+  if (street == 1 && prefAgg == 1 && roll < 60) {
+    apply(1, 2, bet_[1] + sized);
+    return;
+  }
+  // value bet strength, and a small pure-bluff rate on later streets
+  if (e > 620 || (e > 540 && roll < 33) || (street >= 2 && roll < 10)) {
+    apply(1, 2, bet_[1] + sized);
     return;
   }
   apply(1, 1, 0);
@@ -327,7 +397,8 @@ static void bot_act() {
 // ---- coach ----
 static void coach_compute() {
   if (coachValid || over || turn != 0) return;
-  coachEqPm = equity_pm(heroCards, COACH_ITERS);
+  // equity vs the range the bot's actions represent, not a random hand
+  coachEqPm = equity_pm(heroCards, COACH_ITERS, CLS_MIN[rangeCls[1]]);
   int tc = to_call_of(0);
   int potNow = pot + bet_[0] + bet_[1];
   coachPoPm = tc > 0 ? tc * 1000 / (potNow + tc) : 0;
@@ -430,6 +501,7 @@ extern "C" EXPORT("new_hand") void new_hand() {
   pot = 0; bet_[0] = bet_[1] = 0;
   acted[0] = acted[1] = 0;
   lastRaise = BB;
+  rangeCls[0] = rangeCls[1] = 0; prefAgg = -1;
   over = 0; result_ = 0; byFold = 0; showdown = 0;
   heroCat = -1; botCat = -1;
   logN = 0;
@@ -473,6 +545,10 @@ extern "C" EXPORT("coach_advice") int coach_advice() { coach_compute(); return c
 // rough outs count on the flop/turn (-1 when it doesn't apply)
 extern "C" EXPORT("now_cat") int now_cat() { return now_score() >> 20; }
 extern "C" EXPORT("outs") int outs() { return count_outs(); }
+// starting-hand strength (Chen x2) and the range class each player has shown
+extern "C" EXPORT("hand_chen") int hand_chen() { return chen2(heroCards[0], heroCards[1]); }
+extern "C" EXPORT("bot_range") int bot_range() { return rangeCls[1]; }
+extern "C" EXPORT("hero_range") int hero_range() { return rangeCls[0]; }
 
 // last graded decision
 extern "C" EXPORT("last_grade") int last_grade() { return lastGrade; }
