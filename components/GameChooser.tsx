@@ -34,6 +34,7 @@ const WhichFirst = cab(() => import("@/components/WhichFirst"), "WhichFirst");
 const TimelineBuilder = cab(() => import("@/components/TimelineBuilder"), "TimelineBuilder");
 const FilterDesigner = cab(() => import("@/components/FilterDesigner"), "FilterDesigner");
 const SmithChart = cab(() => import("@/components/SmithChart"), "SmithChart");
+const PokerTrainer = cab(() => import("@/components/PokerTrainer"), "PokerTrainer");
 
 // The arcade: a grid of cabinets. Pick one and the grid gets out of the way;
 // "← all games" brings it back. Each game lazy-loads its engine only when
@@ -64,6 +65,7 @@ const GAMES: GameDef[] = [
   { key: "fractal", label: "Mandelbrot", tag: "C++", area: "math", render: () => <MandelbrotExplorer /> },
   { key: "pd", label: "Prisoner's Dilemma", tag: "C++", area: "math", render: () => <PrisonersDilemma /> },
   { key: "eps", label: "ε–δ & Riemann", tag: "C++", area: "math", render: () => <AnalysisGame /> },
+  { key: "poker", label: "Poker trainer", tag: "C++", area: "math", render: () => <PokerTrainer /> },
   { key: "nim", label: "Nim", tag: "Rust", area: "math", render: () => <NimGame /> },
   { key: "go", label: "Go", tag: "written in Go", area: "languages", render: () => <GoGame /> },
   { key: "java", label: "Snake", tag: "Java bytecode", area: "languages", render: () => <SnakeJava /> },

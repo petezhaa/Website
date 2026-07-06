@@ -38,6 +38,7 @@ const ENGINES = [
   ["cpp/filter.cpp", "public/filter.bin", []],
   ["cpp/smith.cpp", "public/smith.bin", []],
   ["cpp/logic.cpp", "public/logic.bin", []],
+  ["cpp/poker.cpp", "public/poker.bin", []],
 ];
 
 for (const [src, out, extra] of ENGINES) {
