@@ -23,6 +23,12 @@ type Engine = {
   set_mode: (m: number) => void;
   hero_rebuys: () => number;
   can_raise: () => number;
+  cur_sb: () => number;
+  cur_bb: () => number;
+  t_over: () => number;
+  hero_place: () => number;
+  p_out: (p: number) => number;
+  t_next_up: () => number;
   coach_equity: () => number;
   coach_pot_odds: () => number;
   coach_advice: () => number;
@@ -72,6 +78,11 @@ const CATS = [
 ];
 const ADVICE = ["fold", "check or call", "bet or raise"];
 const STREETS = ["", "Flop", "Turn", "River"];
+// the table's regulars, one personality per seat
+const BOT_NAMES = ["You", "Cal", "Ruth", "Sal", "Moe"];
+const BOT_STYLES = ["", "plays it straight", "tight", "wild", "never folds"];
+const ordinal = (n: number) =>
+  n === 1 ? "1st" : n === 2 ? "2nd" : n === 3 ? "3rd" : `${n}th`;
 
 // A card deals in with a small flip-and-drop; `delay` staggers a spread.
 // At showdown `glow` rings the five cards that make the winning hand and
@@ -164,6 +175,7 @@ type Seat = {
   cat: number;
   mask: number;
   isButton: boolean;
+  out: number; // tournament finishing position, 0 while still in
 };
 type Snap = {
   np: number;
@@ -197,6 +209,11 @@ type Snap = {
   street: number;
   canRaise: boolean;
   rebuys: number;
+  sb: number;
+  bb: number;
+  tOver: boolean;
+  heroPlace: number;
+  nextUp: number;
   log: string[];
 };
 
@@ -340,12 +357,22 @@ function Guide({ onClose }: { onClose: () => void }) {
           high.
         </p>
         <p>
-          Two stakes settings: in practice, every stack resets to 1000 each
+          Three stakes settings. In practice, every stack resets to 1000 each
           hand so every decision starts from the same place. In bankroll,
-          stacks carry from hand to hand, going broke costs a rebuy, and
-          side pots work the way they do in a real room. The hand history
-          below the table keeps your last thirty hands with every graded
-          decision, so you can go back and see exactly where the money went.
+          stacks carry from hand to hand, going broke costs a rebuy, and side
+          pots work the way they do in a real room. In tournament, the blinds
+          climb every eight hands, going broke knocks you out for good, and
+          the last player standing wins; short stacks and rising blinds
+          change what a correct decision is, and that pressure is the whole
+          point. The hand history below the table keeps your last thirty
+          hands with every graded decision, so you can go back and see
+          exactly where the money went.
+        </p>
+        <p>
+          The regulars each play their own way: Cal plays it straight, Ruth
+          is tight and only bets when she has it, Sal is wild and bluffs too
+          much, and Moe calls almost anything but almost never raises.
+          Noticing who you are up against is part of the game.
         </p>
       </div>
 
@@ -444,7 +471,7 @@ export function PokerTrainer() {
       else if (act === 9) log.push("(river)");
       else if (act === 10) log.push("(showdown)");
       else {
-        const who = actor === 0 ? "You" : np === 2 ? "Bot" : `Bot ${actor}`;
+        const who = BOT_NAMES[actor] ?? "Bot";
         const v = actor === 0 ? youVerbs[act] : botVerbs[act];
         log.push(amt > 0 && act !== 1 && act !== 0 ? `${who} ${v} ${amt}` : `${who} ${v}`);
       }
@@ -461,6 +488,7 @@ export function PokerTrainer() {
         cat: e.p_cat(p),
         mask: e.p_mask(p),
         isButton: !!e.is_button(p),
+        out: e.p_out(p),
       });
     }
     return {
@@ -495,6 +523,11 @@ export function PokerTrainer() {
       street: e.get_street(),
       canRaise: !!e.can_raise(),
       rebuys: e.hero_rebuys(),
+      sb: e.cur_sb(),
+      bb: e.cur_bb(),
+      tOver: !!e.t_over(),
+      heroPlace: e.hero_place(),
+      nextUp: e.t_next_up(),
       log,
     };
   }, []);
@@ -569,7 +602,9 @@ export function PokerTrainer() {
       }
       // the latest bot action becomes a small speech bubble
       if (prev && next.log.length > prev.log.length) {
-        const fresh = next.log.slice(prev.log.length).filter((l) => l.startsWith("Bot"));
+        const fresh = next.log
+          .slice(prev.log.length)
+          .filter((l) => BOT_NAMES.some((n, i) => i > 0 && l.startsWith(n)));
         if (fresh.length) {
           const id = ++fxId.current;
           setBotSay({ id, text: fresh[fresh.length - 1] });
@@ -614,12 +649,13 @@ export function PokerTrainer() {
                 color: delta >= 0 ? "var(--moss)" : "var(--accent)",
               },
             ]);
-            if (next.winners & 1 && !next.byFold) {
+            if ((next.winners & 1 && !next.byFold) || (next.tOver && next.heroPlace === 1)) {
               const glyphs = ["♠", "♥", "♦", "♣"];
               const colors = ["var(--moss)", "var(--gold)", "var(--accent)"];
+              const big = next.tOver && next.heroPlace === 1;
               setConfetti((cf) => [
                 ...cf,
-                ...Array.from({ length: 14 }, (_, i) => ({
+                ...Array.from({ length: big ? 32 : 14 }, (_, i) => ({
                   id: ++fxId.current,
                   x: potA.x,
                   y: potA.y,
@@ -718,7 +754,7 @@ export function PokerTrainer() {
         // the ?v pairs this JS with the engine build it needs: the engine is
         // cached hard (browser + service worker), so any change to the
         // exports must bump this together with the .bin
-        const buf = await fetch("/poker.bin?v=7").then((r) => r.arrayBuffer());
+        const buf = await fetch("/poker.bin?v=8").then((r) => r.arrayBuffer());
         if (cancelled) return;
         const e = (await WebAssembly.instantiate(buf)).instance.exports as unknown as Engine;
         engRef.current = e;
@@ -817,7 +853,7 @@ export function PokerTrainer() {
     return `Calling ${s.toCall} into a ${s.pot} pot: at ${(s.coachEq / 10).toFixed(0)}% equity that call averages ${ev >= 0 ? "+" : ""}${ev} chips.`;
   };
 
-  const botName = (p: number) => (s.np === 2 ? "Bot" : `Bot ${p}`);
+  const botName = (p: number) => BOT_NAMES[p] ?? "Bot";
   const resultLine = () => {
     if (!s.over) return null;
     const heroWon = !!(s.winners & 1);
@@ -914,7 +950,7 @@ export function PokerTrainer() {
         </span>
         <span className="flex items-center gap-2">
           <span className="text-[11px] uppercase tracking-wide text-muted">stakes</span>
-          {["practice", "bankroll"].map((name, i) => (
+          {["practice", "bankroll", "tournament"].map((name, i) => (
             <button
               key={name}
               onClick={() => pickMode(i)}
@@ -932,6 +968,16 @@ export function PokerTrainer() {
           how to play
         </button>
       </div>
+
+      {/* tournament HUD */}
+      {mode === 2 && (
+        <p className="font-mono text-[11px] text-muted">
+          blinds {s.sb}/{s.bb}
+          {s.nextUp > 0 ? ` · up in ${s.nextUp} hand${s.nextUp > 1 ? "s" : ""}` : " · final level"}
+          {" · "}
+          {s.seats.filter((p) => !p.out).length} of {s.np} left
+        </p>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
         {/* ---- the table ---- */}
@@ -1017,7 +1063,10 @@ export function PokerTrainer() {
                         </span>
                       )}
                     </p>
-                    <p className="font-mono text-[11px] text-muted">{b.folded ? "folded" : b.stack}</p>
+                    <p className="font-mono text-[11px] text-muted">
+                      {b.out ? `out · ${ordinal(b.out)}` : b.folded ? "folded" : b.stack}
+                    </p>
+                    <p className="text-[9px] italic text-muted/80">{BOT_STYLES[p]}</p>
                   </div>
                 </div>
               );
@@ -1089,9 +1138,41 @@ export function PokerTrainer() {
                 >
                   {resultLine()}
                 </motion.p>
-                <motion.button whileTap={{ scale: 0.95 }} onClick={deal} className="btn-solid px-5 py-2.5 text-sm">
-                  Next hand
-                </motion.button>
+                {mode === 2 && s.tOver ? (
+                  <motion.div
+                    initial={reduce ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: reduce ? 0 : 0.8, duration: 0.5 }}
+                    className="w-full space-y-2"
+                  >
+                    <p className="font-serif text-2xl tracking-tight">
+                      {s.heroPlace === 1
+                        ? "You won the tournament."
+                        : `You finished ${ordinal(s.heroPlace)} of ${s.np}.`}
+                    </p>
+                    <div className="space-y-0.5 font-mono text-[11px] text-muted">
+                      {s.seats.map((p, i) => (
+                        <p key={i}>
+                          {i === 0 ? "You" : BOT_NAMES[i]}:{" "}
+                          {i === 0
+                            ? ordinal(s.heroPlace)
+                            : p.out
+                            ? ordinal(p.out)
+                            : s.heroPlace !== 1
+                            ? "still standing"
+                            : ordinal(2)}
+                        </p>
+                      ))}
+                    </div>
+                    <motion.button whileTap={{ scale: 0.95 }} onClick={() => pickMode(2)} className="btn-solid px-5 py-2.5 text-sm">
+                      New tournament
+                    </motion.button>
+                  </motion.div>
+                ) : (
+                  <motion.button whileTap={{ scale: 0.95 }} onClick={deal} className="btn-solid px-5 py-2.5 text-sm">
+                    Next hand
+                  </motion.button>
+                )}
               </>
             ) : hero.folded ? (
               <p className="text-xs text-muted">You folded. The hand plays out.</p>

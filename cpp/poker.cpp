@@ -143,8 +143,24 @@ static int stack_[MAXP], bet_[MAXP], acted[MAXP], folded[MAXP];
 static int contrib[MAXP];        // total chips put in this hand (side pots)
 static int onlyCall[MAXP];       // a short all-in didn't reopen the betting
 static int rangeCls[MAXP];
-static int mode = 0;             // 0 practice (top up every hand), 1 bankroll (carry)
+static int mode = 0;             // 0 practice, 1 bankroll, 2 tournament
 static int rebuysHero = 0;
+// tournament state: blinds climb, busts are final, placements recorded
+static int SBv = 5, BBv = 10;    // current blinds (fixed outside tournaments)
+static int outOf[MAXP];          // busted out of the tournament
+static int placeP[MAXP];         // finishing position (0 = still in)
+static int tHands = 0;           // hands played this tournament
+static int tOver = 0;
+static const int T_LEVELS = 8;
+static const int T_SB[T_LEVELS] = {5, 10, 15, 25, 40, 60, 100, 150};
+static const int T_BB[T_LEVELS] = {10, 20, 30, 50, 80, 120, 200, 300};
+static const int T_HANDS_PER_LEVEL = 8;
+static int alive_count() {
+  int n = 0;
+  for (int p = 0; p < NP; p++)
+    if (!outOf[p]) n++;
+  return n;
+}
 static int prefAgg = -1;         // last preflop raiser (for c-bet logic)
 static int pot = 0;              // chips from completed streets
 static int lastRaise = BB;
@@ -303,12 +319,28 @@ static void settle_street() {
   for (int p = 0; p < NP; p++) {
     pot += bet_[p]; bet_[p] = 0; acted[p] = 0; onlyCall[p] = 0;
   }
-  lastRaise = BB;
+  lastRaise = BBv;
+}
+static int next_alive(int from) {
+  int p = from;
+  do { p = (p + 1) % NP; } while (outOf[p]);
+  return p;
 }
 static void finish_hand() {
   over = 1;
   profit += stack_[0] - heroStackAtDeal;
   handsPlayed++;
+  if (mode == 2) {
+    tHands++;
+    int alive = alive_count();
+    for (int p = 0; p < NP; p++)
+      if (!outOf[p] && stack_[p] <= 0) {
+        outOf[p] = 1;
+        placeP[p] = alive; // busting now finishes in this position
+      }
+    if (outOf[0]) tOver = 1;
+    else if (alive_count() == 1) { tOver = 1; placeP[0] = 1; }
+  }
 }
 static void do_showdown() {
   int score[MAXP], seven[7];
@@ -416,7 +448,7 @@ static void apply(int p, int cls, int to) {
   // a short all-in earlier this street means p may only call, not re-raise
   if (onlyCall[p]) { apply(p, 1, 0); return; }
   int mb = max_bet();
-  int prevMin = lastRaise > BB ? lastRaise : BB;
+  int prevMin = lastRaise > BBv ? lastRaise : BBv;
   int minTo = mb + prevMin;
   int allinTo = bet_[p] + stack_[p];
   if (to > allinTo) to = allinTo;
@@ -452,16 +484,33 @@ static void bot_act() {
   // difficulty knobs. easy: loose-passive, reads nothing, calls too much.
   const int jw = level == 0 ? 50 : level == 1 ? 30 : 12;
   const int trapRoll = level == 0 ? 0 : level == 2 ? 20 : 25;
-  const int raiseHi = base + (level == 0 ? 260 : 200);
+  int raiseHi = base + (level == 0 ? 260 : 200);
   const int semiLo = base + 60;
-  const int semiRoll = level == 0 ? 0 : level == 2 ? 30 : 40;
-  const int rebluffRoll = level == 0 ? 0 : level == 2 ? 4 : 6;
-  const int stickyMargin = level == 0 ? 90 : 40;
-  const int stickyRoll = level == 0 ? 60 : level == 2 ? 8 : 25;
-  const int cbetRoll = level == 0 ? 0 : level == 2 ? 50 : 60;
-  const int lateBluffRoll = level == 0 ? 0 : level == 2 ? 6 : 10;
-  const int valueBet = base + (level == 0 ? 160 : level == 2 ? 100 : 120);
-  const int thinRoll = level == 0 ? 0 : 33;
+  int semiRoll = level == 0 ? 0 : level == 2 ? 30 : 40;
+  int rebluffRoll = level == 0 ? 0 : level == 2 ? 4 : 6;
+  int stickyMargin = level == 0 ? 90 : 40;
+  int stickyRoll = level == 0 ? 60 : level == 2 ? 8 : 25;
+  int cbetRoll = level == 0 ? 0 : level == 2 ? 50 : 60;
+  int lateBluffRoll = level == 0 ? 0 : level == 2 ? 6 : 10;
+  int valueBet = base + (level == 0 ? 160 : level == 2 ? 100 : 120);
+  int thinRoll = level == 0 ? 0 : 33;
+  // each seat has a personality layered on top of the difficulty:
+  // seat 1 Cal plays it straight; seat 2 Ruth is tight and honest; seat 3
+  // Sal is wild and bluffy; seat 4 Moe calls everything and raises nothing
+  if (me == 2) {
+    raiseHi += 60; valueBet += 50;
+    semiRoll -= 15; stickyRoll -= 12; lateBluffRoll /= 2; thinRoll -= 15;
+  } else if (me == 3) {
+    semiRoll += 25; rebluffRoll += 6; lateBluffRoll += 8;
+    thinRoll += 15; cbetRoll += 20; stickyRoll += 10;
+  } else if (me == 4) {
+    stickyMargin = 130; stickyRoll = 75;
+    raiseHi += 120; valueBet += 80;
+    semiRoll = 8; rebluffRoll = 0; lateBluffRoll = 0; cbetRoll = 0; thinRoll = 0;
+  }
+  if (semiRoll < 0) semiRoll = 0;
+  if (stickyRoll < 0) stickyRoll = 0;
+  if (thinRoll < 0) thinRoll = 0;
 
   // easy bots read nothing: pretend everyone's range is "anything"
   int savedCls[MAXP];
@@ -477,7 +526,7 @@ static void bot_act() {
   int roll = rnd(100);
   int frac = roll % 3;
   int sized = frac == 0 ? potNow / 2 : frac == 1 ? (potNow * 2) / 3 : potNow;
-  if (sized < BB) sized = BB;
+  if (sized < BBv) sized = BBv;
 
   if (tc > 0) {
     int po = tc * 1000 / (potNow + tc);
@@ -498,7 +547,7 @@ static void bot_act() {
 
   if (street == 0) {
     if (e > base + 180 || (e > base + 80 && roll < (level == 0 ? 0 : 30))) {
-      apply(me, 2, 3 * BB);
+      apply(me, 2, 3 * BBv);
       return;
     }
     apply(me, 1, 0);
@@ -610,12 +659,29 @@ extern "C" EXPORT("set_players") void set_players(int n) {
 }
 extern "C" EXPORT("get_players") int get_players() { return NP; }
 extern "C" EXPORT("set_level") void set_level(int l) { level = l < 0 ? 0 : l > 2 ? 2 : l; }
-// 0 practice (stacks reset every hand), 1 bankroll (stacks carry; bust = rebuy)
+// 0 practice (stacks reset every hand), 1 bankroll (stacks carry; bust =
+// rebuy), 2 tournament (blinds climb, busts are final; call again to restart)
 extern "C" EXPORT("set_mode") void set_mode(int m) {
-  mode = m ? 1 : 0;
+  mode = m < 0 ? 0 : m > 2 ? 2 : m;
   rebuysHero = 0;
-  if (mode == 0)
-    for (int p = 0; p < MAXP; p++) stack_[p] = STACK;
+  SBv = SB; BBv = BB;
+  tHands = 0; tOver = 0;
+  NP = pendingNP;
+  for (int p = 0; p < MAXP; p++) {
+    stack_[p] = STACK;
+    outOf[p] = 0;
+    placeP[p] = 0;
+  }
+}
+extern "C" EXPORT("cur_sb") int cur_sb() { return SBv; }
+extern "C" EXPORT("cur_bb") int cur_bb() { return BBv; }
+extern "C" EXPORT("t_over") int t_over() { return tOver; }
+extern "C" EXPORT("hero_place") int hero_place() { return placeP[0]; }
+extern "C" EXPORT("p_out") int p_out(int p) { return placeP[p]; }
+// hands until the blinds go up (0 when they're already at the cap)
+extern "C" EXPORT("t_next_up") int t_next_up() {
+  if (mode != 2 || tHands / T_HANDS_PER_LEVEL >= T_LEVELS - 1) return 0;
+  return T_HANDS_PER_LEVEL - (tHands % T_HANDS_PER_LEVEL);
 }
 extern "C" EXPORT("get_mode") int get_mode() { return mode; }
 extern "C" EXPORT("hero_rebuys") int hero_rebuys() { return rebuysHero; }
@@ -625,41 +691,56 @@ extern "C" EXPORT("can_raise") int can_raise() {
 }
 
 extern "C" EXPORT("new_hand") void new_hand() {
-  NP = pendingNP;
+  if (mode == 2) {
+    if (tOver) return; // the tournament ended; start a new one instead
+    int lvl = tHands / T_HANDS_PER_LEVEL;
+    if (lvl >= T_LEVELS) lvl = T_LEVELS - 1;
+    SBv = T_SB[lvl]; BBv = T_BB[lvl];
+  } else {
+    NP = pendingNP; // the tournament roster is locked; other modes resize
+    SBv = SB; BBv = BB;
+  }
   shuffle_deck();
   for (int p = 0; p < NP; p++) {
     holeC[p][0] = deck[2 * p];
     holeC[p][1] = deck[2 * p + 1];
-    // practice mode tops everyone up; bankroll mode carries stacks and
-    // rebuys anyone who can no longer post the big blind
-    if (mode == 0 || stack_[p] < BB) {
+    // practice tops everyone up; bankroll rebuys anyone who can no longer
+    // post the big blind; a tournament bust is final
+    if (mode == 0 || (mode == 1 && stack_[p] < BBv)) {
       if (mode == 1 && p == 0 && handsPlayed > 0) rebuysHero++;
       stack_[p] = STACK;
     }
-    bet_[p] = 0; acted[p] = 0; folded[p] = 0;
+    bet_[p] = 0; acted[p] = 0;
+    folded[p] = outOf[p] ? 1 : 0; // the busted sit out permanently
     contrib[p] = 0; onlyCall[p] = 0;
     rangeCls[p] = 0; catP[p] = -1; maskP[p] = 0;
   }
   for (int i = 0; i < 5; i++) board[i] = deck[2 * MAXP + i];
   boardCount = 0; street = 0;
-  button = (button + 1) % NP;
-  pot = 0; lastRaise = BB;
+  button = next_alive(button);
+  pot = 0; lastRaise = BBv;
   prefAgg = -1;
   over = 0; byFold = 0; showdown = 0; winners_ = 0;
   logN = 0;
   lastGrade = -1; lastAdvised = -1; lastEqPm = -1; lastPoPm = -1; lastActionCls = -1;
   heroStackAtDeal = stack_[0];
   // blinds: heads-up the button is the small blind; otherwise they're the
-  // two seats after the button, and the seat after the big blind opens
+  // next two live seats, and the seat after the big blind opens
   int sbp, bbp;
-  if (NP == 2) { sbp = button; bbp = 1 - button; turnSeat = button; }
-  else {
-    sbp = (button + 1) % NP;
-    bbp = (button + 2) % NP;
-    turnSeat = (button + 3) % NP;
+  if (alive_count() == 2) {
+    sbp = button;
+    bbp = next_alive(button);
+    turnSeat = sbp;
+  } else {
+    sbp = next_alive(button);
+    bbp = next_alive(sbp);
+    turnSeat = next_alive(bbp);
   }
-  stack_[sbp] -= SB; bet_[sbp] = SB; contrib[sbp] = SB; logev(sbp, 5, SB);
-  stack_[bbp] -= BB; bet_[bbp] = BB; contrib[bbp] = BB; logev(bbp, 6, BB);
+  // short stacks post what they have (an all-in blind)
+  int paySB = SBv < stack_[sbp] ? SBv : stack_[sbp];
+  stack_[sbp] -= paySB; bet_[sbp] = paySB; contrib[sbp] = paySB; logev(sbp, 5, paySB);
+  int payBB = BBv < stack_[bbp] ? BBv : stack_[bbp];
+  stack_[bbp] -= payBB; bet_[bbp] = payBB; contrib[bbp] = payBB; logev(bbp, 6, payBB);
   coachValid = 0;
 }
 
@@ -701,6 +782,8 @@ extern "C" EXPORT("last_pot_odds") int last_pot_odds() { return lastPoPm; }
 extern "C" EXPORT("last_action_cls") int last_action_cls() { return lastActionCls; }
 
 // per-seat state (seat 0 = hero). Bot hole cards hide until showdown.
+// hero cards always show; bots only at a showdown they reached (players
+// busted in earlier hands sit folded, so they stay hidden automatically)
 extern "C" EXPORT("p_card") int p_card(int p, int i) {
   if (p < 0 || p >= NP) return -1;
   if (p != 0 && !(showdown && !folded[p])) return -1;
@@ -726,7 +809,7 @@ extern "C" EXPORT("hand_over") int hand_over() { return over; }
 extern "C" EXPORT("by_fold") int by_fold_() { return byFold; }
 extern "C" EXPORT("winners") int winners() { return winners_; }
 extern "C" EXPORT("min_raise_to") int min_raise_to() {
-  int m = max_bet() + (lastRaise > BB ? lastRaise : BB);
+  int m = max_bet() + (lastRaise > BBv ? lastRaise : BBv);
   int allin = bet_[0] + stack_[0];
   return m < allin ? m : allin;
 }

@@ -2,7 +2,7 @@
 // - navigations: network first, cached home as the offline fallback
 // - engines + static chunks: cache first (they're immutable per deploy)
 // - everything else same-origin: network, backfilling the cache
-const VERSION = "v9";
+const VERSION = "v10";
 const CACHE = `petezha-${VERSION}`;
 
 // Precache ONLY the tiny engines (~180 KB total): first-visit bandwidth
@@ -24,7 +24,7 @@ const PRECACHE = [
   "/filter.bin",
   "/smith.bin",
   "/logic.bin",
-  "/poker.bin?v=7",
+  "/poker.bin?v=8",
   "/nim.bin",
   "/history.bin",
   "/bench.bin",
