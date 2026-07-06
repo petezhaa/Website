@@ -321,10 +321,8 @@ static void bot_act() {
   }
   apply(1, 1, 0);
 }
-static void run_bot() {
-  while (!over && turn == 1) bot_act();
-  coachValid = 0;
-}
+// the UI paces the bot: it calls bot_step() once per visible action, with a
+// thinking delay in between, so play unfolds instead of teleporting
 
 // ---- coach ----
 static void coach_compute() {
@@ -443,7 +441,6 @@ extern "C" EXPORT("new_hand") void new_hand() {
   stack_[bbp] -= BB; bet_[bbp] = BB; logev(bbp, 6, BB);
   turn = button; // button acts first preflop heads-up
   coachValid = 0;
-  run_bot();
 }
 
 // hero action. cls: 0 fold, 1 check/call, 2 raise to `to` chips this street.
@@ -456,8 +453,16 @@ extern "C" EXPORT("hero_act") int hero_act(int cls, int to) {
   else if (cls >= 1 && coachAdv >= 1) { lastGrade = 1; nOk++; }
   else { lastGrade = 0; nBad++; }
   apply(0, cls, to);
-  if (!over) run_bot();
   return 1;
+}
+
+// one bot action; the UI calls this on a timer while it's the bot's turn
+extern "C" EXPORT("bot_turn") int bot_turn() { return (!over && turn == 1) ? 1 : 0; }
+extern "C" EXPORT("bot_step") void bot_step() {
+  if (!over && turn == 1) {
+    bot_act();
+    coachValid = 0;
+  }
 }
 
 // coach, on demand (only meaningful when it's the hero's turn)
