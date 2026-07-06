@@ -207,7 +207,10 @@ export function PokerTrainer() {
     let cancelled = false;
     (async () => {
       try {
-        const buf = await fetch("/poker.bin").then((r) => r.arrayBuffer());
+        // the ?v pairs this JS with the engine build it needs: the engine is
+        // cached hard (browser + service worker), so any change to the
+        // exports must bump this together with the .bin
+        const buf = await fetch("/poker.bin?v=2").then((r) => r.arrayBuffer());
         if (cancelled) return;
         const e = (await WebAssembly.instantiate(buf)).instance.exports as unknown as Engine;
         engRef.current = e;
