@@ -177,6 +177,127 @@ type Confetto = { id: number; x: number; y: number; dx: number; dy: number; rot:
 
 const round5 = (n: number) => Math.round(n / 5) * 5;
 
+// The how-to-play guide: shown on the first visit, reopenable any time.
+function Guide({ onClose }: { onClose: () => void }) {
+  const H = ({ children }: { children: React.ReactNode }) => (
+    <h4 className="font-serif text-lg tracking-tight">{children}</h4>
+  );
+  const RANKINGS: [string, string][] = [
+    ["Straight flush", "five cards in a row, all one suit"],
+    ["Four of a kind", "all four of one rank"],
+    ["Full house", "three of a kind plus a pair"],
+    ["Flush", "any five cards of one suit"],
+    ["Straight", "five cards in a row, mixed suits"],
+    ["Three of a kind", "three of one rank"],
+    ["Two pair", "two different pairs"],
+    ["Pair", "two of one rank"],
+    ["High card", "none of the above; the best card plays"],
+  ];
+  return (
+    <div className="panel space-y-5 p-6 sm:p-8">
+      <div className="flex items-baseline justify-between gap-4">
+        <h3 className="font-serif text-2xl tracking-tight">How to play</h3>
+        <button onClick={onClose} className="btn-solid px-4 py-2 text-sm">
+          Deal me in
+        </button>
+      </div>
+
+      <div className="space-y-2 text-sm leading-relaxed text-muted">
+        <H>The game</H>
+        <p>
+          This is heads-up no-limit Texas Hold&apos;em, you against the bot.
+          You each get two private cards. Five shared cards land on the table
+          in stages: three at once (the flop), then one more (the turn), then
+          a last one (the river). Your hand is the best five cards you can
+          pick from your two plus the five on the board. Whoever has the
+          better five wins the pot at showdown, and if everyone else folds
+          first, the last player standing takes it without showing anything.
+        </p>
+        <p>
+          Before each hand, both players post forced bets called blinds (5
+          and 10 here), so there is always something to fight for. After the
+          hole cards and after each stage of the board there is a round of
+          betting.
+        </p>
+      </div>
+
+      <div className="space-y-2 text-sm leading-relaxed text-muted">
+        <H>Your options when it is your turn</H>
+        <p>
+          <span className="text-fg">Check</span> passes when nobody has bet.{" "}
+          <span className="text-fg">Call</span> matches the bet in front of
+          you. <span className="text-fg">Bet</span> or{" "}
+          <span className="text-fg">raise</span> puts more chips in, which
+          forces the bot to pay to continue or give up.{" "}
+          <span className="text-fg">Fold</span> surrenders the hand and
+          whatever you already put in. The slider picks any raise size up to
+          all-in.
+        </p>
+      </div>
+
+      <div className="space-y-2 text-sm leading-relaxed text-muted">
+        <H>Hand rankings, strongest first</H>
+        <div className="grid gap-x-8 gap-y-1 sm:grid-cols-2">
+          {RANKINGS.map(([name, what], i) => (
+            <p key={name}>
+              <span className="font-mono text-[11px] text-muted">{i + 1}.</span>{" "}
+              <span className="text-fg">{name}</span>, {what}
+            </p>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2 text-sm leading-relaxed text-muted">
+        <H>What the coach is telling you</H>
+        <p>
+          <span className="text-fg">Equity</span> is the share of the pot
+          your hand would win if the cards ran out thousands of times. The
+          engine actually runs that simulation in C++ at every decision, and
+          it deals the bot hands that match how it has been betting, so a
+          raise from the bot lowers your equity like it should.
+        </p>
+        <p>
+          <span className="text-fg">Pot odds</span> are the price of a call.
+          If you have to put in 20 to win a pot of 60, you are paying 20 to
+          win 80 total, which is 25%. If your equity is above that price the
+          call makes money in the long run, and if it is below, the call
+          loses money no matter how this one hand ends.
+        </p>
+        <p>
+          <span className="text-fg">Outs</span> are the specific cards that
+          improve your hand. The rule of 4 and 2 turns them into a
+          percentage: outs times 4 on the flop, or times 2 on the turn, is
+          roughly your chance to hit.
+        </p>
+        <p>
+          After every action the coach grades you.{" "}
+          <span className="text-moss">Good</span> means the math agreed with
+          you, <span className="text-gold">close</span> means a fine but not
+          best line, and <span className="text-accent">mistake</span> means
+          the numbers said otherwise. The accuracy and streak numbers track
+          those grades, and your lifetime results are saved on this device.
+        </p>
+      </div>
+
+      <div className="space-y-2 text-sm leading-relaxed text-muted">
+        <H>The one idea that matters</H>
+        <p>
+          You are not trying to win every hand. You are trying to make
+          decisions that make money on average. You can play a hand perfectly
+          and still lose it; that is variance, not a mistake. The coach only
+          cares whether the price you paid was right, and that is the habit
+          this trainer is built to teach. Start against the easy opponent,
+          and move up when your accuracy stays high.
+        </p>
+      </div>
+
+      <button onClick={onClose} className="btn-solid px-5 py-2.5 text-sm">
+        Deal me in
+      </button>
+    </div>
+  );
+}
+
 export function PokerTrainer() {
   const engRef = useRef<Engine | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -199,6 +320,17 @@ export function PokerTrainer() {
   const [level, setLevel] = useState(1);
   const streakRef = useRef(0);
   const [streak, setStreak] = useState(0);
+  // first visit: explain the game before dealing; reopenable any time
+  const [showGuide, setShowGuide] = useState(false);
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem("poker-intro-seen")) setShowGuide(true);
+    } catch {}
+  }, []);
+  const closeGuide = () => {
+    try { localStorage.setItem("poker-intro-seen", "1"); } catch {}
+    setShowGuide(false);
+  };
   // lifetime totals survive across visits
   const ltRef = useRef({ hands: 0, profit: 0, best: 0, ok: 0, bad: 0 });
   const [lifetime, setLifetime] = useState(ltRef.current);
@@ -461,10 +593,10 @@ export function PokerTrainer() {
     };
   }, []);
 
-  // deal the first hand once the engine is up
+  // deal the first hand once the engine is up and the guide is out of the way
   useEffect(() => {
-    if (ready && !s) deal();
-  }, [ready, s, deal]);
+    if (ready && !s && !showGuide) deal();
+  }, [ready, s, showGuide, deal]);
 
   // default the raise slider to a half-pot raise whenever it's our turn
   useEffect(() => {
@@ -485,6 +617,7 @@ export function PokerTrainer() {
 
   if (failed)
     return <p className="text-sm text-muted">couldn&apos;t load the wasm engine.</p>;
+  if (showGuide) return <Guide onClose={closeGuide} />;
   if (!ready || !s)
     return (
       <div className="panel grid h-40 place-items-center">
@@ -592,6 +725,9 @@ export function PokerTrainer() {
         <span className="text-[10px] text-muted">
           {level === 0 ? "loose and passive, reads nothing" : level === 1 ? "reads your betting" : "reads sharper, wastes nothing"}
         </span>
+        <button onClick={() => setShowGuide(true)} className="tlink ml-auto text-[11px] !text-muted hover:!text-accent">
+          how to play
+        </button>
       </div>
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
         {/* ---- the table ---- */}
