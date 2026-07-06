@@ -4,10 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { bumpVibe } from "@/lib/vibeBus";
 
-// Heads-up Texas Hold'em against a bot, with a coach. The C++ engine deals,
-// runs the betting, and computes hand equity with a Monte Carlo simulation at
-// every decision. The bot is stepped from here on a timer so its actions play
-// out one at a time, and chips, streets, and showdowns all animate.
+// No-limit Texas Hold'em for 2 to 5 players (you against 1 to 4 bots), with
+// a coach. The C++ engine deals, runs the betting, and computes hand equity
+// with a Monte Carlo simulation against the ranges every live opponent's
+// betting represents. The bots are stepped from here on a timer so their
+// actions play out one at a time, and chips, streets, and showdowns animate.
 
 type Engine = {
   new_session: (seed: number) => void;
@@ -15,42 +16,40 @@ type Engine = {
   hero_act: (cls: number, to: number) => number;
   bot_turn: () => number;
   bot_step: () => void;
+  cur_actor: () => number;
+  set_players: (n: number) => void;
+  get_players: () => number;
+  set_level: (l: number) => void;
   coach_equity: () => number;
   coach_pot_odds: () => number;
   coach_advice: () => number;
   now_cat: () => number;
   outs: () => number;
   hand_chen: () => number;
-  bot_range: () => number;
-  hero_range: () => number;
-  set_level: (l: number) => void;
-  hero_mask: () => number;
-  bot_mask: () => number;
   last_grade: () => number;
   last_advised: () => number;
   last_equity: () => number;
   last_pot_odds: () => number;
   last_action_cls: () => number;
-  hero_card: (i: number) => number;
-  bot_card: (i: number) => number;
+  p_card: (p: number, i: number) => number;
+  p_stack: (p: number) => number;
+  p_bet: (p: number) => number;
+  p_folded: (p: number) => number;
+  p_range: (p: number) => number;
+  p_cat: (p: number) => number;
+  p_mask: (p: number) => number;
+  is_button: (p: number) => number;
   board_card: (i: number) => number;
   board_count: () => number;
   get_street: () => number;
   get_pot: () => number;
-  hero_stack: () => number;
-  bot_stack: () => number;
-  hero_bet: () => number;
-  bot_bet: () => number;
   to_call: () => number;
   hero_turn: () => number;
   hand_over: () => number;
-  get_result: () => number;
   by_fold: () => number;
-  hero_button: () => number;
+  winners: () => number;
   min_raise_to: () => number;
   max_raise_to: () => number;
-  hero_cat: () => number;
-  bot_cat: () => number;
   hands_played: () => number;
   session_profit: () => number;
   n_best: () => number;
@@ -80,16 +79,19 @@ function Card({
   delay = 0,
   dim = false,
   glow = false,
+  small = false,
 }: {
   c: number;
   hidden?: boolean;
   delay?: number;
   dim?: boolean;
   glow?: boolean;
+  small?: boolean;
 }) {
   const reduce = useReducedMotion();
+  const size = small ? "h-12 w-8 sm:h-14 sm:w-10" : "h-16 w-11 sm:h-20 sm:w-14";
   if (c < 0 && !hidden)
-    return <div className="h-16 w-11 rounded-md border border-dashed border-line sm:h-20 sm:w-14" />;
+    return <div className={`${size} rounded-md border border-dashed border-line`} />;
   const red = !hidden && ((c & 3) === 1 || (c & 3) === 2);
   return (
     <motion.div
@@ -100,7 +102,7 @@ function Card({
     >
       {hidden ? (
         <div
-          className="grid h-16 w-11 place-items-center rounded-md border border-line sm:h-20 sm:w-14"
+          className={`${size} grid place-items-center rounded-md border border-line`}
           style={{
             background:
               "repeating-linear-gradient(45deg, var(--surface-2) 0 4px, var(--surface) 4px 8px)",
@@ -108,18 +110,18 @@ function Card({
         />
       ) : (
         <div
-          className={`flex h-16 w-11 flex-col items-center justify-center rounded-md border bg-surface shadow-sm sm:h-20 sm:w-14 ${
+          className={`${size} flex flex-col items-center justify-center rounded-md border bg-surface shadow-sm ${
             glow ? "border-accent ring-2 ring-accent/50" : "border-line"
           }`}
         >
           <span
-            className={`font-serif text-lg font-semibold leading-none sm:text-xl ${red ? "" : "text-fg"}`}
+            className={`font-serif font-semibold leading-none ${small ? "text-sm sm:text-base" : "text-lg sm:text-xl"} ${red ? "" : "text-fg"}`}
             style={red ? { color: "#b0483f" } : undefined}
           >
             {RANKS[c >> 2]}
           </span>
           <span
-            className={`text-base leading-none sm:text-lg ${red ? "" : "text-fg"}`}
+            className={`leading-none ${small ? "text-xs sm:text-sm" : "text-base sm:text-lg"} ${red ? "" : "text-fg"}`}
             style={red ? { color: "#b0483f" } : undefined}
           >
             {SUITS[c & 3]}
@@ -130,23 +132,29 @@ function Card({
   );
 }
 
+type Seat = {
+  c0: number;
+  c1: number;
+  stack: number;
+  folded: boolean;
+  range: number;
+  cat: number;
+  mask: number;
+  isButton: boolean;
+};
 type Snap = {
-  hero: [number, number];
-  bot: [number, number];
+  np: number;
+  seats: Seat[];
   board: number[];
   pot: number;
-  heroStack: number;
-  botStack: number;
   toCall: number;
   heroTurn: boolean;
+  curActor: number;
   over: boolean;
-  result: number;
   byFold: boolean;
-  heroButton: boolean;
+  winners: number;
   minTo: number;
   maxTo: number;
-  heroCat: number;
-  botCat: number;
   hands: number;
   profit: number;
   nBest: number;
@@ -163,14 +171,10 @@ type Snap = {
   nowCat: number;
   outs: number;
   chen: number;
-  botRange: number;
-  heroMask: number;
-  botMask: number;
   street: number;
   log: string[];
 };
 
-// the flying-chip / floating-text / confetti overlays
 type Fly = { id: number; fx: number; fy: number; tx: number; ty: number; label: string; delay: number };
 type Float = { id: number; x: number; y: number; text: string; color: string };
 type Confetto = { id: number; x: number; y: number; dx: number; dy: number; rot: number; glyph: string; color: string };
@@ -205,8 +209,8 @@ function Guide({ onClose }: { onClose: () => void }) {
       <div className="space-y-2 text-sm leading-relaxed text-muted">
         <H>The game</H>
         <p>
-          This is heads-up no-limit Texas Hold&apos;em, you against the bot.
-          You each get two private cards. Five shared cards land on the table
+          This is no-limit Texas Hold&apos;em against one to four bots. Every
+          player gets two private cards. Five shared cards land on the table
           in stages: three at once (the flop), then one more (the turn), then
           a last one (the river). Your hand is the best five cards you can
           pick from your two plus the five on the board. Whoever has the
@@ -214,10 +218,11 @@ function Guide({ onClose }: { onClose: () => void }) {
           first, the last player standing takes it without showing anything.
         </p>
         <p>
-          Before each hand, both players post forced bets called blinds (5
-          and 10 here), so there is always something to fight for. After the
-          hole cards and after each stage of the board there is a round of
-          betting.
+          Before each hand, two players post forced bets called blinds (5 and
+          10 here), so there is always something to fight for. The dealer
+          button moves every hand, the blinds follow it around the table, and
+          after the hole cards and after each stage of the board there is a
+          round of betting.
         </p>
       </div>
 
@@ -228,7 +233,7 @@ function Guide({ onClose }: { onClose: () => void }) {
           <span className="text-fg">Call</span> matches the bet in front of
           you. <span className="text-fg">Bet</span> or{" "}
           <span className="text-fg">raise</span> puts more chips in, which
-          forces the bot to pay to continue or give up.{" "}
+          forces the others to pay to continue or give up.{" "}
           <span className="text-fg">Fold</span> surrenders the hand and
           whatever you already put in. The slider picks any raise size up to
           all-in.
@@ -252,9 +257,11 @@ function Guide({ onClose }: { onClose: () => void }) {
         <p>
           <span className="text-fg">Equity</span> is the share of the pot
           your hand would win if the cards ran out thousands of times. The
-          engine actually runs that simulation in C++ at every decision, and
-          it deals the bot hands that match how it has been betting, so a
-          raise from the bot lowers your equity like it should.
+          engine actually runs that simulation in C++ at every decision,
+          against every player still in the hand, and it deals them hands
+          that match how they have been betting, so a raise lowers your
+          equity like it should. With more players in the pot your equity is
+          naturally smaller, and so is the share you need.
         </p>
         <p>
           <span className="text-fg">Pot odds</span> are the price of a call.
@@ -286,8 +293,9 @@ function Guide({ onClose }: { onClose: () => void }) {
           decisions that make money on average. You can play a hand perfectly
           and still lose it; that is variance, not a mistake. The coach only
           cares whether the price you paid was right, and that is the habit
-          this trainer is built to teach. Start against the easy opponent,
-          and move up when your accuracy stays high.
+          this trainer is built to teach. Start heads-up against the easy
+          opponent, and add players or difficulty when your accuracy stays
+          high.
         </p>
       </div>
 
@@ -318,6 +326,7 @@ export function PokerTrainer() {
   const [botSay, setBotSay] = useState<{ id: number; text: string } | null>(null);
   const [raiseTo, setRaiseTo] = useState(0);
   const [level, setLevel] = useState(1);
+  const [numPlayers, setNumPlayers] = useState(2);
   const streakRef = useRef(0);
   const [streak, setStreak] = useState(0);
   // first visit: explain the game before dealing; reopenable any time
@@ -345,17 +354,14 @@ export function PokerTrainer() {
       }
       const lvl = Number(localStorage.getItem("poker-level"));
       if (lvl === 0 || lvl === 1 || lvl === 2) setLevel(lvl);
+      const np = Number(localStorage.getItem("poker-players"));
+      if (np >= 2 && np <= 5) setNumPlayers(np);
     } catch {}
   }, []);
 
-  const pickLevel = (l: number) => {
-    setLevel(l);
-    engRef.current?.set_level(l);
-    try { localStorage.setItem("poker-level", String(l)); } catch {}
-  };
-
   const snap = useCallback((withCoach: boolean): Snap => {
     const e = engRef.current!;
+    const np = e.get_players();
     const log: string[] = [];
     const botVerbs = ["folds", "checks", "calls", "bets", "raises to", "posts small blind", "posts big blind"];
     const youVerbs = ["fold", "check", "call", "bet", "raise to", "post small blind", "post big blind"];
@@ -368,29 +374,38 @@ export function PokerTrainer() {
       else if (act === 9) log.push("(river)");
       else if (act === 10) log.push("(showdown)");
       else {
-        const who = actor === 0 ? "You" : "Bot";
+        const who = actor === 0 ? "You" : np === 2 ? "Bot" : `Bot ${actor}`;
         const v = actor === 0 ? youVerbs[act] : botVerbs[act];
         log.push(amt > 0 && act !== 1 && act !== 0 ? `${who} ${v} ${amt}` : `${who} ${v}`);
       }
     }
     const heroTurn = !!e.hero_turn();
+    const seats: Seat[] = [];
+    for (let p = 0; p < np; p++) {
+      seats.push({
+        c0: e.p_card(p, 0),
+        c1: e.p_card(p, 1),
+        stack: e.p_stack(p),
+        folded: !!e.p_folded(p),
+        range: e.p_range(p),
+        cat: e.p_cat(p),
+        mask: e.p_mask(p),
+        isButton: !!e.is_button(p),
+      });
+    }
     return {
-      hero: [e.hero_card(0), e.hero_card(1)],
-      bot: [e.bot_card(0), e.bot_card(1)],
+      np,
+      seats,
       board: [0, 1, 2, 3, 4].map((i) => e.board_card(i)),
       pot: e.get_pot(),
-      heroStack: e.hero_stack(),
-      botStack: e.bot_stack(),
       toCall: e.to_call(),
       heroTurn,
+      curActor: e.cur_actor(),
       over: !!e.hand_over(),
-      result: e.get_result(),
       byFold: !!e.by_fold(),
-      heroButton: !!e.hero_button(),
+      winners: e.winners(),
       minTo: e.min_raise_to(),
       maxTo: e.max_raise_to(),
-      heroCat: e.hero_cat(),
-      botCat: e.bot_cat(),
       hands: e.hands_played(),
       profit: e.session_profit(),
       nBest: e.n_best(),
@@ -407,12 +422,16 @@ export function PokerTrainer() {
       nowCat: heroTurn ? e.now_cat() : -1,
       outs: heroTurn ? e.outs() : -1,
       chen: e.hand_chen(),
-      botRange: e.bot_range(),
-      heroMask: e.hero_mask(),
-      botMask: e.bot_mask(),
       street: e.get_street(),
       log,
     };
+  }, []);
+
+  // seat anchor positions inside the table panel, for the chip flights
+  const anchorOf = useCallback((seat: number, np: number, r: DOMRect) => {
+    if (seat === 0) return { x: r.width * 0.16, y: r.height * 0.74 };
+    const nb = np - 1;
+    return { x: r.width * (0.1 + (0.8 * (seat - 0.5)) / nb), y: r.height * 0.08 };
   }, []);
 
   // take a snapshot and spawn the visual effects implied by the state change
@@ -433,7 +452,6 @@ export function PokerTrainer() {
         }
         try { localStorage.setItem("poker-lifetime", JSON.stringify(lt)); } catch {}
         setLifetime({ ...lt });
-        // streak of decisions without a mistake
         if (next.nBad > prev.nBad) streakRef.current = 0;
         else if (next.nBest + next.nOk > prev.nBest + prev.nOk) {
           streakRef.current += 1;
@@ -441,66 +459,62 @@ export function PokerTrainer() {
         }
         setStreak(streakRef.current);
       }
-      // the bot's latest visible action becomes a small speech bubble
+      // the latest bot action becomes a small speech bubble
       if (prev && next.log.length > prev.log.length) {
-        const fresh = next.log.slice(prev.log.length).filter((l) => l.startsWith("Bot "));
+        const fresh = next.log.slice(prev.log.length).filter((l) => l.startsWith("Bot"));
         if (fresh.length) {
           const id = ++fxId.current;
-          setBotSay({ id, text: fresh[fresh.length - 1].slice(4) });
+          setBotSay({ id, text: fresh[fresh.length - 1] });
           window.setTimeout(() => setBotSay((b) => (b && b.id === id ? null : b)), 2000);
         }
       }
-      // stagger newly revealed board cards (flop spreads, runouts roll out)
+      // stagger newly revealed board cards
       const prevBc = prev ? prev.board.filter((c) => c >= 0).length : 0;
       const bc = next.board.filter((c) => c >= 0).length;
       const d = [0, 0, 0, 0, 0];
       for (let i = prevBc; i < bc; i++) d[i] = (i - prevBc) * (prevBc === 0 && bc === 3 ? 0.15 : 0.35);
       boardDelays.current = d;
 
-      if (prev && !reduce && tableRef.current) {
+      if (prev && prev.np === next.np && !reduce && tableRef.current) {
         const r = tableRef.current.getBoundingClientRect();
-        const A = {
-          pot: { x: r.width * 0.82, y: r.height * 0.1 },
-          hero: { x: r.width * 0.16, y: r.height * 0.72 },
-          bot: { x: r.width * 0.16, y: r.height * 0.08 },
-        };
+        const potA = { x: r.width * 0.84, y: r.height * 0.1 };
         const addFly = (f: { x: number; y: number }, t: { x: number; y: number }, amt: number, delay = 0) =>
           setFlies((fl) => [...fl, { id: ++fxId.current, fx: f.x, fy: f.y, tx: t.x, ty: t.y, label: String(amt), delay }]);
-        const heroPaid = prev.heroStack - next.heroStack;
-        const botPaid = prev.botStack - next.botStack;
         const sameHand = prev.hands === next.hands || (!prev.over && next.over);
         if (sameHand) {
-          if (heroPaid > 0) addFly(A.hero, A.pot, heroPaid);
-          if (botPaid > 0) addFly(A.bot, A.pot, botPaid);
+          for (let p = 0; p < next.np; p++) {
+            const paid = prev.seats[p].stack - next.seats[p].stack;
+            if (paid > 0) addFly(anchorOf(p, next.np, r), potA, paid);
+          }
           if (!prev.over && next.over) {
-            const won = prev.pot + Math.max(heroPaid, 0) + Math.max(botPaid, 0);
-            if (next.result === 1) addFly(A.pot, A.hero, won, 0.5);
-            else if (next.result === 2) addFly(A.pot, A.bot, won, 0.5);
-            else {
-              addFly(A.pot, A.hero, Math.floor(won / 2), 0.5);
-              addFly(A.pot, A.bot, Math.floor(won / 2), 0.5);
-            }
+            let won = prev.pot;
+            for (let p = 0; p < next.np; p++) won += Math.max(0, prev.seats[p].stack - next.seats[p].stack);
+            const winnerSeats: number[] = [];
+            for (let p = 0; p < next.np; p++)
+              if (next.winners & (1 << p)) winnerSeats.push(p);
+            for (const w of winnerSeats)
+              addFly(potA, anchorOf(w, next.np, r), Math.floor(won / winnerSeats.length), 0.5);
             const delta = next.profit - prev.profit;
+            const heroA = anchorOf(0, next.np, r);
             setFloats((fl) => [
               ...fl,
               {
                 id: ++fxId.current,
-                x: A.hero.x,
-                y: A.hero.y - 20,
+                x: heroA.x,
+                y: heroA.y - 20,
                 text: `${delta >= 0 ? "+" : ""}${delta}`,
                 color: delta >= 0 ? "var(--moss)" : "var(--accent)",
               },
             ]);
-            if (next.result === 1 && !next.byFold) {
-              // a showdown win gets a little suit-confetti burst from the pot
+            if (next.winners & 1 && !next.byFold) {
               const glyphs = ["♠", "♥", "♦", "♣"];
               const colors = ["var(--moss)", "var(--gold)", "var(--accent)"];
               setConfetti((cf) => [
                 ...cf,
                 ...Array.from({ length: 14 }, (_, i) => ({
                   id: ++fxId.current,
-                  x: A.pot.x,
-                  y: A.pot.y,
+                  x: potA.x,
+                  y: potA.y,
                   dx: (Math.random() - 0.5) * 260,
                   dy: -30 - Math.random() * 140,
                   rot: (Math.random() - 0.5) * 540,
@@ -511,12 +525,13 @@ export function PokerTrainer() {
             }
           }
           if (milestone) {
+            const heroA = anchorOf(0, next.np, r);
             setFloats((fl) => [
               ...fl,
               {
                 id: ++fxId.current,
-                x: A.hero.x + 60,
-                y: A.hero.y - 44,
+                x: heroA.x + 60,
+                y: heroA.y - 44,
                 text: `${milestone} good calls in a row`,
                 color: "var(--gold)",
               },
@@ -532,10 +547,10 @@ export function PokerTrainer() {
       lastRef.current = next;
       setS(next);
     },
-    [snap, reduce]
+    [snap, reduce, anchorOf]
   );
 
-  // the bot thinks, then acts, one visible step at a time
+  // the bots think, then act, one visible step at a time
   const scheduleBot = useCallback(() => {
     const e = engRef.current;
     if (!e) return;
@@ -549,7 +564,7 @@ export function PokerTrainer() {
       e.bot_step();
       pushSnap(true);
       scheduleBot();
-    }, reduce ? 120 : 650 + Math.random() * 550);
+    }, reduce ? 120 : 550 + Math.random() * 500);
   }, [pushSnap, reduce]);
 
   const deal = useCallback(() => {
@@ -560,6 +575,7 @@ export function PokerTrainer() {
     setFloats([]);
     setConfetti([]);
     setFlash(null);
+    setBotSay(null);
     e.new_hand();
     lastRef.current = null; // a fresh hand diffs against nothing
     setHandId((n) => n + 1);
@@ -568,6 +584,18 @@ export function PokerTrainer() {
     bumpVibe("gamer", 6);
   }, [pushSnap, scheduleBot]);
 
+  const pickLevel = (l: number) => {
+    setLevel(l);
+    engRef.current?.set_level(l);
+    try { localStorage.setItem("poker-level", String(l)); } catch {}
+  };
+  const pickPlayers = (n: number) => {
+    setNumPlayers(n);
+    engRef.current?.set_players(n);
+    try { localStorage.setItem("poker-players", String(n)); } catch {}
+    if (engRef.current && ready) deal(); // applies with a fresh hand
+  };
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -575,13 +603,15 @@ export function PokerTrainer() {
         // the ?v pairs this JS with the engine build it needs: the engine is
         // cached hard (browser + service worker), so any change to the
         // exports must bump this together with the .bin
-        const buf = await fetch("/poker.bin?v=5").then((r) => r.arrayBuffer());
+        const buf = await fetch("/poker.bin?v=6").then((r) => r.arrayBuffer());
         if (cancelled) return;
         const e = (await WebAssembly.instantiate(buf)).instance.exports as unknown as Engine;
         engRef.current = e;
         e.new_session((Date.now() & 0xffffffff) >>> 0);
         const lvl = Number(localStorage.getItem("poker-level"));
         if (lvl === 0 || lvl === 2) e.set_level(lvl);
+        const np = Number(localStorage.getItem("poker-players"));
+        if (np >= 2 && np <= 5) e.set_players(np);
         setReady(true);
       } catch {
         if (!cancelled) setFailed(true);
@@ -601,7 +631,7 @@ export function PokerTrainer() {
   // default the raise slider to a half-pot raise whenever it's our turn
   useEffect(() => {
     if (!s || !s.heroTurn) return;
-    const heroBetNow = s.maxTo - s.heroStack;
+    const heroBetNow = s.maxTo - s.seats[0].stack;
     const half = heroBetNow + s.toCall + Math.round((s.pot + s.toCall) * 0.5);
     setRaiseTo(Math.max(s.minTo, Math.min(s.maxTo, Math.round(half / 5) * 5)));
   }, [s]);
@@ -625,8 +655,9 @@ export function PokerTrainer() {
       </div>
     );
 
+  const hero = s.seats[0];
   // raise to = my current bet + the call + a fraction of the pot after calling
-  const heroBetNow = s.maxTo - s.heroStack; // maxTo is my bet plus my stack
+  const heroBetNow = s.maxTo - hero.stack;
   const potAfterCall = s.pot + s.toCall;
   const halfPotTo = round5(heroBetNow + s.toCall + Math.round(potAfterCall * 0.5));
   const potTo = round5(heroBetNow + s.toCall + potAfterCall);
@@ -637,7 +668,7 @@ export function PokerTrainer() {
   // what the hero holds, in words
   const holdingLine = () => {
     if (s.street === 0) {
-      const [a, b] = s.hero;
+      const a = hero.c0, b = hero.c1;
       const ra = a >> 2, rb = b >> 2;
       const strength =
         s.chen >= 18 ? "a premium starting hand"
@@ -653,30 +684,42 @@ export function PokerTrainer() {
     return `You have ${CATS[s.nowCat]} right now.`;
   };
   // the coach reads ranges: say so when it matters
+  const aggressive = s.seats.some((p, i) => i > 0 && !p.folded && p.range >= 2);
   const rangeLine = () =>
-    s.botRange >= 2
-      ? "The bot has shown aggression, so your equity here is measured against the stronger hands its betting represents, not a random hand."
+    aggressive
+      ? "Someone has shown aggression, so your equity here is measured against the stronger hands that betting represents, not random cards."
       : null;
-  // outs, with the rule of 4 and 2
   const outsLine = () => {
     if (s.outs <= 0 || s.street < 1 || s.street > 2) return null;
     const mult = s.street === 1 ? 4 : 2;
     const pct = Math.min(95, s.outs * mult);
     return `About ${s.outs} cards improve your hand. The shortcut: ${s.outs} outs times ${mult} is roughly ${pct}% to hit ${s.street === 1 ? "by the river" : "on the river"}.`;
   };
-  // the call, priced in chips
   const evLine = () => {
     if (s.toCall <= 0 || s.coachEq < 0) return null;
     const ev = Math.round((s.coachEq / 1000) * (s.pot + s.toCall) - s.toCall);
     return `Calling ${s.toCall} into a ${s.pot} pot: at ${(s.coachEq / 10).toFixed(0)}% equity that call averages ${ev >= 0 ? "+" : ""}${ev} chips.`;
   };
 
+  const botName = (p: number) => (s.np === 2 ? "Bot" : `Bot ${p}`);
   const resultLine = () => {
     if (!s.over) return null;
-    if (s.byFold) return s.result === 1 ? "The bot folded. You win the pot." : "You folded.";
-    if (s.result === 3) return `Split pot. Both had ${CATS[s.heroCat] ?? ""}.`;
-    if (s.result === 1) return `You win with ${CATS[s.heroCat] ?? ""} against ${CATS[s.botCat] ?? ""}.`;
-    return `The bot wins with ${CATS[s.botCat] ?? ""} against your ${CATS[s.heroCat] ?? ""}.`;
+    const heroWon = !!(s.winners & 1);
+    if (s.byFold) {
+      if (heroWon) return "Everyone folded. You win the pot.";
+      if (hero.folded) {
+        const w = s.seats.findIndex((p, i) => i > 0 && (s.winners & (1 << i)));
+        return `You folded. ${w > 0 ? botName(w) : "The table"} takes the pot.`;
+      }
+      return "You folded.";
+    }
+    const winnerSeats = s.seats.map((_, i) => i).filter((i) => s.winners & (1 << i));
+    if (heroWon && winnerSeats.length > 1)
+      return `Split pot. ${CATS[hero.cat] ?? ""} all around.`;
+    if (heroWon) return `You win with ${CATS[hero.cat] ?? ""}.`;
+    const w = winnerSeats[0];
+    const yours = hero.folded ? "" : ` against your ${CATS[hero.cat] ?? ""}`;
+    return `${botName(w)} wins with ${CATS[s.seats[w].cat] ?? ""}${yours}.`;
   };
 
   const feedback = () => {
@@ -697,38 +740,56 @@ export function PokerTrainer() {
   };
   const fb = feedback();
 
-  // showdown highlight: ring the winner's five cards, dim what didn't play
-  const showdownNow = s.over && !s.byFold && s.bot[0] >= 0;
-  const winMask = showdownNow ? (s.result === 2 ? s.botMask : s.heroMask) : 0;
-  const heroUsed = (i: number) => showdownNow && s.result !== 2 && !!((winMask >> i) & 1);
-  const botUsed = (i: number) => showdownNow && s.result === 2 && !!((winMask >> i) & 1);
-  const boardUsed = (i: number) => showdownNow && !!((winMask >> (2 + i)) & 1);
+  // showdown highlight: ring each winner's five cards, dim what didn't play
+  const showdownNow = s.over && !s.byFold;
+  const winnerBoardMask = showdownNow
+    ? s.seats.reduce((m, p, i) => (s.winners & (1 << i) ? m | p.mask : m), 0)
+    : 0;
+  const seatUsed = (p: number, i: number) =>
+    showdownNow && !!(s.winners & (1 << p)) && !!((s.seats[p].mask >> i) & 1);
+  const boardUsed = (i: number) => showdownNow && !!((winnerBoardMask >> (2 + i)) & 1);
 
   return (
     <div className="flex flex-col gap-4">
-      {/* opponent difficulty */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[11px] uppercase tracking-wide text-muted">opponent</span>
-        {["easy", "normal", "hard"].map((name, i) => (
-          <button
-            key={name}
-            onClick={() => pickLevel(i)}
-            className={`rounded-md border px-2.5 py-1 text-[11px] transition ${
-              level === i
-                ? "border-accent bg-accent-soft text-accent"
-                : "border-line text-muted hover:border-accent hover:text-accent"
-            }`}
-          >
-            {name}
-          </button>
-        ))}
-        <span className="text-[10px] text-muted">
-          {level === 0 ? "loose and passive, reads nothing" : level === 1 ? "reads your betting" : "reads sharper, wastes nothing"}
+      {/* table setup */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="flex items-center gap-2">
+          <span className="text-[11px] uppercase tracking-wide text-muted">players</span>
+          {[2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              onClick={() => pickPlayers(n)}
+              className={`rounded-md border px-2.5 py-1 text-[11px] transition ${
+                numPlayers === n
+                  ? "border-accent bg-accent-soft text-accent"
+                  : "border-line text-muted hover:border-accent hover:text-accent"
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="text-[11px] uppercase tracking-wide text-muted">opponent</span>
+          {["easy", "normal", "hard"].map((name, i) => (
+            <button
+              key={name}
+              onClick={() => pickLevel(i)}
+              className={`rounded-md border px-2.5 py-1 text-[11px] transition ${
+                level === i
+                  ? "border-accent bg-accent-soft text-accent"
+                  : "border-line text-muted hover:border-accent hover:text-accent"
+              }`}
+            >
+              {name}
+            </button>
+          ))}
         </span>
         <button onClick={() => setShowGuide(true)} className="tlink ml-auto text-[11px] !text-muted hover:!text-accent">
           how to play
         </button>
       </div>
+
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
         {/* ---- the table ---- */}
         <div ref={tableRef} className="panel relative overflow-hidden p-5">
@@ -792,41 +853,34 @@ export function PokerTrainer() {
             )}
           </AnimatePresence>
 
-          {/* bot row */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {/* keyed on the card value too: at showdown the backs remount
-                  as faces, which plays the flip */}
-              <Card key={`b0-${handId}-${s.bot[0]}`} c={s.bot[0]} hidden={s.bot[0] < 0} delay={0.16} glow={botUsed(0)} dim={showdownNow && !botUsed(0)} />
-              <Card key={`b1-${handId}-${s.bot[1]}`} c={s.bot[1]} hidden={s.bot[1] < 0} delay={0.24} glow={botUsed(1)} dim={showdownNow && !botUsed(1)} />
-              <div>
-                <p className="flex items-center gap-2 text-sm font-medium">
-                  Bot {!s.heroButton && <span className="rounded-full border border-line px-1.5 text-[9px] uppercase tracking-wide text-muted">dealer</span>}
-                  {thinking && (
-                    <span className="typing-dots inline-flex items-center gap-1" aria-label="bot is thinking">
-                      <span /><span /><span />
-                    </span>
-                  )}
-                  <AnimatePresence>
-                    {botSay && !thinking && (
-                      <motion.span
-                        key={botSay.id}
-                        initial={{ opacity: 0, y: 4, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        className="rounded-full border border-line bg-surface-2 px-2 py-0.5 text-[10px] font-normal italic text-muted"
-                      >
-                        {botSay.text}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </p>
-                <p className="font-mono text-xs text-muted">{s.botStack}</p>
-              </div>
-            </div>
-            <div className="text-right">
+          {/* bot seats */}
+          <div className={`flex ${s.np > 3 ? "justify-between" : "justify-start gap-10"}`}>
+            {s.seats.slice(1).map((b, k) => {
+              const p = k + 1;
+              const revealed = b.c0 >= 0;
+              return (
+                <div key={p} className={`flex items-start gap-2 ${b.folded ? "opacity-40" : ""}`}>
+                  <div className="flex gap-1">
+                    <Card key={`b${p}0-${handId}-${b.c0}`} c={b.c0} hidden={!revealed && !b.folded} small delay={0.12 + p * 0.07} glow={seatUsed(p, 0)} dim={showdownNow && revealed && !seatUsed(p, 0)} />
+                    <Card key={`b${p}1-${handId}-${b.c1}`} c={b.c1} hidden={!revealed && !b.folded} small delay={0.16 + p * 0.07} glow={seatUsed(p, 1)} dim={showdownNow && revealed && !seatUsed(p, 1)} />
+                  </div>
+                  <div>
+                    <p className="flex items-center gap-1.5 text-xs font-medium">
+                      {botName(p)}
+                      {b.isButton && <span className="rounded-full border border-line px-1 text-[8px] uppercase tracking-wide text-muted">d</span>}
+                      {thinking && s.curActor === p && (
+                        <span className="typing-dots inline-flex items-center gap-1" aria-label="thinking">
+                          <span /><span /><span />
+                        </span>
+                      )}
+                    </p>
+                    <p className="font-mono text-[11px] text-muted">{b.folded ? "folded" : b.stack}</p>
+                  </div>
+                </div>
+              );
+            })}
+            <div className="ml-auto text-right">
               <p className="text-[10px] uppercase tracking-widest text-muted">pot</p>
-              {/* pulses when the pot changes */}
               <motion.p
                 key={s.pot}
                 initial={reduce ? false : { scale: 1.3 }}
@@ -839,8 +893,25 @@ export function PokerTrainer() {
             </div>
           </div>
 
+          {/* the latest bot action */}
+          <div className="h-6 pt-1">
+            <AnimatePresence>
+              {botSay && (
+                <motion.span
+                  key={botSay.id}
+                  initial={{ opacity: 0, y: 4, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="inline-block rounded-full border border-line bg-surface-2 px-2 py-0.5 text-[10px] italic text-muted"
+                >
+                  {botSay.text}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
+
           {/* board: each street's new cards deal in with a stagger */}
-          <div className="my-5 flex justify-center gap-2">
+          <div className="my-4 flex justify-center gap-2">
             {s.board.map((c, i) => (
               <Card key={`bd-${handId}-${i}-${c}`} c={c} delay={boardDelays.current[i]} glow={boardUsed(i)} dim={showdownNow && c >= 0 && !boardUsed(i)} />
             ))}
@@ -848,17 +919,17 @@ export function PokerTrainer() {
 
           {/* hero row */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Card key={`h0-${handId}`} c={s.hero[0]} glow={heroUsed(0)} dim={showdownNow && !heroUsed(0)} />
-              <Card key={`h1-${handId}`} c={s.hero[1]} delay={0.08} glow={heroUsed(1)} dim={showdownNow && !heroUsed(1)} />
+            <div className={`flex items-center gap-3 ${hero.folded ? "opacity-40" : ""}`}>
+              <Card key={`h0-${handId}`} c={hero.c0} glow={seatUsed(0, 0)} dim={showdownNow && !hero.folded && !seatUsed(0, 0)} />
+              <Card key={`h1-${handId}`} c={hero.c1} delay={0.08} glow={seatUsed(0, 1)} dim={showdownNow && !hero.folded && !seatUsed(0, 1)} />
               <div>
                 <p className="text-sm font-medium">
-                  You {s.heroButton && <span className="ml-1 rounded-full border border-line px-1.5 text-[9px] uppercase tracking-wide text-muted">dealer</span>}
+                  You {hero.isButton && <span className="ml-1 rounded-full border border-line px-1.5 text-[9px] uppercase tracking-wide text-muted">dealer</span>}
                 </p>
-                <p className="font-mono text-xs text-muted">{s.heroStack}</p>
+                <p className="font-mono text-xs text-muted">{hero.folded ? "folded" : hero.stack}</p>
               </div>
             </div>
-            {!s.over && s.toCall > 0 && (
+            {!s.over && s.toCall > 0 && s.heroTurn && (
               <p className="font-mono text-xs text-muted">{s.toCall} to call</p>
             )}
           </div>
@@ -879,6 +950,8 @@ export function PokerTrainer() {
                   Next hand
                 </motion.button>
               </>
+            ) : hero.folded ? (
+              <p className="text-xs text-muted">You folded. The hand plays out.</p>
             ) : (
               <>
                 <motion.button
@@ -895,7 +968,7 @@ export function PokerTrainer() {
                   disabled={!s.heroTurn}
                   className="rounded-md border-2 border-moss/60 bg-moss/10 px-4 py-2.5 text-sm font-medium text-moss transition hover:bg-moss/20 disabled:opacity-40"
                 >
-                  {s.toCall > 0 ? `Call ${Math.min(s.toCall, s.heroStack)}` : "Check"}
+                  {s.toCall > 0 ? `Call ${Math.min(s.toCall, hero.stack)}` : "Check"}
                 </motion.button>
                 {s.maxTo > s.toCall && (
                   <>
@@ -908,7 +981,6 @@ export function PokerTrainer() {
                     <motion.button whileTap={{ scale: 0.94 }} onClick={() => act(2, s.maxTo)} disabled={!s.heroTurn} className="btn-term px-3.5 py-2.5 text-sm disabled:opacity-40">
                       All in
                     </motion.button>
-                    {/* pick any size */}
                     <div className="flex w-full items-center gap-3 pt-1">
                       <input
                         type="range"
@@ -996,8 +1068,11 @@ export function PokerTrainer() {
                 </p>
               </div>
             )}
-            {coachOn && !s.over && !s.heroTurn && (
-              <p className="mt-3 text-xs text-muted">the bot is thinking…</p>
+            {coachOn && !s.over && !s.heroTurn && !hero.folded && (
+              <p className="mt-3 text-xs text-muted">waiting on the table…</p>
+            )}
+            {coachOn && !s.over && hero.folded && (
+              <p className="mt-3 text-xs text-muted">you folded this one; watch how it plays out.</p>
             )}
             {!coachOn && (
               <p className="mt-3 text-xs text-muted">
@@ -1072,16 +1147,17 @@ export function PokerTrainer() {
       <div className="max-w-2xl space-y-2 text-xs leading-relaxed text-muted">
         <p>
           How the training works: at every decision the C++ engine deals
-          thousands of opponent hands and runouts to estimate your equity,
-          which is the share of the pot your hand wins on average. The
-          opponent hands are not random: they are weighted toward the range
-          the bot&apos;s betting represents, so when it raises, your equity is
-          measured against stronger hands. The coach compares that equity to
-          the pot odds, which is the price a call is asking you to pay. If
+          thousands of hands to every live opponent and runs out the board to
+          estimate your equity, which is the share of the pot your hand wins
+          on average. The opponents&apos; hands are not random: they are
+          weighted toward the ranges their betting represents, so a raise
+          lowers your equity like it should. The coach compares that equity
+          to the pot odds, which is the price a call is asking you to pay. If
           your equity beats the price, calling makes money in the long run.
           If it does not, the call loses money no matter how the hand turns
-          out, and the coach counts it as a mistake. The bot reads your
-          betting the same way, so it notices when you only raise good hands.
+          out, and the coach counts it as a mistake. The bots read your
+          betting the same way, so they notice when you only raise good
+          hands.
         </p>
         <p>
           The coach also counts your outs, the cards that improve your hand,

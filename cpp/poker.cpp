@@ -1,8 +1,13 @@
-// poker.cpp — heads-up Texas Hold'em trainer, freestanding C++ -> wasm32.
-// The engine deals, runs the betting, plays the bot, and coaches: at every
-// hero decision it computes hand equity with a Monte Carlo simulation and
-// compares the action taken against the pot odds. Pure integer logic plus a
+// poker.cpp — no-limit Texas Hold'em trainer for 2 to 5 players, freestanding
+// C++ -> wasm32. The engine deals, runs the betting, plays the bots, and
+// coaches: at every hero decision it estimates equity with a Monte Carlo
+// simulation against the ranges the other players' betting represents, and
+// grades the action taken against the pot odds. Pure integer logic plus a
 // xorshift PRNG, no libc/libm. React only draws.
+//
+// Because every player is topped up to the same stack each hand, active
+// players always hold equal stacks at the start of a street, so side pots
+// can never form; the only cleanup needed is refunding an uncalled bet.
 //
 // Build: clang --target=wasm32 -O3 -nostdlib -Wl,--no-entry
 //              -o public/poker.bin cpp/poker.cpp
@@ -11,10 +16,11 @@
 typedef unsigned int u32;
 
 // ---- config ----
-static const int STACK = 1000; // both players top up to this every hand
+static const int MAXP = 5;
+static const int STACK = 1000; // everyone tops up to this every hand
 static const int SB = 5, BB = 10;
-static const int COACH_ITERS = 1500; // Monte Carlo samples for the coach
-static const int BOT_ITERS = 600;    // the bot thinks a little less hard
+static const int COACH_ITERS = 1200; // Monte Carlo samples for the coach
+static const int BOT_ITERS = 500;    // the bots think a little less hard
 
 // ---- rng ----
 static u32 rng = 0x2545F491u;
@@ -49,11 +55,9 @@ static int eval5(const int *cs) {
     cnt[rank[i]]++;
     if ((cs[i] & 3) != (cs[0] & 3)) flush = 0;
   }
-  // distinct ranks, high to low, with counts
   int ur[5], uc[5], nu = 0;
   for (int r = 12; r >= 0; r--)
     if (cnt[r]) { ur[nu] = r; uc[nu] = cnt[r]; nu++; }
-  // straight (needs 5 distinct ranks)
   int straight = 0, top = 0;
   if (nu == 5) {
     if (ur[0] - ur[4] == 4) { straight = 1; top = ur[0]; }
@@ -66,7 +70,6 @@ static int eval5(const int *cs) {
     for (int i = 0; i < 5; i++) s |= ur[i] << (16 - 4 * i);
     return s;
   }
-  // sort unique ranks by count desc, then rank desc (stable insertion)
   for (int i = 1; i < nu; i++)
     for (int j = i; j > 0; j--)
       if (uc[j] > uc[j - 1] || (uc[j] == uc[j - 1] && ur[j] > ur[j - 1])) {
@@ -84,7 +87,7 @@ static int eval5(const int *cs) {
   return s;
 }
 
-// best 5-card score out of 7 cards; optionally reports which five were used
+// best 5-card score out of 7; optionally reports which five were used
 // as a bitmask over the input order (for the showdown highlight)
 static int eval7_mask(const int *cs, int *maskOut) {
   int best = -1, bmask = 0, five[5];
@@ -102,30 +105,27 @@ static int eval7_mask(const int *cs, int *maskOut) {
 static int eval7(const int *cs) { return eval7_mask(cs, 0); }
 
 // ---- preflop hand strength: the Chen formula, doubled to stay integer ----
-// AA=40, AKs=24, 72o=-2... used to filter range-weighted sampling and to
-// tell the player how strong their starting hand is.
 static int chen2(int c0, int c1) {
   int r0 = c0 >> 2, r1 = c1 >> 2;
   int hi = r0 > r1 ? r0 : r1, lo = r0 > r1 ? r1 : r0;
-  // high-card points x2: A=20 K=16 Q=14 J=12, ten and below = rank number
   int base;
   if (hi == 12) base = 20;
   else if (hi == 11) base = 16;
   else if (hi == 10) base = 14;
   else if (hi == 9) base = 12;
-  else base = hi + 2; // rank number (T=10 ... 2=2)
+  else base = hi + 2;
   if (r0 == r1) {
     int p = base * 2;
-    return p < 10 ? 10 : p; // pairs: double, minimum 5 points
+    return p < 10 ? 10 : p;
   }
   int s = base;
-  if ((c0 & 3) == (c1 & 3)) s += 4; // suited
+  if ((c0 & 3) == (c1 & 3)) s += 4;
   int gap = hi - lo - 1;
   if (gap == 1) s -= 2;
   else if (gap == 2) s -= 4;
   else if (gap == 3) s -= 8;
   else if (gap >= 4) s -= 10;
-  if (gap <= 1 && hi < 10) s += 2; // connected low cards can straighten
+  if (gap <= 1 && hi < 10) s += 2;
   return s;
 }
 // range classes: 0 = anything, 1 = called (playable), 2 = raised (strong),
@@ -133,42 +133,40 @@ static int chen2(int c0, int c1) {
 static const int CLS_MIN[4] = {-100, 7, 12, 17};
 
 // ---- game state ----
-static int heroCards[2], botCards[2], board[5];
-static int boardCount = 0;   // visible board cards
-static int street = 0;       // 0 pre, 1 flop, 2 turn, 3 river
-static int button = 1;       // player index on the button (0 hero, 1 bot); alternates
-static int stack_[2], bet_[2], acted[2];
-static int pot = 0;          // chips from completed streets
-static int lastRaise = BB;   // size of the last raise on this street
-static int rangeCls[2] = {0, 0}; // range class each player's actions represent
-static int prefAgg = -1;         // who raised last preflop (for c-bet logic)
-static int turn = 0;         // whose turn (0 hero, 1 bot)
-static int over = 1;         // hand over flag
-static int result_ = 0;      // 0 ongoing, 1 hero won, 2 bot won, 3 split
+static int NP = 2;               // players this hand (2..5), seat 0 = hero
+static int pendingNP = 2;        // applied at the next deal
+static int holeC[MAXP][2], board[5];
+static int boardCount = 0;
+static int street = 0;           // 0 pre, 1 flop, 2 turn, 3 river
+static int button = 1;           // rotates every hand
+static int stack_[MAXP], bet_[MAXP], acted[MAXP], folded[MAXP];
+static int rangeCls[MAXP];
+static int prefAgg = -1;         // last preflop raiser (for c-bet logic)
+static int pot = 0;              // chips from completed streets
+static int lastRaise = BB;
+static int turnSeat = 0;
+static int over = 1;
 static int byFold = 0;
-static int showdown = 0;     // bot cards revealed
-static int heroCat = -1, botCat = -1;
-static int heroMask = 0, botMask = 0; // which 5 of 7 made each best hand
-static int level = 1;        // 0 easy, 1 normal, 2 hard
+static int showdown = 0;
+static int winners_ = 0;         // bitmask of winning seats at hand end
+static int catP[MAXP], maskP[MAXP];
 static int heroStackAtDeal = 0;
+static int level = 1;            // 0 easy, 1 normal, 2 hard
 
 // session
 static int handsPlayed = 0, profit = 0;
 static int nBest = 0, nOk = 0, nBad = 0;
 
-// coach cache for the current decision point
+// coach cache
 static int coachValid = 0;
-static int coachEqPm = 0;    // hero equity, per-mille
-static int coachPoPm = 0;    // pot odds, per-mille
-static int coachAdv = 1;     // 0 fold, 1 check/call, 2 bet/raise
-// last graded hero action
-static int lastGrade = -1;   // 2 best, 1 ok, 0 mistake, -1 none yet
+static int coachEqPm = 0, coachPoPm = 0, coachAdv = 1;
+static int lastGrade = -1;
 static int lastAdvised = -1, lastEqPm = -1, lastPoPm = -1, lastActionCls = -1;
 
-// action log: (actor, action, amount, street)
+// action log: (actor, action, amount, street); actor 9 = the dealer
 // actions: 0 fold, 1 check, 2 call, 3 bet, 4 raise, 5 SB, 6 BB,
 //          7 flop, 8 turn, 9 river, 10 showdown
-static const int LOGMAX = 96;
+static const int LOGMAX = 128;
 static int logActor[LOGMAX], logAct[LOGMAX], logAmt[LOGMAX], logStreet[LOGMAX];
 static int logN = 0;
 static void logev(int actor, int act, int amt) {
@@ -178,136 +176,205 @@ static void logev(int actor, int act, int amt) {
   }
 }
 
-// ---- Monte Carlo equity: my two cards + visible board vs a sampled hand.
-// vsMin filters the villain's hole cards by Chen score, so the simulation
-// runs against the range their betting represents instead of pure random.
-static int equity_pm(const int *mine, int iters, int vsMin) {
+// ---- table helpers ----
+static int count_active() {
+  int n = 0;
+  for (int p = 0; p < NP; p++)
+    if (!folded[p]) n++;
+  return n;
+}
+static int max_bet() {
+  int m = 0;
+  for (int p = 0; p < NP; p++)
+    if (!folded[p] && bet_[p] > m) m = bet_[p];
+  return m;
+}
+static int to_call_of(int p) {
+  int d = max_bet() - bet_[p];
+  return d > 0 ? d : 0;
+}
+static int pot_now() {
+  int s = pot;
+  for (int p = 0; p < NP; p++) s += bet_[p];
+  return s;
+}
+static int can_act(int p) { return !folded[p] && stack_[p] > 0; }
+static int needs_action(int p) {
+  return can_act(p) && (!acted[p] || bet_[p] < max_bet());
+}
+static int next_needing(int from) {
+  for (int k = 1; k <= NP; k++) {
+    int p = (from + k) % NP;
+    if (needs_action(p)) return p;
+  }
+  return -1;
+}
+static int players_who_can_act() {
+  int n = 0;
+  for (int p = 0; p < NP; p++)
+    if (can_act(p)) n++;
+  return n;
+}
+
+// ---- multi-way Monte Carlo equity for `seat` vs every live opponent, each
+// rejection-sampled into the range their betting represents ----
+static int equity_of(int seat, int iters) {
   int used[52] = {0};
-  used[mine[0]] = used[mine[1]] = 1;
+  used[holeC[seat][0]] = used[holeC[seat][1]] = 1;
   for (int i = 0; i < boardCount; i++) used[board[i]] = 1;
   int avail[52], na = 0;
   for (int c = 0; c < 52; c++)
     if (!used[c]) avail[na++] = c;
 
-  int need = 2 + (5 - boardCount);
-  int win2 = 0; // wins*2 + ties
+  int vill[MAXP], nv = 0;
+  for (int p = 0; p < NP; p++)
+    if (p != seat && !folded[p]) vill[nv++] = p;
+  if (nv == 0) return 1000;
+
+  int needB = 5 - boardCount;
+  // score in 1/120ths so 2..5-way ties split exactly
+  int win120 = 0;
   for (int it = 0; it < iters; it++) {
-    // rejection-sample the villain's two cards into their range (bail out
-    // after a few tries so a blocked-out range can't loop forever)
-    for (int tries = 0; tries < 24; tries++) {
-      int a = rnd(na), b = rnd(na - 1);
-      if (b >= a) b++;
-      if (chen2(avail[a], avail[b]) >= vsMin || tries == 23) {
-        int t = avail[0]; avail[0] = avail[a]; avail[a] = t;
-        // careful: position b may have moved if b == 0 got swapped away
-        if (b == 0) b = a;
-        t = avail[1]; avail[1] = avail[b]; avail[b] = t;
-        break;
+    // deal each villain into their range; villain k uses slots 2k, 2k+1
+    for (int k = 0; k < nv; k++) {
+      int base = 2 * k;
+      int vsMin = CLS_MIN[rangeCls[vill[k]]];
+      for (int tries = 0; tries < 20; tries++) {
+        int a = base + rnd(na - base), b = base + rnd(na - base - 1);
+        if (b >= a) b++;
+        if (chen2(avail[a], avail[b]) >= vsMin || tries == 19) {
+          int t = avail[base]; avail[base] = avail[a]; avail[a] = t;
+          if (b == base) b = a;
+          t = avail[base + 1]; avail[base + 1] = avail[b]; avail[b] = t;
+          break;
+        }
       }
     }
     // complete the board from the rest
-    for (int i = 2; i < need; i++) {
-      int j = i + rnd(na - i);
-      int t = avail[i]; avail[i] = avail[j]; avail[j] = t;
+    int bd = 2 * nv;
+    for (int i = 0; i < needB; i++) {
+      int j = bd + i + rnd(na - bd - i);
+      int t = avail[bd + i]; avail[bd + i] = avail[j]; avail[j] = t;
     }
-    int h7[7], v7[7];
-    h7[0] = mine[0]; h7[1] = mine[1];
-    v7[0] = avail[0]; v7[1] = avail[1];
-    for (int i = 0; i < boardCount; i++) { h7[2 + i] = board[i]; v7[2 + i] = board[i]; }
-    for (int i = 0; i < 5 - boardCount; i++) {
-      h7[2 + boardCount + i] = avail[2 + i];
-      v7[2 + boardCount + i] = avail[2 + i];
+    int seven[7];
+    seven[0] = holeC[seat][0]; seven[1] = holeC[seat][1];
+    for (int i = 0; i < boardCount; i++) seven[2 + i] = board[i];
+    for (int i = 0; i < needB; i++) seven[2 + boardCount + i] = avail[bd + i];
+    int mine = eval7(seven);
+    int bestV = -1;
+    for (int k = 0; k < nv; k++) {
+      seven[0] = avail[2 * k]; seven[1] = avail[2 * k + 1];
+      int s = eval7(seven);
+      if (s > bestV) bestV = s;
     }
-    int hs = eval7(h7), vs = eval7(v7);
-    if (hs > vs) win2 += 2;
-    else if (hs == vs) win2 += 1;
+    if (mine > bestV) win120 += 120;
+    else if (mine == bestV) {
+      int ties = 1;
+      for (int k = 0; k < nv; k++) {
+        seven[0] = avail[2 * k]; seven[1] = avail[2 * k + 1];
+        if (eval7(seven) == bestV) ties++;
+      }
+      win120 += 120 / ties;
+    }
   }
-  return win2 * 500 / iters; // per-mille
+  return (int)((long long)win120 * 1000 / (120LL * iters));
 }
 
-// ---- betting helpers ----
-static int to_call_of(int p) {
-  int d = bet_[1 - p] - bet_[p];
-  return d > 0 ? d : 0;
-}
-static void settle_bets() {
-  // an all-in call can leave bets unequal: refund the excess
-  if (bet_[0] != bet_[1]) {
-    int hi = bet_[0] > bet_[1] ? 0 : 1;
-    int excess = bet_[hi] - bet_[1 - hi];
-    bet_[hi] -= excess;
-    stack_[hi] += excess;
+// ---- street / hand flow ----
+static void settle_street() {
+  // refund an uncalled bet (only possible when everyone else folded or the
+  // last raise went unmatched)
+  int hi = 0;
+  for (int p = 1; p < NP; p++)
+    if (bet_[p] > bet_[hi]) hi = p;
+  int second = 0;
+  for (int p = 0; p < NP; p++)
+    if (p != hi && bet_[p] > second) second = bet_[p];
+  if (bet_[hi] > second) {
+    stack_[hi] += bet_[hi] - second;
+    bet_[hi] = second;
   }
-  pot += bet_[0] + bet_[1];
-  bet_[0] = bet_[1] = 0;
-  acted[0] = acted[1] = 0;
+  for (int p = 0; p < NP; p++) { pot += bet_[p]; bet_[p] = 0; acted[p] = 0; }
   lastRaise = BB;
 }
-static void do_showdown() {
-  int h7[7], b7[7];
-  h7[0] = heroCards[0]; h7[1] = heroCards[1];
-  b7[0] = botCards[0];  b7[1] = botCards[1];
-  for (int i = 0; i < 5; i++) { h7[2 + i] = board[i]; b7[2 + i] = board[i]; }
-  int hs = eval7_mask(h7, &heroMask), bs = eval7_mask(b7, &botMask);
-  heroCat = hs >> 20; botCat = bs >> 20;
-  showdown = 1;
-  logev(2, 10, 0);
-  if (hs > bs) { stack_[0] += pot; result_ = 1; }
-  else if (bs > hs) { stack_[1] += pot; result_ = 2; }
-  else { stack_[0] += pot / 2; stack_[1] += pot - pot / 2; result_ = 3; }
-  pot = 0;
+static void finish_hand() {
   over = 1;
-  byFold = 0;
   profit += stack_[0] - heroStackAtDeal;
   handsPlayed++;
+}
+static void do_showdown() {
+  int best = -1;
+  int seven[7];
+  for (int i = 0; i < 5; i++) seven[2 + i] = board[i];
+  for (int p = 0; p < NP; p++) {
+    if (folded[p]) { catP[p] = -1; maskP[p] = 0; continue; }
+    seven[0] = holeC[p][0]; seven[1] = holeC[p][1];
+    int s = eval7_mask(seven, &maskP[p]);
+    catP[p] = s >> 20;
+    if (s > best) best = s;
+  }
+  winners_ = 0;
+  int nw = 0;
+  for (int p = 0; p < NP; p++) {
+    if (folded[p]) continue;
+    seven[0] = holeC[p][0]; seven[1] = holeC[p][1];
+    if (eval7(seven) == best) { winners_ |= 1 << p; nw++; }
+  }
+  showdown = 1;
+  logev(9, 10, 0);
+  int share = pot / nw, extra = pot - share * nw;
+  for (int p = 0; p < NP; p++)
+    if (winners_ & (1 << p)) { stack_[p] += share + extra; extra = 0; }
+  pot = 0;
+  byFold = 0;
+  finish_hand();
+}
+static void runout_and_showdown() {
+  while (boardCount < 5) {
+    street = street < 3 ? street + 1 : 3;
+    boardCount = street == 1 ? 3 : (street == 2 ? 4 : 5);
+    logev(9, 6 + street, 0);
+  }
+  do_showdown();
 }
 static void deal_next_street() {
   street++;
   boardCount = street == 1 ? 3 : (street == 2 ? 4 : 5);
-  logev(2, 6 + street, 0); // 7 flop, 8 turn, 9 river
-  turn = 1 - button; // out of position acts first postflop
+  logev(9, 6 + street, 0);
+  turnSeat = -1;
+  for (int k = 1; k <= NP; k++) {
+    int p = (button + k) % NP;
+    if (can_act(p)) { turnSeat = p; break; }
+  }
   coachValid = 0;
 }
-static void end_hand_by_fold(int folder) {
-  settle_bets();
-  stack_[1 - folder] += pot;
-  pot = 0;
-  result_ = folder == 0 ? 2 : 1;
-  byFold = 1;
-  over = 1;
-  profit += stack_[0] - heroStackAtDeal;
-  handsPlayed++;
-}
-// returns 1 if the street (or hand) advanced
-static int maybe_advance() {
-  int settled = (acted[0] && acted[1] && bet_[0] == bet_[1]);
-  // an all-in call for less than the bet also ends the action
-  for (int p = 0; p < 2; p++)
-    if (stack_[p] == 0 && acted[p] && acted[1 - p] && bet_[p] <= bet_[1 - p])
-      settled = 1;
-  if (!settled) return 0;
-  settle_bets();
-  // someone all-in: run out the board and show down
-  if (stack_[0] == 0 || stack_[1] == 0) {
-    while (boardCount < 5) {
-      street = street < 3 ? street + 1 : 3;
-      boardCount = street == 1 ? 3 : (street == 2 ? 4 : 5);
-      logev(2, 6 + street, 0);
-    }
-    do_showdown();
-    return 1;
+// after seat p acts, advance the hand state machine
+static void advance_after(int p) {
+  if (count_active() == 1) {
+    settle_street();
+    for (int q = 0; q < NP; q++)
+      if (!folded[q]) { stack_[q] += pot; winners_ = 1 << q; }
+    pot = 0;
+    byFold = 1;
+    finish_hand();
+    return;
   }
-  if (street == 3) { do_showdown(); return 1; }
+  int nxt = next_needing(p);
+  if (nxt >= 0) { turnSeat = nxt; return; }
+  // street settled
+  settle_street();
+  if (players_who_can_act() <= 1) { runout_and_showdown(); return; }
+  if (street == 3) { do_showdown(); return; }
   deal_next_street();
-  return 1;
 }
 
-// perform an action for player p. cls: 0 fold, 1 check/call, 2 raise-to `to`.
+// perform an action for seat p. cls: 0 fold, 1 check/call, 2 raise-to `to`.
 static void apply(int p, int cls, int to) {
   int tc = to_call_of(p);
   if (cls == 0) {
+    folded[p] = 1;
     logev(p, 0, 0);
-    end_hand_by_fold(p);
+    advance_after(p);
     return;
   }
   if (cls == 1) {
@@ -315,137 +382,130 @@ static void apply(int p, int cls, int to) {
     stack_[p] -= pay;
     bet_[p] += pay;
     logev(p, tc > 0 ? 2 : 1, pay);
-    // calling a real bet narrows your range a little
     if (tc > 0 && rangeCls[p] < 1) rangeCls[p] = 1;
     acted[p] = 1;
-    if (!maybe_advance()) turn = 1 - p;
+    advance_after(p);
     return;
   }
-  // raise to `to` (total this street), clamped to legal range
-  int minTo = bet_[1 - p] + (lastRaise > BB ? lastRaise : BB);
+  int mb = max_bet();
+  int minTo = mb + (lastRaise > BB ? lastRaise : BB);
   int allinTo = bet_[p] + stack_[p];
   if (to > allinTo) to = allinTo;
   if (to < minTo && to < allinTo) to = minTo < allinTo ? minTo : allinTo;
-  if (to <= bet_[1 - p]) { // can't actually raise: treat as call
-    apply(p, 1, 0);
-    return;
-  }
+  if (to <= mb) { apply(p, 1, 0); return; }
   int add = to - bet_[p];
-  int raiseSize = to - bet_[1 - p];
+  int raiseSize = to - mb;
   if (raiseSize > lastRaise) lastRaise = raiseSize;
   stack_[p] -= add;
   bet_[p] += add;
   logev(p, tc > 0 ? 4 : 3, to);
-  // aggression narrows the range this player represents
   rangeCls[p] = rangeCls[p] < 2 ? 2 : 3;
   if (street == 0) prefAgg = p;
   acted[p] = 1;
-  acted[1 - p] = 0;
-  if (!maybe_advance()) turn = 1 - p;
+  advance_after(p);
 }
 
-// ---- the bot ----
-// It reads the hero the same way the coach reads it: equity is computed
-// against the range the hero's actions represent. On top of the math it has
-// habits: it opens the button, continuation-bets, bluffs occasionally,
-// slowplays monsters sometimes, and mixes its bet sizes.
+// ---- the bots ----
 static void bot_act() {
+  int me = turnSeat;
+  const int act = count_active();
+  const int base = 1000 / act; // multi-way baseline equity
   // difficulty knobs. easy: loose-passive, reads nothing, calls too much.
-  // normal: the balanced default. hard: sharper reads, more pressure.
-  // "hard" is not "wilder": it reads more accurately, folds with discipline,
-  // bluffs LESS (bluffs only beat players who over-fold), and value-bets
-  // thinner. "easy" is a loose-passive calling station that reads nothing.
-  const int vsMin = level == 0 ? CLS_MIN[0] : CLS_MIN[rangeCls[0]];
-  const int jw = level == 0 ? 50 : level == 1 ? 30 : 12; // equity jitter
+  const int jw = level == 0 ? 50 : level == 1 ? 30 : 12;
   const int trapRoll = level == 0 ? 0 : level == 2 ? 20 : 25;
-  const int raiseHi = level == 0 ? 760 : 700;
+  const int raiseHi = base + (level == 0 ? 260 : 200);
+  const int semiLo = base + 60;
   const int semiRoll = level == 0 ? 0 : level == 2 ? 30 : 40;
   const int rebluffRoll = level == 0 ? 0 : level == 2 ? 4 : 6;
   const int stickyMargin = level == 0 ? 90 : 40;
   const int stickyRoll = level == 0 ? 60 : level == 2 ? 8 : 25;
   const int cbetRoll = level == 0 ? 0 : level == 2 ? 50 : 60;
   const int lateBluffRoll = level == 0 ? 0 : level == 2 ? 6 : 10;
-  const int valueBet = level == 0 ? 660 : level == 2 ? 600 : 620;
+  const int valueBet = base + (level == 0 ? 160 : level == 2 ? 100 : 120);
   const int thinRoll = level == 0 ? 0 : 33;
 
-  int e = equity_pm(botCards, BOT_ITERS, vsMin);
+  // easy bots read nothing: pretend everyone's range is "anything"
+  int savedCls[MAXP];
+  if (level == 0)
+    for (int p = 0; p < NP; p++) { savedCls[p] = rangeCls[p]; rangeCls[p] = 0; }
+  int e = equity_of(me, BOT_ITERS);
+  if (level == 0)
+    for (int p = 0; p < NP; p++) rangeCls[p] = savedCls[p];
   e += rnd(2 * jw) - jw;
-  int tc = to_call_of(1);
-  int potNow = pot + bet_[0] + bet_[1];
+
+  int tc = to_call_of(me);
+  int potNow = pot_now();
   int roll = rnd(100);
-  // mixed bet sizing: half pot, two-thirds, or full pot
-  int frac = roll % 3; // reuse the roll as a cheap size mixer
+  int frac = roll % 3;
   int sized = frac == 0 ? potNow / 2 : frac == 1 ? (potNow * 2) / 3 : potNow;
   if (sized < BB) sized = BB;
 
   if (tc > 0) {
     int po = tc * 1000 / (potNow + tc);
-    // monsters sometimes just call to trap
-    if (e > 780 && roll < trapRoll) { apply(1, 1, 0); return; }
-    if (e > raiseHi || (e > 560 && roll < semiRoll)) {
-      apply(1, 2, bet_[0] + potNow); // pot-size raise
+    if (e > base + 380 && roll < trapRoll) { apply(me, 1, 0); return; }
+    if (e > raiseHi || (e > semiLo && roll < semiRoll)) {
+      apply(me, 2, max_bet() + potNow);
       return;
     }
-    if (e >= po) { apply(1, 1, 0); return; }
-    // priced out: usually fold, occasionally bluff-raise
-    if (roll < rebluffRoll && stack_[1] > potNow) { apply(1, 2, bet_[0] + potNow); return; }
-    // sticky peel: slightly wrong calls, sometimes, like a human
-    if (e >= po - stickyMargin && roll < stickyRoll) { apply(1, 1, 0); return; }
-    apply(1, 0, 0);
+    if (e >= po) { apply(me, 1, 0); return; }
+    if (roll < rebluffRoll && stack_[me] > potNow && act == 2) {
+      apply(me, 2, max_bet() + potNow);
+      return;
+    }
+    if (e >= po - stickyMargin && roll < stickyRoll) { apply(me, 1, 0); return; }
+    apply(me, 0, 0);
     return;
   }
 
-  // no bet to face
   if (street == 0) {
-    // preflop, checked around to the bot in the big blind: punish limps
-    if (e > 580 || (e > 480 && roll < (level == 0 ? 0 : 30))) { apply(1, 2, 3 * BB); return; }
-    apply(1, 1, 0);
+    if (e > base + 180 || (e > base + 80 && roll < (level == 0 ? 0 : 30))) {
+      apply(me, 2, 3 * BB);
+      return;
+    }
+    apply(me, 1, 0);
     return;
   }
-  // continuation bet: it raised preflop, so it usually keeps betting the flop
-  if (street == 1 && prefAgg == 1 && roll < cbetRoll) {
-    apply(1, 2, bet_[1] + sized);
+  if (street == 1 && prefAgg == me && roll < cbetRoll) {
+    apply(me, 2, bet_[me] + sized);
     return;
   }
-  // value bet strength, and a small pure-bluff rate on later streets
-  if (e > valueBet || (e > 540 && roll < thinRoll) || (street >= 2 && roll < lateBluffRoll)) {
-    apply(1, 2, bet_[1] + sized);
+  // bluffs only heads-up: firing into a crowd is lighting chips on fire
+  if (e > valueBet || (e > base + 40 && roll < thinRoll) ||
+      (street >= 2 && act == 2 && roll < lateBluffRoll)) {
+    apply(me, 2, bet_[me] + sized);
     return;
   }
-  apply(1, 1, 0);
+  apply(me, 1, 0);
 }
-// the UI paces the bot: it calls bot_step() once per visible action, with a
-// thinking delay in between, so play unfolds instead of teleporting
 
 // ---- coach ----
 static void coach_compute() {
-  if (coachValid || over || turn != 0) return;
-  // equity vs the range the bot's actions represent, not a random hand
-  coachEqPm = equity_pm(heroCards, COACH_ITERS, CLS_MIN[rangeCls[1]]);
+  if (coachValid || over || turnSeat != 0) return;
+  coachEqPm = equity_of(0, COACH_ITERS);
   int tc = to_call_of(0);
-  int potNow = pot + bet_[0] + bet_[1];
+  int potNow = pot_now();
   coachPoPm = tc > 0 ? tc * 1000 / (potNow + tc) : 0;
+  int base = 1000 / count_active();
   if (tc > 0) {
-    if (coachEqPm > coachPoPm + 150 && coachEqPm > 600) coachAdv = 2;
+    if (coachEqPm > coachPoPm + 150 && coachEqPm > base + 100) coachAdv = 2;
     else if (coachEqPm >= coachPoPm) coachAdv = 1;
     else coachAdv = 0;
   } else {
-    coachAdv = coachEqPm > 620 ? 2 : 1;
+    coachAdv = coachEqPm > base + 120 ? 2 : 1;
   }
   coachValid = 1;
 }
 
-// ---- hand-reading helpers for the coach ----
-// hero's best current score using only the visible board
+// ---- hand-reading helpers ----
 static int now_score() {
   if (boardCount == 0) {
-    int r0 = heroCards[0] >> 2, r1 = heroCards[1] >> 2;
-    if (r0 == r1) return (1 << 20) | (r0 << 16); // pocket pair
+    int r0 = holeC[0][0] >> 2, r1 = holeC[0][1] >> 2;
+    if (r0 == r1) return (1 << 20) | (r0 << 16);
     int hi = r0 > r1 ? r0 : r1, lo = r0 > r1 ? r1 : r0;
-    return (hi << 16) | (lo << 12); // high card
+    return (hi << 16) | (lo << 12);
   }
   int cs[7];
-  cs[0] = heroCards[0]; cs[1] = heroCards[1];
+  cs[0] = holeC[0][0]; cs[1] = holeC[0][1];
   for (int i = 0; i < boardCount; i++) cs[2 + i] = board[i];
   int n = 2 + boardCount;
   if (n == 5) return eval5(cs);
@@ -462,17 +522,13 @@ static int now_score() {
   }
   return eval7(cs);
 }
-
-// rough outs count on the flop or turn: unseen cards that raise the hero's
-// hand category. Cards that only pair the board (helping any two cards
-// equally) are not counted unless the hero holds that rank too.
 static int count_outs() {
   if (boardCount < 3 || boardCount > 4) return -1;
   int baseCat = now_score() >> 20;
   int used[52] = {0};
-  used[heroCards[0]] = used[heroCards[1]] = 1;
+  used[holeC[0][0]] = used[holeC[0][1]] = 1;
   for (int i = 0; i < boardCount; i++) used[board[i]] = 1;
-  int hr0 = heroCards[0] >> 2, hr1 = heroCards[1] >> 2;
+  int hr0 = holeC[0][0] >> 2, hr1 = holeC[0][1] >> 2;
   int n = 0;
   for (int c = 0; c < 52; c++) {
     if (used[c]) continue;
@@ -480,13 +536,12 @@ static int count_outs() {
     int onBoard = 0;
     for (int i = 0; i < boardCount; i++)
       if ((board[i] >> 2) == r) onBoard = 1;
-    if (onBoard && r != hr0 && r != hr1) continue; // pairs the board, not us
-    // evaluate with the extra card
+    if (onBoard && r != hr0 && r != hr1) continue;
     int cs[7];
-    cs[0] = heroCards[0]; cs[1] = heroCards[1];
+    cs[0] = holeC[0][0]; cs[1] = holeC[0][1];
     for (int i = 0; i < boardCount; i++) cs[2 + i] = board[i];
     cs[2 + boardCount] = c;
-    int m = 3 + boardCount; // 6 or 7
+    int m = 3 + boardCount;
     int best = -1, five[5];
     if (m == 6) {
       for (int skip = 0; skip < 6; skip++) {
@@ -507,42 +562,52 @@ extern "C" EXPORT("new_session") void new_session(u32 seed) {
   rng = seed ? seed : 0x2545F491u;
   handsPlayed = 0; profit = 0;
   nBest = 0; nOk = 0; nBad = 0;
-  stack_[0] = stack_[1] = STACK;
   button = 1;
   over = 1;
   lastGrade = -1;
 }
+extern "C" EXPORT("set_players") void set_players(int n) {
+  pendingNP = n < 2 ? 2 : n > MAXP ? MAXP : n;
+}
+extern "C" EXPORT("get_players") int get_players() { return NP; }
+extern "C" EXPORT("set_level") void set_level(int l) { level = l < 0 ? 0 : l > 2 ? 2 : l; }
 
 extern "C" EXPORT("new_hand") void new_hand() {
-  stack_[0] = stack_[1] = STACK; // top up; profit tracks the running total
+  NP = pendingNP;
   shuffle_deck();
-  heroCards[0] = deck[0]; heroCards[1] = deck[1];
-  botCards[0] = deck[2];  botCards[1] = deck[3];
-  for (int i = 0; i < 5; i++) board[i] = deck[4 + i];
+  for (int p = 0; p < NP; p++) {
+    holeC[p][0] = deck[2 * p];
+    holeC[p][1] = deck[2 * p + 1];
+    stack_[p] = STACK;
+    bet_[p] = 0; acted[p] = 0; folded[p] = 0;
+    rangeCls[p] = 0; catP[p] = -1; maskP[p] = 0;
+  }
+  for (int i = 0; i < 5; i++) board[i] = deck[2 * MAXP + i];
   boardCount = 0; street = 0;
-  button = 1 - button;
-  pot = 0; bet_[0] = bet_[1] = 0;
-  acted[0] = acted[1] = 0;
-  lastRaise = BB;
-  rangeCls[0] = rangeCls[1] = 0; prefAgg = -1;
-  heroMask = 0; botMask = 0;
-  over = 0; result_ = 0; byFold = 0; showdown = 0;
-  heroCat = -1; botCat = -1;
+  button = (button + 1) % NP;
+  pot = 0; lastRaise = BB;
+  prefAgg = -1;
+  over = 0; byFold = 0; showdown = 0; winners_ = 0;
   logN = 0;
   lastGrade = -1; lastAdvised = -1; lastEqPm = -1; lastPoPm = -1; lastActionCls = -1;
   heroStackAtDeal = STACK;
-  // blinds: button posts SB, other posts BB
-  int sbp = button, bbp = 1 - button;
+  // blinds: heads-up the button is the small blind; otherwise they're the
+  // two seats after the button, and the seat after the big blind opens
+  int sbp, bbp;
+  if (NP == 2) { sbp = button; bbp = 1 - button; turnSeat = button; }
+  else {
+    sbp = (button + 1) % NP;
+    bbp = (button + 2) % NP;
+    turnSeat = (button + 3) % NP;
+  }
   stack_[sbp] -= SB; bet_[sbp] = SB; logev(sbp, 5, SB);
   stack_[bbp] -= BB; bet_[bbp] = BB; logev(bbp, 6, BB);
-  turn = button; // button acts first preflop heads-up
   coachValid = 0;
 }
 
-// hero action. cls: 0 fold, 1 check/call, 2 raise to `to` chips this street.
 extern "C" EXPORT("hero_act") int hero_act(int cls, int to) {
-  if (over || turn != 0) return 0;
-  coach_compute(); // grade against the coach's numbers for this spot
+  if (over || turnSeat != 0) return 0;
+  coach_compute();
   lastAdvised = coachAdv; lastEqPm = coachEqPm; lastPoPm = coachPoPm;
   lastActionCls = cls;
   if (cls == coachAdv) { lastGrade = 2; nBest++; }
@@ -552,10 +617,11 @@ extern "C" EXPORT("hero_act") int hero_act(int cls, int to) {
   return 1;
 }
 
-// one bot action; the UI calls this on a timer while it's the bot's turn
-extern "C" EXPORT("bot_turn") int bot_turn() { return (!over && turn == 1) ? 1 : 0; }
+// one bot action; the UI calls this on a timer while it's a bot's turn
+extern "C" EXPORT("bot_turn") int bot_turn() { return (!over && turnSeat != 0) ? 1 : 0; }
+extern "C" EXPORT("cur_actor") int cur_actor() { return over ? -1 : turnSeat; }
 extern "C" EXPORT("bot_step") void bot_step() {
-  if (!over && turn == 1) {
+  if (!over && turnSeat != 0) {
     bot_act();
     coachValid = 0;
   }
@@ -565,20 +631,9 @@ extern "C" EXPORT("bot_step") void bot_step() {
 extern "C" EXPORT("coach_equity") int coach_equity() { coach_compute(); return coachEqPm; }
 extern "C" EXPORT("coach_pot_odds") int coach_pot_odds() { coach_compute(); return coachPoPm; }
 extern "C" EXPORT("coach_advice") int coach_advice() { coach_compute(); return coachAdv; }
-// what the hero currently holds (category with the visible board) and a
-// rough outs count on the flop/turn (-1 when it doesn't apply)
 extern "C" EXPORT("now_cat") int now_cat() { return now_score() >> 20; }
 extern "C" EXPORT("outs") int outs() { return count_outs(); }
-// starting-hand strength (Chen x2) and the range class each player has shown
-extern "C" EXPORT("hand_chen") int hand_chen() { return chen2(heroCards[0], heroCards[1]); }
-extern "C" EXPORT("bot_range") int bot_range() { return rangeCls[1]; }
-extern "C" EXPORT("hero_range") int hero_range() { return rangeCls[0]; }
-// difficulty: 0 easy, 1 normal, 2 hard
-extern "C" EXPORT("set_level") void set_level(int l) { level = l < 0 ? 0 : l > 2 ? 2 : l; }
-// which 5 of the 7 cards made each best hand at showdown, as bitmasks over
-// [hole0, hole1, board0..board4]; 0 before showdown
-extern "C" EXPORT("hero_mask") int hero_mask() { return showdown ? heroMask : 0; }
-extern "C" EXPORT("bot_mask") int bot_mask() { return showdown ? botMask : 0; }
+extern "C" EXPORT("hand_chen") int hand_chen() { return chen2(holeC[0][0], holeC[0][1]); }
 
 // last graded decision
 extern "C" EXPORT("last_grade") int last_grade() { return lastGrade; }
@@ -587,33 +642,37 @@ extern "C" EXPORT("last_equity") int last_equity() { return lastEqPm; }
 extern "C" EXPORT("last_pot_odds") int last_pot_odds() { return lastPoPm; }
 extern "C" EXPORT("last_action_cls") int last_action_cls() { return lastActionCls; }
 
-// state getters
-extern "C" EXPORT("hero_card") int hero_card(int i) { return heroCards[i & 1]; }
-extern "C" EXPORT("bot_card") int bot_card(int i) { return showdown ? botCards[i & 1] : -1; }
+// per-seat state (seat 0 = hero). Bot hole cards hide until showdown.
+extern "C" EXPORT("p_card") int p_card(int p, int i) {
+  if (p < 0 || p >= NP) return -1;
+  if (p != 0 && !(showdown && !folded[p])) return -1;
+  return holeC[p][i & 1];
+}
+extern "C" EXPORT("p_stack") int p_stack(int p) { return stack_[p]; }
+extern "C" EXPORT("p_bet") int p_bet(int p) { return bet_[p]; }
+extern "C" EXPORT("p_folded") int p_folded(int p) { return folded[p]; }
+extern "C" EXPORT("p_range") int p_range(int p) { return rangeCls[p]; }
+extern "C" EXPORT("p_cat") int p_cat(int p) { return catP[p]; }
+extern "C" EXPORT("p_mask") int p_mask(int p) { return showdown ? maskP[p] : 0; }
+extern "C" EXPORT("is_button") int is_button(int p) { return p == button ? 1 : 0; }
+
 extern "C" EXPORT("board_card") int board_card(int i) {
   return (i >= 0 && i < boardCount) ? board[i] : -1;
 }
 extern "C" EXPORT("board_count") int board_count() { return boardCount; }
 extern "C" EXPORT("get_street") int get_street() { return street; }
-extern "C" EXPORT("get_pot") int get_pot() { return pot + bet_[0] + bet_[1]; }
-extern "C" EXPORT("hero_stack") int hero_stack() { return stack_[0]; }
-extern "C" EXPORT("bot_stack") int bot_stack() { return stack_[1]; }
-extern "C" EXPORT("hero_bet") int hero_bet() { return bet_[0]; }
-extern "C" EXPORT("bot_bet") int bot_bet() { return bet_[1]; }
+extern "C" EXPORT("get_pot") int get_pot() { return pot_now(); }
 extern "C" EXPORT("to_call") int to_call() { return to_call_of(0); }
-extern "C" EXPORT("hero_turn") int hero_turn() { return (!over && turn == 0) ? 1 : 0; }
+extern "C" EXPORT("hero_turn") int hero_turn() { return (!over && turnSeat == 0) ? 1 : 0; }
 extern "C" EXPORT("hand_over") int hand_over() { return over; }
-extern "C" EXPORT("get_result") int get_result() { return result_; }
 extern "C" EXPORT("by_fold") int by_fold_() { return byFold; }
-extern "C" EXPORT("hero_button") int hero_button() { return button == 0 ? 1 : 0; }
+extern "C" EXPORT("winners") int winners() { return winners_; }
 extern "C" EXPORT("min_raise_to") int min_raise_to() {
-  int m = bet_[1] + (lastRaise > BB ? lastRaise : BB);
+  int m = max_bet() + (lastRaise > BB ? lastRaise : BB);
   int allin = bet_[0] + stack_[0];
   return m < allin ? m : allin;
 }
 extern "C" EXPORT("max_raise_to") int max_raise_to() { return bet_[0] + stack_[0]; }
-extern "C" EXPORT("hero_cat") int hero_cat_() { return heroCat; }
-extern "C" EXPORT("bot_cat") int bot_cat_() { return botCat; }
 
 // session stats
 extern "C" EXPORT("hands_played") int hands_played() { return handsPlayed; }
