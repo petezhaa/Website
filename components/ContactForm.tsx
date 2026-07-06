@@ -34,7 +34,7 @@ export function ContactForm() {
   };
 
   const fieldCls =
-    "w-full rounded-[2px] border border-line bg-surface px-3.5 py-2.5 font-mono text-sm outline-none transition focus:border-accent";
+    "w-full rounded-md border border-line bg-surface px-3.5 py-2.5 text-sm outline-none transition focus:border-accent";
 
   return (
     <form onSubmit={submit} className="flex w-full flex-col gap-3 text-left">
@@ -79,7 +79,7 @@ export function ContactForm() {
                   <i className="bg-gold/60" />
                   <i className="bg-moss/60" />
                 </span>
-                <span className="text-accent">$</span> mail — this is what I&apos;ll get
+Preview — this is what I&apos;ll get
               </div>
               <div className="space-y-1 px-4 py-3 font-mono text-[11px] text-muted">
                 <p>

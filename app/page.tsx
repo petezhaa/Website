@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Image from "next/image";
 import { Reveal } from "@/components/Reveal";
 import { Polaroid } from "@/components/Polaroid";
 import { FortuneCookie } from "@/components/FortuneCookie";
@@ -22,32 +23,39 @@ import { PeterBotShell } from "@/components/PeterBotShell";
 import { ContactForm } from "@/components/ContactForm";
 import { VibeCorner } from "@/components/VibeCorner";
 
-// A section header that reads like a shell path: 01 ~/work ─────── # note
+// An editorial section head: a serif title, an optional standfirst, a rule.
 function Section({
-  n,
-  slug,
+  id,
+  title,
   note,
+  children,
 }: {
-  n: string;
-  slug: string;
+  id: string;
+  title: string;
   note?: string;
+  children: React.ReactNode;
 }) {
   return (
-    <Reveal>
-      <div className="mb-9 flex items-baseline gap-3">
-        <span className="font-mono text-sm text-muted">{n}</span>
-        <h2 className="font-mono text-2xl font-bold tracking-tight sm:text-3xl">
-          <span className="text-accent">~/</span>
-          {slug}
-        </h2>
-        <span className="rule-dash self-center" />
-        {note && (
-          <span className="hidden shrink-0 font-mono text-xs text-muted sm:inline">
-            # {note}
-          </span>
-        )}
-      </div>
-    </Reveal>
+    <section id={id} className="scroll-mt-24 py-16 sm:py-20">
+      <Reveal>
+        <div className="mb-9">
+          <h2 className="font-serif text-3xl tracking-tight sm:text-4xl">
+            {title}
+          </h2>
+          {note && <p className="mt-1.5 max-w-xl text-muted">{note}</p>}
+          <div className="mt-5 h-px w-full bg-line" />
+        </div>
+      </Reveal>
+      {children}
+    </section>
+  );
+}
+
+function Kicker({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted">
+      {children}
+    </p>
   );
 }
 
@@ -57,13 +65,12 @@ export default function Home() {
       <ScrollProgress />
       <PeterBotShell />
       <VibeCorner />
+
       {/* ============ NAV ============ */}
-      <header className="sticky top-0 z-50 border-b border-line bg-bg/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-3.5">
-          <a href="#top" className="font-mono text-sm">
-            <span className="text-accent">peter</span>
-            <span className="text-muted">@</span>
-            <span className="text-fg">petezha.xyz</span>
+      <header className="sticky top-0 z-50 border-b border-line bg-bg/85 backdrop-blur">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-6 px-6 py-4">
+          <a href="#top" className="font-serif text-lg tracking-tight">
+            Peter Zhao
           </a>
           <NavLinks />
           <div className="flex items-center gap-3">
@@ -72,15 +79,15 @@ export default function Home() {
               href="/resume.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-term hidden whitespace-nowrap px-3 py-1.5 text-xs xl:inline-block"
+              className="btn-term hidden whitespace-nowrap px-3.5 py-1.5 text-sm xl:inline-block"
             >
-              resume
+              Résumé
             </a>
             <a
               href={`mailto:${LINKS.email}`}
-              className="btn-solid px-3.5 py-1.5 text-xs"
+              className="btn-solid px-3.5 py-1.5 text-sm"
             >
-              email
+              Email
             </a>
           </div>
         </div>
@@ -88,78 +95,69 @@ export default function Home() {
 
       <main id="top" className="mx-auto w-full max-w-5xl px-6">
         {/* ============ HERO ============ */}
-        <section className="flex min-h-[82svh] flex-col justify-center py-20">
-          <Reveal>
-            <p className="mb-5 font-mono text-xs text-muted">
-              <span className="text-accent">peter@petezha</span>
-              <span className="text-muted">:</span>
-              <span className="text-moss">~</span>
-              <span className="text-accent">$</span> whoami
-            </p>
-          </Reveal>
-          <Reveal delay={60}>
-            <p className="mb-6 flex items-center gap-2.5 font-mono text-xs text-muted">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent/60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
-              </span>
-              <a href="/now" className="tlink !text-muted hover:!text-accent">
-                right now: nvidia, santa clara &rarr;
-              </a>
-            </p>
-          </Reveal>
-          <Reveal delay={120}>
-            <h1 className="max-w-3xl font-mono text-4xl font-bold leading-[1.12] tracking-tight sm:text-6xl">
+        <section className="grid min-h-[84svh] items-center gap-12 py-16 lg:grid-cols-[1.55fr_1fr] lg:gap-16">
+          <div>
+            <Reveal>
               <HeroLine />
-            </h1>
-          </Reveal>
-          <Reveal delay={200}>
-            <p className="mt-8 max-w-2xl leading-relaxed text-muted">
-              I study computer science, electrical engineering, and math. All
-              three, because the work I enjoy sits somewhere between them.
-              I&apos;m spending the early summer at NVIDIA working on GPU
-              simulation infrastructure, then the late summer at Microsoft on
-              Azure Search. Last summer I was at Amazon.
-            </p>
-            <Suspense fallback={null}>
-              <StatLine />
-            </Suspense>
-          </Reveal>
-          <Reveal delay={280}>
-            <div className="mt-10 flex flex-wrap items-center gap-4">
-              <Magnetic>
-                <a
-                  href="#play"
-                  className="btn-solid inline-block px-6 py-3 text-sm"
-                >
-                  play the games
-                </a>
-              </Magnetic>
-              <Magnetic>
-                <a
-                  href="#work"
-                  className="btn-term inline-block px-6 py-3 text-sm"
-                >
-                  see my work
-                </a>
-              </Magnetic>
-              <div className="flex gap-5 font-mono text-xs text-muted">
-                <a href={LINKS.github} target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">github</a>
-                <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">linkedin</a>
-                <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">resume</a>
+            </Reveal>
+            <Reveal delay={140}>
+              <p className="mt-7 max-w-xl text-lg leading-relaxed text-muted">
+                I study computer science, electrical engineering, and math &mdash;
+                all three, because the work I enjoy sits somewhere between them.
+                This summer I&apos;m at NVIDIA building GPU simulation
+                infrastructure, then Microsoft on Azure Search. Last summer,
+                Amazon.
+              </p>
+              <Suspense fallback={null}>
+                <StatLine />
+              </Suspense>
+            </Reveal>
+            <Reveal delay={220}>
+              <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-4">
+                <Magnetic>
+                  <a href="#play" className="btn-solid inline-block px-6 py-3 text-sm">
+                    Play the games
+                  </a>
+                </Magnetic>
+                <Magnetic>
+                  <a href="#work" className="btn-term inline-block px-6 py-3 text-sm">
+                    See my work
+                  </a>
+                </Magnetic>
+                <div className="flex gap-5 text-sm text-muted">
+                  <a href={LINKS.github} target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">GitHub</a>
+                  <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">LinkedIn</a>
+                </div>
               </div>
-            </div>
-          </Reveal>
-          <Reveal delay={360}>
-            <div className="mt-14">
-              <Stats />
-            </div>
+            </Reveal>
+            <Reveal delay={300}>
+              <div className="mt-12">
+                <Stats />
+              </div>
+            </Reveal>
+          </div>
+
+          <Reveal delay={200}>
+            <figure className="mx-auto w-fit">
+              <div className="mx-auto h-64 w-64 overflow-hidden rounded-full border border-line bg-surface shadow-sm sm:h-72 sm:w-72 lg:h-80 lg:w-80">
+                <Image
+                  src="/childhood.jpg"
+                  alt="Peter as a small child in Pulaski, Wisconsin"
+                  width={480}
+                  height={480}
+                  unoptimized
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <figcaption className="mt-4 text-center text-sm italic text-muted">
+                Pulaski, Wisconsin. Age four.
+              </figcaption>
+            </figure>
           </Reveal>
         </section>
 
         {/* ============ WORK ============ */}
-        <section className="py-24" id="work">
-          <Section n="01" slug="work" note="where the résumé lives" />
+        <Section id="work" title="Work" note="Five engineering roles, most recent first — the résumé, in brief.">
           <div className="flex flex-col lg:pl-5">
             {ROLES.map((role, i) => (
               <Reveal key={role.company + role.dates} delay={i * 50}>
@@ -167,27 +165,29 @@ export default function Home() {
               </Reveal>
             ))}
           </div>
-        </section>
+        </Section>
 
         {/* ============ PROJECTS ============ */}
-        <section className="py-24" id="projects">
-          <Section n="02" slug="projects" note="things I built for myself" />
-          <div className="grid gap-4 sm:grid-cols-2">
+        <Section id="projects" title="Projects" note="Things I built because I wanted them to exist.">
+          <div className="grid gap-5 sm:grid-cols-2">
             {PROJECTS.map((project, i) => (
               <Reveal key={project.name} delay={i * 60} className="h-full">
                 <ProjectCard project={project} />
               </Reveal>
             ))}
           </div>
-        </section>
+        </Section>
 
-        {/* ============ ARCADE ============ */}
-        <section className="py-24" id="play">
-          <Section n="03" slug="arcade" note="four languages, zero plugins" />
+        {/* ============ THE ARCADE ============ */}
+        <Section
+          id="play"
+          title="The arcade"
+          note="Four languages, running in your browser — no plugins."
+        >
           <Reveal>
             <p className="mb-8 max-w-2xl leading-relaxed text-muted">
-              A small arcade, each cabinet running a different language in your
-              browser: the map game&apos;s engine is{" "}
+              A small arcade, each cabinet running a different language: the map
+              game&apos;s engine is{" "}
               <a
                 href={LINKS.github}
                 target="_blank"
@@ -196,52 +196,51 @@ export default function Home() {
               >
                 Rust compiled to WebAssembly
               </a>
-              , the physics and math sims are freestanding C++, the board game
-              Go is written in Go (obviously), and Snake is genuine Java
-              bytecode run by a little JVM I wrote for this site. React just
-              draws.
+              , the physics and math sims are freestanding C++, the board game Go
+              is written in Go, and Snake is genuine Java bytecode run by a little
+              JVM I wrote for this site. React just draws.
             </p>
           </Reveal>
           <Reveal delay={100}>
             <GameChooser />
           </Reveal>
           <Reveal delay={160}>
-            <div className="mt-10">
-              <p className="prompt mb-2 font-mono text-[11px] text-muted">
-                ./bench --all <span className="text-muted/70"># yes, the C++ actually runs</span>
+            <div className="mt-12">
+              <h3 className="font-serif text-xl tracking-tight">Benchmarks</h3>
+              <p className="mb-3 mt-1 text-sm text-muted">
+                The same workload, run in each language, live. Yes, the C++
+                actually runs.
               </p>
               <BenchPanel />
             </div>
           </Reveal>
-        </section>
+        </Section>
 
         {/* ============ ABOUT ============ */}
-        <section className="py-24" id="about">
-          <Section n="04" slug="about" note="the actual person" />
-          <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr]">
+        <Section id="about" title="About" note="The part that isn't on the résumé.">
+          <div className="grid gap-12 lg:grid-cols-[1.5fr_1fr]">
             <Reveal>
               <div className="space-y-5 leading-relaxed text-muted">
                 <p className="font-serif text-2xl leading-snug tracking-tight text-fg sm:text-3xl">
                   I grew up in Pulaski, Wisconsin, in a trailer park.
                 </p>
                 <p>
-                  I worked at my parents&apos; restaurant. I was one of the
-                  only Asian students in my school, got held back in
-                  kindergarten, and still ended up valedictorian of my high
-                  school.
+                  I worked at my parents&apos; restaurant. I was one of the only
+                  Asian students in my school, got held back in kindergarten, and
+                  still ended up valedictorian of my high school.
                 </p>
                 <p>
-                  I study three majors because the things I want to build need
-                  all three: GPU systems, firmware, and control systems
-                  don&apos;t stay inside one department. I learn fastest when
-                  the project is slightly past what I already know how to do.
+                  I study three majors because the things I want to build need all
+                  three: GPU systems, firmware, and control systems don&apos;t
+                  stay inside one department. I learn fastest when the project is
+                  slightly past what I already know how to do.
                 </p>
                 <p>
-                  Outside of school: history, film and animation, photography,
-                  and grand strategy games. I also hike, which is why
-                  there&apos;s a national park tier list below this.
+                  Outside of school: history, film and animation, photography, and
+                  grand strategy games. I also hike, which is why there&apos;s a
+                  national park tier list further down.
                 </p>
-                <div className="max-w-sm pt-2">
+                <div className="max-w-sm pt-3">
                   <Polaroid
                     src="/first-home.jpg"
                     alt="The trailer in Pulaski, Wisconsin, where Peter grew up"
@@ -253,171 +252,115 @@ export default function Home() {
               </div>
             </Reveal>
             <Reveal delay={100}>
-              <div className="flex flex-col gap-4">
-                <Polaroid
-                  src="/childhood.jpg"
-                  alt="Peter as a small child in an oversized soccer sweater"
-                  caption="age four, allegedly"
-                  width={480}
-                  height={480}
-                  round
-                />
-                {/* education — a terminal panel, not a soft card */}
-                <div className="panel">
-                  <div className="panel-titlebar">
-                    <span className="win-dots">
-                      <i className="bg-accent/60" />
-                      <i className="bg-gold/60" />
-                      <i className="bg-moss/60" />
-                    </span>
-                    <span className="text-accent">~/</span>education
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-mono text-base font-bold">
-                      University of Wisconsin&ndash;Madison
-                    </h3>
-                    <p className="mt-1.5 text-sm text-muted">
-                      B.S. Computer Science, Electrical Engineering &amp;
-                      Mathematics &middot; May 2027
-                    </p>
-                    <p className="mt-1 text-sm text-muted">
-                      STAR &amp; PEOPLE Scholar
-                    </p>
-                  </div>
+              <div className="space-y-8">
+                <div>
+                  <Kicker>Education</Kicker>
+                  <h3 className="mt-2 font-serif text-xl tracking-tight">
+                    University of Wisconsin&ndash;Madison
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted">
+                    B.S. Computer Science, Electrical Engineering &amp;
+                    Mathematics &middot; May 2027
+                  </p>
+                  <p className="text-sm text-muted">STAR &amp; PEOPLE Scholar</p>
                 </div>
-                {/* skills — rendered like a config file */}
-                <div className="panel">
-                  <div className="panel-titlebar">
-                    <span className="win-dots">
-                      <i className="bg-accent/60" />
-                      <i className="bg-gold/60" />
-                      <i className="bg-moss/60" />
-                    </span>
-                    <span className="text-accent">~/</span>skills.toml
-                  </div>
-                  <div className="space-y-2.5 p-5 font-mono text-[12px] leading-relaxed">
-                    {SKILL_GROUPS.map((g) => (
-                      <p key={g.label} className="break-words">
-                        <span className="text-accent">
-                          {g.label.toLowerCase().replace(/[^a-z]+/g, "_")}
-                        </span>
-                        <span className="text-muted"> = [</span>
-                        {g.items.map((item, idx) => (
-                          <span key={item}>
-                            <span className="text-fg">{item}</span>
-                            {idx < g.items.length - 1 && (
-                              <span className="text-muted">, </span>
-                            )}
-                          </span>
-                        ))}
-                        <span className="text-muted">]</span>
+                <div className="space-y-4">
+                  <Kicker>What I work with</Kicker>
+                  {SKILL_GROUPS.map((g) => (
+                    <div key={g.label}>
+                      <h4 className="text-sm font-semibold">{g.label}</h4>
+                      <p className="mt-1 text-sm leading-relaxed text-muted">
+                        {g.items.join(", ")}
                       </p>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </Reveal>
           </div>
-        </section>
+        </Section>
 
-        {/* ============ PARKS TIER LIST ============ */}
-        <section className="py-24" id="parks">
-          <Section n="05" slug="parks" note="all 63. yes I have opinions" />
+        {/* ============ PARKS ============ */}
+        <Section
+          id="parks"
+          title="National parks, ranked"
+          note="All 63. Formed on trails, from photos, and with some bias toward mountains."
+        >
           <Reveal>
             <p className="mb-8 max-w-2xl leading-relaxed text-muted">
-              Every U.S. national park, tiered. Formed on trails, from photos,
-              and with some bias toward mountains. Disagree? Drag a park where
-              you think it belongs, and the list will explain why you&apos;re
-              wrong.
+              Disagree? Drag a park where you think it belongs, and the list will
+              explain why you&apos;re wrong.
             </p>
           </Reveal>
           <Reveal delay={80}>
             <ParkTierList />
           </Reveal>
-        </section>
+        </Section>
 
         {/* ============ FILMS ============ */}
-        <section className="py-24" id="films">
-          <Section n="06" slug="watching" note="letterboxd, live" />
-          {/* streamed: the page shell shouldn't wait on Letterboxd */}
+        <Section id="films" title="Watching" note="From Letterboxd, live.">
           <Suspense fallback={null}>
             <FilmShelf />
           </Suspense>
-        </section>
+        </Section>
 
-        {/* ============ GAMES ============ */}
-        <section className="py-24" id="games">
-          <Section n="07" slug="playing" note="steam, live" />
-          {/* streamed: same deal for Steam */}
+        {/* ============ VIDEO GAMES ============ */}
+        <Section id="games" title="Playing" note="From Steam, live.">
           <Suspense fallback={null}>
             <GameShelf />
           </Suspense>
-        </section>
+        </Section>
 
         {/* ============ STATS ============ */}
-        <section className="py-24" id="stats">
-          <Section n="08" slug="stats" note="live data, real charts" />
+        <Section id="stats" title="By the numbers" note="Live data, real charts.">
           <Suspense fallback={null}>
             <StatsSection />
           </Suspense>
-        </section>
+        </Section>
 
         {/* ============ THE RESTAURANT ============ */}
-        <section className="py-24" id="chinawok">
+        <section id="chinawok" className="scroll-mt-24 py-16 sm:py-20">
           <Reveal>
-            <div className="panel border-accent/40">
-              <div className="panel-titlebar border-accent/30">
-                <span className="win-dots">
-                  <i className="bg-accent/70" />
-                  <i className="bg-gold/70" />
-                  <i className="bg-moss/70" />
-                </span>
-                <span className="text-accent">$</span> ./support-this-site.sh
-              </div>
-              <div className="p-8 sm:p-12">
-                <p className="font-mono text-xs uppercase tracking-[0.2em] text-accent">
-                  09 · one more thing
-                </p>
-                <div className="mt-4 grid gap-10 lg:grid-cols-[1.5fr_1fr]">
-                  <div>
-                    <h2 className="max-w-2xl font-serif text-3xl leading-snug tracking-tight sm:text-5xl">
-                      My parents run a Chinese restaurant.
-                    </h2>
-                    <p className="mt-5 max-w-xl leading-relaxed text-muted">
-                      China Wok, in Pulaski, Wisconsin. It paid for the
-                      calculators, the tuition gaps, and the work ethic. If
-                      you&apos;re ever near Green Bay, ordering the General
-                      Tso&apos;s is the single most effective way to support
-                      this website.
-                    </p>
-                    <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-muted">
-                      <span className="text-gold">4.7★ on Google</span>
-                      <span>1170 Mountain Bay Dr, Pulaski, WI</span>
-                      <span>$10–20</span>
-                    </div>
-                    <div className="mt-8">
-                      <Magnetic>
-                        <a
-                          href="https://order.chinawoktasty.com/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-solid inline-block px-8 py-4 text-base"
-                        >
-                          order here &rarr;
-                        </a>
-                      </Magnetic>
-                    </div>
+            <div className="rounded-2xl border border-line bg-surface p-8 sm:p-12">
+              <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr] lg:items-center">
+                <div>
+                  <Kicker>One more thing</Kicker>
+                  <h2 className="mt-3 max-w-2xl font-serif text-3xl leading-snug tracking-tight sm:text-4xl">
+                    My parents run a Chinese restaurant.
+                  </h2>
+                  <p className="mt-5 max-w-xl leading-relaxed text-muted">
+                    China Wok, in Pulaski, Wisconsin. It paid for the calculators,
+                    the tuition gaps, and the work ethic. If you&apos;re ever near
+                    Green Bay, ordering the General Tso&apos;s is the single most
+                    effective way to support this website.
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
+                    <span className="text-gold">4.7★ on Google</span>
+                    <span>1170 Mountain Bay Dr, Pulaski, WI</span>
+                    <span>$10&ndash;20</span>
                   </div>
-                  <div className="flex flex-col items-center justify-center gap-8">
-                    <Polaroid
-                      src="/china-wok-family.jpg"
-                      alt="The family standing in front of China Wok, next to the delivery van"
-                      caption="china wok, back then"
-                      width={339}
-                      height={357}
-                    />
-                    <FortuneCookie />
+                  <div className="mt-8">
+                    <Magnetic>
+                      <a
+                        href="https://order.chinawoktasty.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-solid inline-block px-7 py-3.5 text-base"
+                      >
+                        Order here &rarr;
+                      </a>
+                    </Magnetic>
                   </div>
+                </div>
+                <div className="flex flex-col items-center justify-center gap-8">
+                  <Polaroid
+                    src="/china-wok-family.jpg"
+                    alt="The family standing in front of China Wok, next to the delivery van"
+                    caption="china wok, back then"
+                    width={339}
+                    height={357}
+                  />
+                  <FortuneCookie />
                 </div>
               </div>
             </div>
@@ -425,22 +368,21 @@ export default function Home() {
         </section>
 
         {/* ============ CONTACT ============ */}
-        <section className="py-28" id="contact">
-          <Section n="10" slug="contact" note="I answer email quickly" />
-          <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr]">
+        <section id="contact" className="scroll-mt-24 py-20 sm:py-24">
+          <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
             <Reveal>
               <div>
-                <h2 className="max-w-md font-serif text-3xl leading-tight tracking-tight sm:text-4xl">
+                <h2 className="max-w-md font-serif text-4xl leading-tight tracking-tight sm:text-5xl">
                   Get in touch.
                 </h2>
                 <p className="mt-5 max-w-md leading-relaxed text-muted">
                   I&apos;m happy to talk about internships, projects, or school,
                   and I answer email quickly. Genuinely, try me.
                 </p>
-                <div className="mt-6 flex gap-6 font-mono text-xs text-muted">
-                  <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">linkedin</a>
-                  <a href={LINKS.github} target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">github</a>
-                  <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">resume</a>
+                <div className="mt-6 flex gap-6 text-sm text-muted">
+                  <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">LinkedIn</a>
+                  <a href={LINKS.github} target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">GitHub</a>
+                  <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">Résumé</a>
                 </div>
               </div>
             </Reveal>
@@ -453,18 +395,15 @@ export default function Home() {
 
       {/* ============ FOOTER ============ */}
       <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-6 py-6 font-mono text-xs text-muted">
-          <span>
-            <span className="text-accent">©</span> 2026 peter zhao &middot; built
-            by hand in pulaski, wi
-          </span>
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-6 py-8 text-sm text-muted">
+          <span>© 2026 Peter Zhao — Pulaski, Wisconsin</span>
           <a
             href={LINKS.github}
             target="_blank"
             rel="noopener noreferrer"
             className="tlink !text-muted hover:!text-accent"
           >
-            no templates — view source &rarr;
+            Source on GitHub
           </a>
         </div>
       </footer>

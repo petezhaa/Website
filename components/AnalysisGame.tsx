@@ -489,7 +489,7 @@ export function AnalysisGame() {
   };
 
   const btn = (active: boolean) =>
-    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-md border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
       active ? "border-accent bg-accent-soft text-accent" : "border-line text-muted hover:border-accent hover:text-accent"
     }`;
 
@@ -500,7 +500,7 @@ export function AnalysisGame() {
     <div className="flex flex-col gap-3">
       {/* part a: function picker + score */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">part a · the ε–δ duel</span>
+        <span className="text-[10px] uppercase tracking-[0.2em] text-muted">part a · the ε–δ duel</span>
         {names.map((nm, i) => (
           <button key={i} onClick={() => pickFn(i)} disabled={!ready} title={TAGLINES[i] ?? ""} className={btn(fi === i)}>
             {nm}
@@ -531,15 +531,15 @@ export function AnalysisGame() {
         />
         {failed && (
           <div className="absolute inset-0 grid place-items-center bg-surface/90">
-            <p className="font-mono text-sm text-muted">couldn&apos;t load the wasm engine.</p>
+            <p className="text-sm text-muted">couldn&apos;t load the wasm engine.</p>
           </div>
         )}
         {!ready && !failed && (
           <div className="absolute inset-0 grid place-items-center bg-surface/90">
-            <p className="animate-pulse font-mono text-sm text-muted">summoning the ε demon…</p>
+            <p className="animate-pulse text-sm text-muted">summoning the ε demon…</p>
           </div>
         )}
-        <p className="pointer-events-none absolute bottom-3 right-4 text-right font-mono text-[10px] leading-relaxed text-muted/70">
+        <p className="pointer-events-none absolute bottom-3 right-4 text-right text-[10px] leading-relaxed text-muted/70">
           drag horizontally to size your δ-window<br />
           gold band: the demon&apos;s ε · keep the trapped curve inside it
         </p>
@@ -557,7 +557,7 @@ export function AnalysisGame() {
         <button onClick={() => nudge(1 / 0.9)} disabled={!ready || phase !== "duel"} className={btn(false)}>δ +</button>
         <button onClick={() => pickFn(fi)} disabled={!ready} className={btn(false)}>restart</button>
         {phase !== "duel" && (
-          <span className="font-mono text-[11px] text-muted">
+          <span className="text-[11px] text-muted">
             {phase === "won"
               ? "flawless. now try a nastier function."
               : "pick another function — this one is broken at a, and that was the point."}
@@ -566,7 +566,7 @@ export function AnalysisGame() {
       </div>
 
       {msg && (
-        <p className="panel px-4 py-2.5 font-mono text-[11px] leading-relaxed text-muted">
+        <p className="panel px-4 py-2.5 text-[11px] leading-relaxed text-muted">
           <span className={phase === "trapped" ? "text-accent" : phase === "won" ? "text-moss" : "text-gold"}>ε demon</span>
           {" · "}
           {msg}
@@ -575,7 +575,7 @@ export function AnalysisGame() {
 
       {/* part b: the riemann lab */}
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">part b · the riemann lab</span>
+        <span className="text-[10px] uppercase tracking-[0.2em] text-muted">part b · the riemann lab</span>
         {RULES.map((r, i) => (
           <button key={r} onClick={() => setRuleBoth(i)} disabled={!ready} className={btn(rule === i)}>
             {r}

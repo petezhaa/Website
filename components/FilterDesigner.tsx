@@ -480,7 +480,7 @@ export function FilterDesigner() {
   };
 
   const chip = (active: boolean) =>
-    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-md border px-3 py-1.5 text-[11px] font-medium transition ${
       active ? "border-accent bg-accent-soft text-accent" : "border-line text-muted hover:border-accent hover:text-accent"
     }`;
 
@@ -492,13 +492,13 @@ export function FilterDesigner() {
   const lastLevel = level === levelNames.length - 1;
 
   if (failed)
-    return <p className="font-mono text-sm text-muted">couldn&apos;t load the wasm engine.</p>;
+    return <p className="text-sm text-muted">couldn&apos;t load the wasm engine.</p>;
 
   return (
     <div className="flex flex-col gap-3">
       {/* level picker */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">level</span>
+        <span className="text-[10px] uppercase tracking-[0.2em] text-muted">level</span>
         {levelNames.map((nm, i) => {
           const locked = i > unlocked;
           return (
@@ -513,13 +513,13 @@ export function FilterDesigner() {
             </button>
           );
         })}
-        <span className="ml-auto font-mono text-[11px] text-muted">
+        <span className="ml-auto text-[11px] text-muted">
           {ready ? `${solved.filter(Boolean).length}/${levelNames.length} specs signed off` : ""} · C++
         </span>
       </div>
 
       {ready && (
-        <p className="font-mono text-[11px] leading-relaxed text-muted">
+        <p className="text-[11px] leading-relaxed text-muted">
           {BRIEFS[level]}{" "}
           <span className="text-muted/70">({HINTS[level]})</span>
         </p>
@@ -546,7 +546,7 @@ export function FilterDesigner() {
 
       {/* topology chips */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted">topology</span>
+        <span className="text-[10px] uppercase tracking-widest text-muted">topology</span>
         {TOPOS.map((t, i) => (
           <button key={t.name} onClick={() => pickTopo(i)} disabled={!ready} title={t.blurb} className={chip(topo === i)}>
             {t.name}
@@ -572,10 +572,10 @@ export function FilterDesigner() {
         />
         {!ready && !failed && (
           <div className="absolute inset-0 grid place-items-center bg-surface/90">
-            <p className="animate-pulse font-mono text-sm text-muted">warming up the soldering iron…</p>
+            <p className="animate-pulse text-sm text-muted">warming up the soldering iron…</p>
           </div>
         )}
-        <p className="pointer-events-none absolute bottom-3 right-4 text-right font-mono text-[10px] leading-relaxed text-muted/70">
+        <p className="pointer-events-none absolute bottom-3 right-4 text-right text-[10px] leading-relaxed text-muted/70">
           |H| in dB vs frequency · hover for a readout<br />
           green gate: clear the bar · clay gate: duck under it
         </p>
@@ -583,13 +583,13 @@ export function FilterDesigner() {
 
       {/* spec verdicts */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted">spec</span>
+        <span className="text-[10px] uppercase tracking-widest text-muted">spec</span>
         {specs.map((sp, i) => {
           const ok = ((mask >> i) & 1) === 1;
           return (
             <span
               key={i}
-              className={`rounded-[2px] border px-2.5 py-1 font-mono text-[11px] ${
+              className={`rounded-md border px-2.5 py-1 font-mono text-[11px] ${
                 ok ? "border-moss/60 text-moss" : "border-accent/60 text-accent"
               }`}
             >
@@ -600,7 +600,7 @@ export function FilterDesigner() {
         <button
           onClick={() => loadLevel(level)}
           disabled={!ready}
-          className="ml-auto font-mono text-[10px] text-muted underline decoration-line underline-offset-2 transition hover:text-accent"
+          className="ml-auto text-[10px] text-muted underline decoration-line underline-offset-2 transition hover:text-accent"
         >
           reset bench
         </button>
@@ -608,12 +608,12 @@ export function FilterDesigner() {
 
       {/* win banner */}
       {allPass && msg && (
-        <div className="flex flex-wrap items-center gap-3 rounded-[2px] border border-moss/50 bg-surface px-4 py-2.5 font-mono text-[11px] text-moss">
+        <div className="flex flex-wrap items-center gap-3 rounded-md border border-moss/50 bg-surface px-4 py-2.5 text-[11px] text-moss">
           <span>{msg}</span>
           {!lastLevel && (
             <button
               onClick={() => loadLevel(level + 1)}
-              className="rounded-[2px] border border-moss/60 px-3 py-1 font-bold transition hover:bg-moss/10"
+              className="rounded-md border border-moss/60 px-3 py-1 font-bold transition hover:bg-moss/10"
             >
               next level →
             </button>
@@ -638,7 +638,7 @@ export function FilterDesigner() {
                     onClick={() => nudge(k, -0.01)}
                     disabled={!used || !ready}
                     aria-label={`${cfg.label} down a hair`}
-                    className="grid h-6 w-6 place-items-center rounded-[2px] border border-line text-muted transition hover:border-accent hover:text-accent disabled:pointer-events-none"
+                    className="grid h-6 w-6 place-items-center rounded-md border border-line text-muted transition hover:border-accent hover:text-accent disabled:pointer-events-none"
                   >
                     −
                   </button>
@@ -646,7 +646,7 @@ export function FilterDesigner() {
                     onClick={() => nudge(k, 0.01)}
                     disabled={!used || !ready}
                     aria-label={`${cfg.label} up a hair`}
-                    className="grid h-6 w-6 place-items-center rounded-[2px] border border-line text-muted transition hover:border-accent hover:text-accent disabled:pointer-events-none"
+                    className="grid h-6 w-6 place-items-center rounded-md border border-line text-muted transition hover:border-accent hover:text-accent disabled:pointer-events-none"
                   >
                     +
                   </button>
@@ -664,7 +664,7 @@ export function FilterDesigner() {
                 aria-label={`${cfg.label}, log scale`}
                 className="w-full accent-accent"
               />
-              {!used && <p className="mt-1 font-mono text-[10px] text-muted/70">not in this circuit</p>}
+              {!used && <p className="mt-1 text-[10px] text-muted/70">not in this circuit</p>}
             </div>
           );
         })}
@@ -673,7 +673,7 @@ export function FilterDesigner() {
       {/* waveform lab: in vs out, steady state */}
       <div className="panel relative overflow-hidden">
         <canvas ref={waveRef} width={WW} height={WH} className="block h-auto w-full select-none" />
-        <p className="pointer-events-none absolute bottom-2 right-4 text-right font-mono text-[10px] text-muted/70">
+        <p className="pointer-events-none absolute bottom-2 right-4 text-right text-[10px] text-muted/70">
           faint: what goes in · clay: what comes out — steady state, the transient gave up long ago
         </p>
       </div>

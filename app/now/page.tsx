@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid gap-1 border-t border-line pt-4 sm:grid-cols-[130px_1fr] sm:gap-4">
-      <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-accent">
+      <p className="text-[11px] uppercase tracking-[0.15em] text-accent">
         {label}
       </p>
       <p className="leading-relaxed">{children}</p>
@@ -41,18 +41,18 @@ export default async function NowPage() {
       <header className="mb-14 flex items-center justify-between">
         <a
           href="/"
-          className="font-mono text-xs text-muted transition hover:text-accent"
+          className="text-xs text-muted transition hover:text-accent"
         >
           ← petezha.xyz
         </a>
-        <span className="font-mono text-xs text-muted">updated {NOW_UPDATED}</span>
+        <span className="text-xs text-muted">updated {NOW_UPDATED}</span>
       </header>
 
-      <p className="flex items-center gap-2.5 font-mono text-xs text-muted">
+      <p className="flex items-center gap-2.5 text-xs text-muted">
         <span className="h-2 w-2 rounded-full bg-accent" />
         a /now page
       </p>
-      <h1 className="mt-4 font-mono text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl">
+      <h1 className="mt-4 text-4xl leading-[1.1] tracking-tight sm:text-5xl">
         What I&apos;m doing now
       </h1>
       <p className="mt-5 max-w-xl leading-relaxed text-muted">
@@ -125,7 +125,7 @@ export default async function NowPage() {
         ))}
       </div>
 
-      <p className="mt-14 border-t border-line pt-6 font-mono text-xs text-muted">
+      <p className="mt-14 border-t border-line pt-6 text-xs text-muted">
         Watching and playing refresh themselves hourly. The rest updates when I
         remember to.
       </p>

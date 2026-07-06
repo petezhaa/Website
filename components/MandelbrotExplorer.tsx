@@ -173,19 +173,19 @@ export function MandelbrotExplorer() {
         />
         {failed && (
           <div className="absolute inset-0 grid place-items-center bg-surface/90">
-            <p className="font-mono text-sm text-muted">couldn&apos;t load the wasm engine.</p>
+            <p className="text-sm text-muted">couldn&apos;t load the wasm engine.</p>
           </div>
         )}
         {!ready && !failed && (
           <div className="absolute inset-0 grid place-items-center bg-surface/90">
-            <p className="animate-pulse font-mono text-sm text-muted">iterating…</p>
+            <p className="animate-pulse text-sm text-muted">iterating…</p>
           </div>
         )}
-        <p className="pointer-events-none absolute bottom-3 right-4 font-mono text-[10px] text-muted/70">
+        <p className="pointer-events-none absolute bottom-3 right-4 text-[10px] text-muted/70">
           scroll to zoom · drag to pan
         </p>
       </div>
-      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 text-[13px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the math, running in C++</p>
         <p>for each pixel c, iterate z → z² + c from z = 0.</p>
         <p>points where |z| stays bounded are the set (dark); the rest are colored by how fast they escape.</p>

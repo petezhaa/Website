@@ -563,7 +563,7 @@ export function CircuitSim() {
   const endDrag = () => { dragFRef.current = false; };
 
   const btn = (active: boolean) =>
-    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-md border px-3 py-1.5 text-[11px] font-medium transition ${
       active ? "border-accent bg-accent-soft text-accent" : "border-line text-muted hover:border-accent hover:text-accent"
     }`;
 
@@ -626,15 +626,15 @@ export function CircuitSim() {
         />
         {failed && (
           <div className="absolute inset-0 grid place-items-center bg-surface/90">
-            <p className="font-mono text-sm text-muted">couldn&apos;t load the wasm engine.</p>
+            <p className="text-sm text-muted">couldn&apos;t load the wasm engine.</p>
           </div>
         )}
         {!ready && !failed && (
           <div className="absolute inset-0 grid place-items-center bg-surface/90">
-            <p className="animate-pulse font-mono text-sm text-muted">winding the coils…</p>
+            <p className="animate-pulse text-sm text-muted">winding the coils…</p>
           </div>
         )}
-        <p className="pointer-events-none absolute bottom-3 right-4 text-right font-mono text-[10px] leading-relaxed text-muted/70">
+        <p className="pointer-events-none absolute bottom-3 right-4 text-right text-[10px] leading-relaxed text-muted/70">
           {mode < 2 ? (
             <>tap the schematic to flip the switch<br />τ marked in gold on the scope</>
           ) : (

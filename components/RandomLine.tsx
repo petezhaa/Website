@@ -11,7 +11,7 @@ export function RandomLine({ lines }: { lines: string[] }) {
 
   if (!line) return null;
   return (
-    <p className="mt-4 font-mono text-xs text-muted">
+    <p className="mt-4 text-xs text-muted">
       {line}{" "}
       <span className="text-muted/60">
         (a language model wrote this from my live stats)

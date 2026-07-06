@@ -59,11 +59,11 @@ export function FortuneCookie() {
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
             className="panel max-w-64 px-4 py-2 text-center shadow-md"
           >
-            <p className="font-mono text-lg leading-snug text-fg">{fortune}</p>
+            <p className="text-lg leading-snug text-fg">{fortune}</p>
           </motion.div>
         )}
       </AnimatePresence>
-      <p className="font-mono text-[10px] text-muted">
+      <p className="text-[10px] text-muted">
         {fortune ? (count > 3 ? "the cookies are not a meal. order food." : "crack another") : "crack the cookie"}
       </p>
     </div>

@@ -73,7 +73,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://cdn.cloudflare.steamstatic.com" />
         <link rel="preconnect" href="https://a.ltrbxd.com" />
       </head>
-      <body className="min-h-full flex flex-col font-mono">
+      <body className="min-h-full flex flex-col font-sans">
         {children}
         <CheeseMode />
       </body>

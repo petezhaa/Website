@@ -33,7 +33,7 @@ export async function generateMetadata({
 function TierChip({ digit }: { digit: number }) {
   return (
     <span
-      className="grid h-7 w-7 place-items-center rounded-[2px] font-mono text-sm font-bold text-[#26241e]"
+      className="grid h-7 w-7 place-items-center rounded-md font-mono text-sm font-bold text-[#26241e]"
       style={{ backgroundColor: TIER_HEX[digit] ?? "#feff7f" }}
     >
       {TIER_LABELS[digit]}
@@ -52,15 +52,15 @@ export default async function HeresyPage({
   return (
     <main className="mx-auto w-full max-w-2xl px-6 py-16">
       <header className="mb-12 flex items-center justify-between">
-        <a href="/" className="font-mono text-xs text-muted transition hover:text-accent">
+        <a href="/" className="text-xs text-muted transition hover:text-accent">
           ← petezha.xyz
         </a>
-        <span className="font-mono text-xs text-muted">park rankings · heresy</span>
+        <span className="text-xs text-muted">park rankings · heresy</span>
       </header>
 
       {h && h.length > 0 ? (
         <>
-          <h1 className="font-mono text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+          <h1 className="text-3xl leading-tight tracking-tight sm:text-4xl">
             Heresy, on the record
           </h1>
           <p className="mt-4 max-w-xl leading-relaxed text-muted">
@@ -80,7 +80,7 @@ export default async function HeresyPage({
                 >
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">{park}</p>
-                    <p className="truncate font-mono text-[11px] text-muted">
+                    <p className="truncate text-[11px] text-muted">
                       {PARK_FACTS[park] ?? "a national park"}
                     </p>
                   </div>
@@ -101,7 +101,7 @@ export default async function HeresyPage({
         </>
       ) : (
         <>
-          <h1 className="font-mono text-3xl font-bold tracking-tight sm:text-4xl">
+          <h1 className="text-3xl tracking-tight sm:text-4xl">
             That heresy link is corrupted
           </h1>
           <p className="mt-4 max-w-xl leading-relaxed text-muted">

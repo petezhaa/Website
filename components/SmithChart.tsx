@@ -405,7 +405,7 @@ export function SmithChart() {
         : "over par, but the wave forgives you.";
 
   const chip = (active: boolean, locked = false) =>
-    `rounded-[2px] border px-2.5 py-1 font-mono text-[11px] transition ${
+    `rounded-md border px-2.5 py-1 text-[11px] transition ${
       locked
         ? "cursor-not-allowed border-line text-muted opacity-40"
         : active
@@ -414,13 +414,13 @@ export function SmithChart() {
     }`;
 
   if (failed)
-    return <p className="font-mono text-sm text-muted">couldn&apos;t load the wasm engine.</p>;
+    return <p className="text-sm text-muted">couldn&apos;t load the wasm engine.</p>;
 
   return (
     <div className="flex flex-col gap-4">
       {/* level picker */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-mono text-[11px] uppercase tracking-wide text-muted">level</span>
+        <span className="text-[11px] uppercase tracking-wide text-muted">level</span>
         {names.map((nm, i) => {
           const unlocked = i === 0 || solved[i] || solved[i - 1];
           return (
@@ -435,7 +435,7 @@ export function SmithChart() {
             </button>
           );
         })}
-        <span className="font-mono text-[11px] text-muted">· match one to unlock the next</span>
+        <span className="text-[11px] text-muted">· match one to unlock the next</span>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(280px,2fr)]">
@@ -449,10 +449,10 @@ export function SmithChart() {
           />
           {!ready && !failed && (
             <div className="absolute inset-0 grid place-items-center bg-surface/90">
-              <p className="animate-pulse font-mono text-sm text-muted">calibrating the network analyzer…</p>
+              <p className="animate-pulse text-sm text-muted">calibrating the network analyzer…</p>
             </div>
           )}
-          <p className="pointer-events-none absolute bottom-3 left-4 font-mono text-[10px] leading-relaxed text-muted/70">
+          <p className="pointer-events-none absolute bottom-3 left-4 text-[10px] leading-relaxed text-muted/70">
             series parts ride the R-circles · shunt parts ride the G-circles<br />
             walk the dot to the bullseye
           </p>
@@ -461,7 +461,7 @@ export function SmithChart() {
         {/* mission + network + readouts */}
         <div className="flex min-w-0 flex-col gap-3">
           <div className="panel p-4">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-accent">
+            <p className="text-[10px] uppercase tracking-widest text-accent">
               level {level + 1} · {names[level] ?? "…"}
             </p>
             <p className="mt-1 font-mono text-lg font-bold text-fg">
@@ -470,7 +470,7 @@ export function SmithChart() {
             <p className="font-mono text-[11px] text-muted">
               z = {fmtZ(load.zr / 50, load.zi / 50, 2)} normalized · f = {fmtF(load.f)} · Z₀ = 50 Ω
             </p>
-            <p className="mt-2 font-mono text-[11px] leading-relaxed text-muted">{HINTS[level]}</p>
+            <p className="mt-2 text-[11px] leading-relaxed text-muted">{HINTS[level]}</p>
             <p className="mt-1.5 font-mono text-[10px] text-muted">
               goal: |Γ| &lt; 0.10 · par {pars[level] ?? 2} element{(pars[level] ?? 2) === 1 ? "" : "s"}
             </p>
@@ -478,11 +478,11 @@ export function SmithChart() {
 
           {/* the matching network, load side first */}
           <div className="flex items-center justify-between px-1">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted">matching network</span>
+            <span className="text-[10px] uppercase tracking-widest text-muted">matching network</span>
             {used > 0 && (
               <button
                 onClick={clearNetwork}
-                className="font-mono text-[10px] text-muted underline decoration-line underline-offset-2 transition hover:text-accent"
+                className="text-[10px] text-muted underline decoration-line underline-offset-2 transition hover:text-accent"
               >
                 clear all
               </button>
@@ -491,14 +491,14 @@ export function SmithChart() {
           {slots.map((s, si) => (
             <div key={si} className="panel p-3">
               <div className="mb-2 flex items-center justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-muted">
+                <span className="text-[10px] uppercase tracking-widest text-muted">
                   slot {si + 1}
                   {si === 0 ? " · load side" : si === slots.length - 1 ? " · source side" : ""}
                 </span>
                 {s.kind !== 0 && (
                   <button
                     onClick={() => setKind(si, 0)}
-                    className="font-mono text-[10px] text-muted underline decoration-line underline-offset-2 transition hover:text-accent"
+                    className="text-[10px] text-muted underline decoration-line underline-offset-2 transition hover:text-accent"
                   >
                     remove
                   </button>
@@ -536,21 +536,21 @@ export function SmithChart() {
           <div className="panel p-4">
             <div className="flex items-end justify-between">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-muted">|Γ|</p>
+                <p className="text-[10px] uppercase tracking-widest text-muted">|Γ|</p>
                 <p className={`font-mono text-3xl font-bold ${out.matched ? "text-moss" : "text-fg"}`}>
                   {out.gm.toFixed(3)}
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-mono text-[10px] uppercase tracking-widest text-muted">vswr</p>
+                <p className="text-[10px] uppercase tracking-widest text-muted">vswr</p>
                 <p className={`font-mono text-3xl font-bold ${out.matched ? "text-moss" : "text-fg"}`}>
                   {out.vswr >= 99 ? ">99" : out.vswr.toFixed(2)}
                 </p>
               </div>
             </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-[2px] bg-surface-2">
+            <div className="mt-2 h-2 overflow-hidden rounded-md bg-surface-2">
               <div
-                className={`h-full rounded-[2px] transition-all ${out.matched ? "bg-moss" : "bg-accent"}`}
+                className={`h-full rounded-md transition-all ${out.matched ? "bg-moss" : "bg-accent"}`}
                 style={{ width: `${Math.max(2, (1 - Math.min(1, out.gm)) * 100)}%` }}
               />
             </div>
@@ -561,23 +561,23 @@ export function SmithChart() {
             <p className="mt-1 font-mono text-[10px] text-muted">pass line: |Γ| &lt; 0.10 · vswr &lt; 1.22</p>
 
             {out.matched && (
-              <div className="mt-3 rounded-[2px] border border-moss/50 bg-moss/10 p-3">
-                <p className="font-mono text-[12px] font-bold text-moss">
+              <div className="mt-3 rounded-md border border-moss/50 bg-moss/10 p-3">
+                <p className="text-[12px] font-bold text-moss">
                   matched. the power goes where you point it.
                 </p>
-                <p className="mt-0.5 font-mono text-[10.5px] text-muted">
+                <p className="mt-0.5 text-[10.5px] text-muted">
                   {used} element{used === 1 ? "" : "s"} · par {pars[level] ?? 2} · {parQuip}
                 </p>
                 {level + 1 < names.length ? (
                   <button
                     onClick={() => { pickLevel(level + 1); bumpVibe("gamer", 4); }}
-                    className="btn-solid mt-2 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider"
+                    className="btn-solid mt-2 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider"
                   >
                     next level →
                   </button>
                 ) : (
                   allSolved && (
-                    <p className="mt-1.5 font-mono text-[10.5px] text-moss">
+                    <p className="mt-1.5 text-[10.5px] text-moss">
                       all six loads matched. the reflected wave has nothing left to say.
                     </p>
                   )

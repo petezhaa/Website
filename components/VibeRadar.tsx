@@ -53,7 +53,7 @@ export function VibeRadar({ vibe, samples }: { vibe: Vibe; samples: number }) {
 
   return (
     <div className="flex flex-col items-center gap-1.5 text-center">
-      <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-accent">
+      <p className="text-[11px] uppercase tracking-[0.2em] text-accent">
         your visit, graphed
       </p>
       <svg viewBox="0 0 176 176" className="w-64 overflow-visible sm:w-72">
@@ -95,7 +95,7 @@ export function VibeRadar({ vibe, samples }: { vibe: Vibe; samples: number }) {
           );
         })}
       </svg>
-      <p className="max-w-64 font-mono text-[11px] leading-snug text-muted">
+      <p className="max-w-64 text-[11px] leading-snug text-muted">
         {samples === 0
           ? "click around, play the game, text the bot. it's watching."
           : `reading ${samples} interaction${samples === 1 ? "" : "s"} so far`}

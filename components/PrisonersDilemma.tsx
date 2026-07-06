@@ -84,18 +84,18 @@ export function PrisonersDilemma() {
   };
 
   const cell = (m: number) =>
-    `grid h-5 w-5 place-items-center rounded-[2px] text-[9px] font-bold ${
+    `grid h-5 w-5 place-items-center rounded-md text-[9px] font-bold ${
       m ? "bg-moss/25 text-moss" : "bg-accent/20 text-accent"
     }`;
   const recent = history.slice(-30);
   const maxTour = tour ? Math.max(...tour.map((r) => r.score), 1) : 1;
 
   if (failed)
-    return <p className="font-mono text-sm text-muted">couldn&apos;t load the wasm engine.</p>;
+    return <p className="text-sm text-muted">couldn&apos;t load the wasm engine.</p>;
   if (!ready)
     return (
       <div className="panel grid h-40 place-items-center">
-        <p className="animate-pulse font-mono text-sm text-muted">dealing…</p>
+        <p className="animate-pulse text-sm text-muted">dealing…</p>
       </div>
     );
 
@@ -103,12 +103,12 @@ export function PrisonersDilemma() {
     <div className="flex flex-col gap-4">
       {/* opponent picker */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-mono text-[11px] uppercase tracking-wide text-muted">opponent</span>
+        <span className="text-[11px] uppercase tracking-wide text-muted">opponent</span>
         {names.map((n, i) => (
           <button
             key={n}
             onClick={() => beginMatch(i)}
-            className={`rounded-[2px] border px-2.5 py-1 font-mono text-[11px] transition ${
+            className={`rounded-md border px-2.5 py-1 text-[11px] transition ${
               opp === i ? "border-accent bg-accent-soft text-accent" : "border-line text-muted hover:border-accent hover:text-accent"
             }`}
           >
@@ -122,12 +122,12 @@ export function PrisonersDilemma() {
         <div className="panel p-5">
           <div className="mb-4 flex items-end justify-between">
             <div>
-              <p className="font-mono text-[11px] text-muted">you</p>
+              <p className="text-[11px] text-muted">you</p>
               <p className="font-mono text-3xl font-bold text-fg">{scores.my}</p>
             </div>
-            <p className="pb-1 font-mono text-[11px] text-muted">round {history.length}</p>
+            <p className="pb-1 text-[11px] text-muted">round {history.length}</p>
             <div className="text-right">
-              <p className="font-mono text-[11px] text-muted">{names[opp]}</p>
+              <p className="text-[11px] text-muted">{names[opp]}</p>
               <p className="font-mono text-3xl font-bold text-accent">{scores.op}</p>
             </div>
           </div>
@@ -135,13 +135,13 @@ export function PrisonersDilemma() {
           <div className="flex gap-3">
             <button
               onClick={() => move(1)}
-              className="flex-1 rounded-[2px] border-2 border-moss/60 bg-moss/10 px-4 py-3 text-sm font-medium text-moss transition hover:bg-moss/20"
+              className="flex-1 rounded-md border-2 border-moss/60 bg-moss/10 px-4 py-3 text-sm font-medium text-moss transition hover:bg-moss/20"
             >
               Cooperate
             </button>
             <button
               onClick={() => move(0)}
-              className="flex-1 rounded-[2px] border-2 border-accent/60 bg-accent-soft px-4 py-3 text-sm font-medium text-accent transition hover:bg-accent/15"
+              className="flex-1 rounded-md border-2 border-accent/60 bg-accent-soft px-4 py-3 text-sm font-medium text-accent transition hover:bg-accent/15"
             >
               Defect
             </button>
@@ -151,19 +151,19 @@ export function PrisonersDilemma() {
           {recent.length > 0 && (
             <div className="mt-4 space-y-1.5">
               <div className="flex items-center gap-1.5">
-                <span className="w-10 shrink-0 font-mono text-[9px] text-muted">you</span>
+                <span className="w-10 shrink-0 text-[9px] text-muted">you</span>
                 <div className="flex flex-wrap gap-1">
                   {recent.map(([m], i) => <span key={i} className={cell(m)}>{m ? "C" : "D"}</span>)}
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-10 shrink-0 font-mono text-[9px] text-muted">them</span>
+                <span className="w-10 shrink-0 text-[9px] text-muted">them</span>
                 <div className="flex flex-wrap gap-1">
                   {recent.map(([, o], i) => <span key={i} className={cell(o)}>{o ? "C" : "D"}</span>)}
                 </div>
               </div>
               <div className="flex gap-3 pt-1">
-                <button onClick={() => beginMatch(opp)} className="tlink font-mono text-[10px]">rematch</button>
+                <button onClick={() => beginMatch(opp)} className="tlink text-[10px]">rematch</button>
               </div>
             </div>
           )}
@@ -193,12 +193,12 @@ export function PrisonersDilemma() {
           <p className="text-sm font-medium">Axelrod tournament</p>
           <button
             onClick={runTournament}
-            className="btn-solid px-4 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider"
+            className="btn-solid px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider"
           >
             {tour ? "run again" : "run tournament"}
           </button>
         </div>
-        <p className="mt-1 font-mono text-[11px] text-muted">
+        <p className="mt-1 text-[11px] text-muted">
           every strategy plays every other (and itself), {TOUR_ROUNDS} rounds each, scored in C++.
         </p>
         {tour && (
@@ -211,15 +211,15 @@ export function PrisonersDilemma() {
                   </span>
                   <span className="text-muted tabular-nums">{r.score.toLocaleString()}</span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-[2px] bg-surface-2">
+                <div className="h-2 overflow-hidden rounded-md bg-surface-2">
                   <div
-                    className={`h-full rounded-[2px] ${r.idx === opp ? "bg-accent" : "bg-moss/70"}`}
+                    className={`h-full rounded-md ${r.idx === opp ? "bg-accent" : "bg-moss/70"}`}
                     style={{ width: `${(r.score / maxTour) * 100}%` }}
                   />
                 </div>
               </div>
             ))}
-            <p className="pt-1 font-mono text-[10.5px] leading-relaxed text-muted">
+            <p className="pt-1 text-[10.5px] leading-relaxed text-muted">
               the classic result: &ldquo;nice&rdquo; retaliatory strategies (tit-for-tat and friends) beat greedy ones over the long run. being first to defect rarely pays.
             </p>
           </div>

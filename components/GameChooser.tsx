@@ -8,7 +8,7 @@ import { bumpVibe } from "@/lib/vibeBus";
 // and nothing else. Twenty statically-imported games was one heavy bundle.
 const booting = () => (
   <div className="panel grid h-40 place-items-center">
-    <p className="animate-pulse font-mono text-sm text-muted">booting the cabinet…</p>
+    <p className="animate-pulse text-sm text-muted">booting the cabinet…</p>
   </div>
 );
 const cab = (loader: () => Promise<{ [k: string]: React.ComponentType }>, name: string) =>
@@ -102,12 +102,12 @@ export function GameChooser() {
         <div className="flex flex-wrap items-baseline gap-3">
           <button
             onClick={() => pick(null)}
-            className="btn-term px-3 py-1.5 font-mono text-[11px]"
+            className="btn-term px-3 py-1.5 text-[11px]"
           >
             ← all games
           </button>
           <span className="text-sm font-medium">{game.label}</span>
-          <span className="font-mono text-[10px] text-muted">
+          <span className="text-[10px] text-muted">
             {game.tag} · {game.area}
           </span>
         </div>
@@ -118,7 +118,7 @@ export function GameChooser() {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="font-mono text-[11px] text-muted">
+      <p className="text-[11px] text-muted">
         {GAMES.length} machines · pick one
       </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -131,8 +131,8 @@ export function GameChooser() {
             <span className="text-sm font-medium leading-tight group-hover:text-accent">
               {g.label}
             </span>
-            <span className="font-mono text-[10px] text-accent/80">{g.tag}</span>
-            <span className="font-mono text-[9px] uppercase tracking-widest text-muted">
+            <span className="text-[10px] text-accent/80">{g.tag}</span>
+            <span className="text-[9px] uppercase tracking-widest text-muted">
               {g.area}
             </span>
           </button>

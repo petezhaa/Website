@@ -14,14 +14,11 @@ export function ProjectCard({ project }: { project: Project }) {
       ref={ref}
       whileHover={reduceMotion ? undefined : { y: -3 }}
       transition={{ type: "spring", stiffness: 320, damping: 24 }}
-      className="panel group flex h-full flex-col p-5 transition-colors hover:border-accent/60"
+      className="panel group flex h-full flex-col p-6 transition-colors hover:border-accent/50"
     >
       <div className="flex items-baseline justify-between gap-4">
-        <h3 className="font-mono text-base font-bold tracking-tight">
-          <span className="text-accent">&gt; </span>
-          {project.name}
-        </h3>
-        <span className="shrink-0 font-mono text-[11px] text-muted">
+        <h3 className="font-serif text-xl tracking-tight">{project.name}</h3>
+        <span className="shrink-0 text-sm tabular-nums text-muted">
           {project.timeframe}
         </span>
       </div>
@@ -31,7 +28,7 @@ export function ProjectCard({ project }: { project: Project }) {
       </p>
       <div className="mt-4 flex flex-wrap gap-1.5">
         {project.tags.map((tag) => (
-          <span key={tag} className="chip px-2 py-0.5 text-[10px] uppercase tracking-wider">
+          <span key={tag} className="chip px-2.5 py-0.5">
             {tag}
           </span>
         ))}

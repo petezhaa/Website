@@ -113,14 +113,14 @@ export function BenchPanel() {
   return (
     <div className="panel p-5 sm:p-6">
       <p className="text-sm font-medium">Same function, three languages</p>
-      <p className="mb-4 mt-1 font-mono text-[11px] leading-relaxed text-muted">
+      <p className="mb-4 mt-1 text-[13px] leading-relaxed text-muted">
         the engine&apos;s haversine, hand-written in C++, Rust, and JS with the
         exact same math. C++ and Rust compile to bare wasm; JS doesn&apos;t. all
         three run {N.toLocaleString()} times in your browser, right now.
       </p>
 
       {failed ? (
-        <p className="font-mono text-[11px] text-muted">
+        <p className="text-[13px] text-muted">
           couldn&apos;t load the wasm modules. your browser may be blocking
           WebAssembly.
         </p>
@@ -147,9 +147,9 @@ export function BenchPanel() {
                       {fmtOps(row.ops)} · {row.ms.toFixed(1)}ms · {row.note}
                     </span>
                   </div>
-                  <div className="h-2.5 overflow-hidden rounded-[2px] bg-surface-2">
+                  <div className="h-2.5 overflow-hidden rounded-md bg-surface-2">
                     <div
-                      className={`h-full rounded-[2px] transition-[width] duration-700 ease-out ${
+                      className={`h-full rounded-md transition-[width] duration-700 ease-out ${
                         row.key === "cpp"
                           ? "bg-accent"
                           : row.key === "rust"

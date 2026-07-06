@@ -46,7 +46,7 @@ function WatchHeatmap({ films }: { films: LetterboxdData["films"] }) {
 
   return (
     <div className="mb-8">
-      <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
+      <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-accent">
         the last {WEEKS} weeks
       </p>
       <div className="flex gap-1 overflow-x-auto pb-1">
@@ -70,7 +70,7 @@ function WatchHeatmap({ films }: { films: LetterboxdData["films"] }) {
           </div>
         ))}
       </div>
-      <p className="mt-2 font-mono text-[10px] text-muted">
+      <p className="mt-2 text-[10px] text-muted">
         {total} diary entries in view · darker = double feature
       </p>
     </div>
@@ -85,7 +85,7 @@ function Shelf({ data }: { data: LetterboxdData }) {
     <>
       {data.favorites.length > 0 && (
         <div className="mb-10">
-          <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
+          <p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-accent">
             the all-time four
           </p>
           <div className="grid grid-cols-4 gap-3 sm:max-w-md">
@@ -98,7 +98,7 @@ function Shelf({ data }: { data: LetterboxdData }) {
                 className="group"
                 title={fav.title}
               >
-                <div className="overflow-hidden rounded-[2px] border-2 border-gold/60 transition group-hover:-translate-y-1 group-hover:border-gold">
+                <div className="overflow-hidden rounded-md border-2 border-gold/60 transition group-hover:-translate-y-1 group-hover:border-gold">
                   {fav.poster ? (
                     <Image
                       src={fav.poster}
@@ -108,7 +108,7 @@ function Shelf({ data }: { data: LetterboxdData }) {
                       className="h-auto w-full"
                     />
                   ) : (
-                    <div className="grid aspect-2/3 place-items-center bg-surface-2 p-2 text-center font-mono text-xs">
+                    <div className="grid aspect-2/3 place-items-center bg-surface-2 p-2 text-center text-xs">
                       {fav.title}
                     </div>
                   )}
@@ -160,7 +160,7 @@ function Shelf({ data }: { data: LetterboxdData }) {
               film.rating !== null ? ` — ${stars(film.rating)}` : ""
             }`}
           >
-            <div className="overflow-hidden rounded-[2px] border border-line transition group-hover:-translate-y-1 group-hover:border-accent">
+            <div className="overflow-hidden rounded-md border border-line transition group-hover:-translate-y-1 group-hover:border-accent">
               {film.poster ? (
                 <Image
                   src={film.poster}
@@ -170,7 +170,7 @@ function Shelf({ data }: { data: LetterboxdData }) {
                   className="h-auto w-full"
                 />
               ) : (
-                <div className="grid aspect-2/3 place-items-center bg-surface-2 p-2 text-center font-mono text-xs">
+                <div className="grid aspect-2/3 place-items-center bg-surface-2 p-2 text-center text-xs">
                   {film.title}
                 </div>
               )}

@@ -187,18 +187,18 @@ export function GuessYear() {
   }, [phase, total, readStr]);
 
   const btn = (active: boolean) =>
-    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-md border px-3 py-1.5 text-[11px] font-medium transition ${
       active
         ? "border-accent bg-accent-soft text-accent"
         : "border-line text-muted hover:border-accent hover:text-accent"
     }`;
 
   if (failed)
-    return <p className="font-mono text-sm text-muted">the history engine didn&apos;t load.</p>;
+    return <p className="text-sm text-muted">the history engine didn&apos;t load.</p>;
   if (!ready)
     return (
       <div className="panel grid h-40 place-items-center">
-        <p className="animate-pulse font-mono text-sm text-muted">excavating the timeline…</p>
+        <p className="animate-pulse text-sm text-muted">excavating the timeline…</p>
       </div>
     );
 
@@ -210,7 +210,7 @@ export function GuessYear() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <button onClick={startGame} className={btn(false)}>new game</button>
-        <span className="font-mono text-[11px] text-muted">
+        <span className="text-[11px] text-muted">
           round {Math.min(round + 1, roundsTotal)} / {roundsTotal} · total {total}
           {best > 0 && ` · best ${best}`}
         </span>
@@ -219,7 +219,7 @@ export function GuessYear() {
       <div className="panel p-6">
         {phase !== "done" && (
           <>
-            <div className="flex items-baseline justify-between gap-4 font-mono text-[11px] text-muted">
+            <div className="flex items-baseline justify-between gap-4 text-[11px] text-muted">
               <span>when did this happen?</span>
               {phase === "guess" && (
                 <span className={timeLeft <= 5 ? "font-bold text-accent" : ""}>
@@ -227,7 +227,7 @@ export function GuessYear() {
                 </span>
               )}
             </div>
-            <h3 className="mt-2 font-mono font-bold text-2xl leading-snug tracking-tight sm:text-3xl">
+            <h3 className="mt-2 text-2xl leading-snug tracking-tight sm:text-3xl">
               {eventName}
             </h3>
           </>
@@ -281,14 +281,14 @@ export function GuessYear() {
         {phase === "reveal" && (
           <div className="mt-6 flex flex-col items-center gap-1 text-center">
             {timedOut && (
-              <p className="font-mono text-[10px] text-muted">
+              <p className="text-[10px] text-muted">
                 time ran out — the slider answered for you.
               </p>
             )}
             <p className="font-mono font-bold text-4xl tracking-tight text-accent">
               {fmtYear(last.actual)}
             </p>
-            <p className="font-mono text-[11px] text-muted">
+            <p className="text-[11px] text-muted">
               you said {fmtYear(last.guess)} —{" "}
               {diff === 0
                 ? "dead on."
@@ -314,14 +314,14 @@ export function GuessYear() {
 
         {phase === "done" && (
           <div className="flex flex-col items-center gap-2 py-4 text-center">
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted">
               final tally
             </p>
             <p className="font-mono font-bold text-5xl tracking-tight">
               {total}
               <span className="text-2xl text-muted"> / 6000</span>
             </p>
-            <p className="font-mono text-[11px] text-muted">
+            <p className="text-[11px] text-muted">
               {newBest ? (
                 <span className="font-bold text-moss">new best.</span>
               ) : (
@@ -338,7 +338,7 @@ export function GuessYear() {
         )}
       </div>
 
-      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">forgiving chronology, in Rust</p>
         <p>the engine (rust/history.rs → wasm) grades on a curve: half points when you&apos;re off by one-twelfth of the event&apos;s age, floor of six years.</p>
         <p>so the pyramid forgives a century. the iPhone does not.</p>

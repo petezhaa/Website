@@ -146,18 +146,18 @@ export function WhichFirst() {
   };
 
   const btn = (active: boolean) =>
-    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-md border px-3 py-1.5 text-[11px] font-medium transition ${
       active
         ? "border-accent bg-accent-soft text-accent"
         : "border-line text-muted hover:border-accent hover:text-accent"
     }`;
 
   if (failed)
-    return <p className="font-mono text-sm text-muted">the history engine didn&apos;t load.</p>;
+    return <p className="text-sm text-muted">the history engine didn&apos;t load.</p>;
   if (!ready || !pair)
     return (
       <div className="panel grid h-40 place-items-center">
-        <p className="animate-pulse font-mono text-sm text-muted">shuffling the timeline…</p>
+        <p className="animate-pulse text-sm text-muted">shuffling the timeline…</p>
       </div>
     );
 
@@ -168,7 +168,7 @@ export function WhichFirst() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <button onClick={newGame} className={btn(false)}>restart</button>
-        <span className="font-mono text-[11px] text-muted">
+        <span className="text-[11px] text-muted">
           streak{" "}
           <span className={`font-bold transition-colors duration-300 ${flash ? "text-moss" : "text-fg"}`}>
             {over ? over.finalStreak : streak}
@@ -184,7 +184,7 @@ export function WhichFirst() {
       >
         {!over ? (
           <>
-            <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
+            <p className="text-center text-[11px] uppercase tracking-[0.2em] text-muted">
               which came first?
             </p>
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
@@ -196,29 +196,29 @@ export function WhichFirst() {
                   key={side}
                   onClick={() => pick(side)}
                   aria-label={`${name} came first`}
-                  className="min-h-[7rem] cursor-pointer rounded-[2px] border border-line bg-surface-2 px-6 py-8 text-center font-mono text-lg font-bold leading-snug text-fg transition hover:border-accent hover:bg-accent-soft sm:min-h-[9rem] sm:px-8 sm:text-xl"
+                  className="min-h-[7rem] cursor-pointer rounded-md border border-line bg-surface-2 px-6 py-8 text-center text-lg font-bold leading-snug text-fg transition hover:border-accent hover:bg-accent-soft sm:min-h-[9rem] sm:px-8 sm:text-xl"
                 >
                   {name}
                 </button>
               ))}
             </div>
             <div className="mt-4 flex items-center gap-3">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-muted">gap</span>
-              <div className="h-1 flex-1 overflow-hidden rounded-[2px] bg-line/60">
+              <span className="text-[10px] uppercase tracking-wider text-muted">gap</span>
+              <div className="h-1 flex-1 overflow-hidden rounded-md bg-line/60">
                 <div
-                  className="h-full rounded-[2px] bg-accent transition-all duration-500"
+                  className="h-full rounded-md bg-accent transition-all duration-500"
                   style={{ width: `${Math.round(tight * 100)}%` }}
                 />
               </div>
-              <span className="font-mono text-[10px] text-muted">{gapLabel(streak)}</span>
+              <span className="text-[10px] text-muted">{gapLabel(streak)}</span>
             </div>
-            <p className="mt-2 text-center font-mono text-[10px] text-muted/70">
+            <p className="mt-2 text-center text-[10px] text-muted/70">
               fair warning: the year gap tightens as your streak grows.
             </p>
           </>
         ) : (
           <div className="flex flex-col items-center gap-4">
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-accent">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-accent">
               wrong. here are the receipts
             </p>
             <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
@@ -231,11 +231,11 @@ export function WhichFirst() {
                 return (
                   <div
                     key={side}
-                    className={`rounded-[2px] border px-6 py-6 text-center ${
+                    className={`rounded-md border px-6 py-6 text-center ${
                       earlier ? "border-moss/60" : "border-accent/50"
                     }`}
                   >
-                    <p className="font-mono text-lg font-bold leading-snug text-fg">{name}</p>
+                    <p className="text-lg font-bold leading-snug text-fg">{name}</p>
                     <p
                       className={`mt-2 font-mono text-[11px] font-bold ${
                         earlier ? "text-moss" : "text-accent"
@@ -252,7 +252,7 @@ export function WhichFirst() {
                 );
               })}
             </div>
-            <p className="font-mono text-[11px] text-muted">
+            <p className="text-[11px] text-muted">
               streak ended at <span className="font-bold text-fg">{over.finalStreak}</span> · best{" "}
               <span className="font-bold text-fg">{best}</span>
             </p>
@@ -266,7 +266,7 @@ export function WhichFirst() {
         )}
       </div>
 
-      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">chronology under pressure, in Rust</p>
         <p>
           {nEvents} events in the wasm engine&apos;s table, one rule: click the earlier one.

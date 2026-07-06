@@ -158,7 +158,7 @@ export function ParkTierList() {
           }`}
         >
           <div
-            className="flex w-14 shrink-0 items-center justify-center font-mono text-2xl font-bold text-[#26241e] sm:w-16"
+            className="flex w-14 shrink-0 items-center justify-center font-serif text-2xl text-[#26241e] sm:w-16"
             style={{ backgroundColor: tier.color }}
           >
             {tier.label}
@@ -183,7 +183,7 @@ export function ParkTierList() {
                     e.stopPropagation();
                     setSelected(selected === park ? null : park);
                   }}
-                  className={`cursor-grab select-none rounded-[2px] border px-2.5 py-1 text-xs transition active:cursor-grabbing ${
+                  className={`cursor-grab select-none rounded-md border px-2.5 py-1 text-xs transition active:cursor-grabbing ${
                     selected === park
                       ? "border-accent bg-accent-soft text-accent"
                       : "border-line bg-surface-2 hover:border-accent hover:text-accent"
@@ -197,7 +197,7 @@ export function ParkTierList() {
         </div>
       ))}
 
-      <p className="font-mono text-[11px] text-muted">
+      <p className="text-[11px] text-muted">
         drag a park to a different tier (or tap it, then tap a tier)
       </p>
 
@@ -205,13 +205,13 @@ export function ParkTierList() {
         <div className="flex flex-col gap-2">
           <button
             onClick={publishHeresy}
-            className="btn-term self-start px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider"
+            className="btn-term self-start px-4 py-2 text-xs font-bold uppercase tracking-wider"
           >
             publish it anyway ({heresyCount})
           </button>
           {heresyLink && (
             <div className="panel border-accent/40 p-3">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-accent">
                 your heresy is on the record
               </p>
               <p className="mt-1 text-sm text-muted">
@@ -223,11 +223,11 @@ export function ParkTierList() {
                   readOnly
                   value={heresyLink}
                   onFocus={(e) => e.currentTarget.select()}
-                  className="min-w-0 flex-1 rounded-[2px] border border-line bg-surface-2 px-3 py-1.5 font-mono text-[11px] text-muted"
+                  className="min-w-0 flex-1 rounded-md border border-line bg-surface-2 px-3 py-1.5 font-mono text-[11px] text-muted"
                 />
                 <button
                   onClick={publishHeresy}
-                  className="btn-solid shrink-0 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider"
+                  className="btn-solid shrink-0 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider"
                 >
                   {heresyCopied ? "copied ✓" : "copy"}
                 </button>
@@ -249,11 +249,11 @@ export function ParkTierList() {
             <button
               onClick={() => setRebuttal(null)}
               aria-label="dismiss"
-              className="absolute right-3 top-3 font-mono text-xs text-muted transition hover:text-accent"
+              className="absolute right-3 top-3 text-xs text-muted transition hover:text-accent"
             >
               ✕
             </button>
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-accent">
               re: your proposed change — {rebuttal.park}, {rebuttal.from} →{" "}
               {rebuttal.to}
             </p>

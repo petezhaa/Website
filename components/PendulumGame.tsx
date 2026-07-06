@@ -232,7 +232,7 @@ export function PendulumGame() {
   );
 
   if (failed)
-    return <p className="font-mono text-sm text-muted">the pendulum engine didn&apos;t load. it fell over, presumably.</p>;
+    return <p className="text-sm text-muted">the pendulum engine didn&apos;t load. it fell over, presumably.</p>;
 
   return (
     <div className="flex flex-col gap-3">
@@ -263,13 +263,13 @@ export function PendulumGame() {
         <canvas ref={canvasRef} width={W} height={H} className="block h-auto w-full select-none" />
         {!ready && !failed && (
           <div className="absolute inset-0 grid place-items-center bg-surface/90">
-            <p className="animate-pulse font-mono text-sm text-muted">standing up…</p>
+            <p className="animate-pulse text-sm text-muted">standing up…</p>
           </div>
         )}
         {crashed && (
           <div className="absolute inset-0 grid place-items-center bg-bg/80 backdrop-blur-sm">
             <div className="text-center">
-              <p className="font-mono text-2xl font-bold">it fell over.</p>
+              <p className="font-serif text-2xl">it fell over.</p>
               <p className="mt-1 font-mono text-[11px] text-muted">
                 survived {alive.toFixed(1)}s · retune and try again
               </p>

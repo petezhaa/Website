@@ -1,7 +1,7 @@
 // Small stylized marks for each employer. These are hand-drawn monogram
 // tiles in each brand's color language, not the official trademarks.
 export function CompanyMark({ company }: { company: string }) {
-  const base = "h-10 w-10 shrink-0 rounded-[2px]";
+  const base = "h-10 w-10 shrink-0 rounded-md";
 
   switch (company) {
     case "Microsoft":

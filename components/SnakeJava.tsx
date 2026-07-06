@@ -162,14 +162,14 @@ export function SnakeJava() {
     <button
       onPointerDown={(e) => { e.preventDefault(); jvmRef.current?.callVoid("setDir", d); }}
       aria-label={`move ${label}`}
-      className="h-11 w-11 rounded-[2px] border border-line bg-surface font-mono text-sm text-muted active:border-accent active:text-accent"
+      className="h-11 w-11 rounded-md border border-line bg-surface text-sm text-muted active:border-accent active:text-accent"
     >
       {label}
     </button>
   );
 
   if (failed)
-    return <p className="font-mono text-sm text-muted">the JVM didn&apos;t boot. genuinely embarrassing.</p>;
+    return <p className="text-sm text-muted">the JVM didn&apos;t boot. genuinely embarrassing.</p>;
 
   return (
     <div className="flex flex-col gap-3">
@@ -189,7 +189,7 @@ export function SnakeJava() {
           <div className="absolute inset-0 grid place-items-center bg-bg/80 backdrop-blur-sm">
             <div className="text-center">
               <p className="font-mono text-2xl font-bold">NullPointerException</p>
-              <p className="mt-1 font-mono text-[11px] text-muted">(not really. you hit yourself.)</p>
+              <p className="mt-1 text-[11px] text-muted">(not really. you hit yourself.)</p>
               <button
                 onClick={restart}
                 className="btn-solid mt-4 px-5 py-2 text-xs font-bold uppercase tracking-wider"
@@ -205,7 +205,7 @@ export function SnakeJava() {
         {dpad(0, "↑")}
         <div className="flex gap-1">{dpad(3, "←")}{dpad(2, "↓")}{dpad(1, "→")}</div>
       </div>
-      <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="panel p-4 text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">actual Java bytecode</p>
         <p>java/Snake.java is compiled with javac, and the raw .class file ships to your browser — where a ~250-line JVM interpreter written in TypeScript for this site (lib/jvm.ts) executes the bytecode, instruction by instruction: iload, iastore, if_icmpne, invokestatic.</p>
         <p>no plugins, no transpiling. `javap -c Snake.class` shows exactly what&apos;s running right now.</p>

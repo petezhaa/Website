@@ -55,7 +55,7 @@ export function VibeCorner() {
             className="panel fixed bottom-20 left-5 z-[70] p-5 shadow-2xl"
           >
             <VibeRadar vibe={vibe} samples={samples} />
-            <p className="mt-2.5 max-w-64 text-center font-mono text-[11px] leading-snug text-muted">
+            <p className="mt-2.5 max-w-64 text-center text-[11px] leading-snug text-muted">
               ask the bot to analyze your personality, it can see this
             </p>
           </motion.div>

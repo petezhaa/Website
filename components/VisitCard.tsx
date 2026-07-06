@@ -58,7 +58,7 @@ export function VisitCard() {
   return (
     <div className="panel p-5">
       <p className="text-sm font-medium">Meanwhile, you</p>
-      <p className="mb-4 font-mono text-[11px] text-muted">
+      <p className="mb-4 text-[11px] text-muted">
         this visit, measured locally · nothing leaves your browser
       </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -87,9 +87,9 @@ export function VisitCard() {
             {secrets}/{SECRET_TOTAL}
           </p>
           {/* the bar goldens as the hunt progresses — every find moves it */}
-          <div className="mt-1.5 h-1.5 overflow-hidden rounded-[2px] bg-surface-2">
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-md bg-surface-2">
             <div
-              className={`h-full rounded-[2px] transition-all duration-700 ${secrets >= 10 ? "bg-gold" : "bg-accent"}`}
+              className={`h-full rounded-md transition-all duration-700 ${secrets >= 10 ? "bg-gold" : "bg-accent"}`}
               style={{ width: `${(secrets / SECRET_TOTAL) * 100}%` }}
             />
           </div>
@@ -102,7 +102,7 @@ export function VisitCard() {
           </p>
         </div>
       </div>
-      <div className="mt-4 border-t border-line pt-3 font-mono text-[10.5px] leading-relaxed text-muted">
+      <div className="mt-4 border-t border-line pt-3 text-[10.5px] leading-relaxed text-muted">
         {topAxes.length > 0 ? (
           <p>
             current read:{" "}

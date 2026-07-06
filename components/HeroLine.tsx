@@ -3,84 +3,39 @@
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
-// The headline's middle changes every visit.
-const MIDDLES = [
-  "a student engineer at",
-  "building things at",
-  "probably debugging something at",
-  "triple majoring, allegedly sleeping, at",
-  "making GPUs and maps behave at",
-  "an engineer and park ranker at",
-  "turning coffee into firmware at",
-  "in over my head, on purpose, at",
+// The small line above the headline changes every visit.
+const KICKERS = [
+  "Student engineer at UW–Madison",
+  "Currently at NVIDIA, Santa Clara",
+  "Triple major, allegedly sleeping",
+  "Probably debugging something",
+  "Maps, GPUs, and a bot that texts back",
+  "Turning coffee into firmware",
 ];
 
-const GREETING = "Hi, I'm ";
-const NAME = "Peter.";
-
-// Reads like a line of terminal output: the greeting types itself in, the
-// name glows amber (phosphor), and a block caret blinks at the end.
 export function HeroLine() {
   const [i, setI] = useState(0);
-  const reduceMotion = useReducedMotion();
+  const reduce = useReducedMotion();
   useEffect(() => {
-    setI(Math.floor(Math.random() * MIDDLES.length));
+    setI(Math.floor(Math.random() * KICKERS.length));
   }, []);
 
-  const letter = (ch: string, idx: number) => (
-    <motion.span
-      key={idx}
-      className="inline-block whitespace-pre"
-      initial={reduceMotion ? false : { opacity: 0, y: "0.35em" }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        type: "spring",
-        stiffness: 360,
-        damping: 22,
-        delay: 0.12 + idx * 0.03,
-      }}
-    >
-      {ch}
-    </motion.span>
-  );
-
   return (
-    <>
-      <span aria-label={`${GREETING}${NAME}`} className="inline-block">
-        <span aria-hidden>{GREETING.split("").map(letter)}</span>
-        <span aria-hidden className="relative inline-block text-accent">
-          {/* faint bloom behind the name — dark mode only (a black bloom on
-              light paper just reads as a smudge) */}
-          <motion.span
-            aria-hidden
-            className="pointer-events-none absolute -inset-x-[0.35em] -inset-y-[0.18em] -z-10 hidden rounded-[40%] dark:block"
-            style={{
-              background:
-                "radial-gradient(ellipse at center, var(--accent) 0%, transparent 70%)",
-              filter: "blur(16px)",
-            }}
-            initial={{ opacity: reduceMotion ? 0.22 : 0 }}
-            animate={
-              reduceMotion
-                ? { opacity: 0.22 }
-                : { opacity: [0.18, 0.34, 0.18] }
-            }
-            transition={
-              reduceMotion
-                ? undefined
-                : { delay: 0.9, duration: 3.6, repeat: Infinity, ease: "easeInOut" }
-            }
-          />
-          <span>
-            {NAME.split("").map((ch, idx) => letter(ch, GREETING.length + idx))}
-          </span>
-        </span>
-      </span>{" "}
-      <span className="text-muted">{MIDDLES[i]}</span>{" "}
-      <em className="text-accent not-italic underline decoration-accent/40 decoration-2 underline-offset-[6px]">
-        UW&ndash;Madison
-      </em>
-      <span className="caret align-middle" aria-hidden />
-    </>
+    <div>
+      <motion.p
+        initial={reduce ? false : { opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-5 text-xs font-medium uppercase tracking-[0.18em] text-muted"
+      >
+        {KICKERS[i]}
+      </motion.p>
+      <h1 className="font-serif text-5xl font-medium leading-[1.04] tracking-tight sm:text-6xl lg:text-[4.4rem]">
+        Between the hardware
+        <br />
+        and the{" "}
+        <em className="italic text-accent">software</em>.
+      </h1>
+    </div>
   );
 }

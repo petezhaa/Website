@@ -437,7 +437,7 @@ export function InductionSim() {
   };
 
   const btn = (active: boolean) =>
-    `rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition ${
+    `rounded-md border px-3 py-1.5 text-[11px] font-medium transition ${
       active ? "border-accent bg-accent-soft text-accent" : "border-line text-muted hover:border-accent hover:text-accent"
     }`;
 
@@ -449,7 +449,7 @@ export function InductionSim() {
         </button>
         <button onClick={reset} className={btn(false)}>reset</button>
         <span className="mx-1 hidden h-5 w-px bg-line sm:inline-block" />
-        <label className="flex items-center gap-1.5 font-mono text-[11px] text-muted">
+        <label className="flex items-center gap-1.5 text-[11px] text-muted">
           amp
           <input
             type="range" min={0.05} max={0.6} step={0.01} value={amp}
@@ -460,7 +460,7 @@ export function InductionSim() {
           />
           <span className="tabular-nums">{amp.toFixed(2)}</span>
         </label>
-        <label className="flex items-center gap-1.5 font-mono text-[11px] text-muted">
+        <label className="flex items-center gap-1.5 text-[11px] text-muted">
           freq
           <input
             type="range" min={0.2} max={2.5} step={0.05} value={freq}
@@ -471,7 +471,7 @@ export function InductionSim() {
           />
           <span className="tabular-nums">{freq.toFixed(2)} Hz</span>
         </label>
-        <span className="font-mono text-[11px] text-muted">{shakeOn ? "autopilot" : "manual"} · C++</span>
+        <span className="text-[11px] text-muted">{shakeOn ? "autopilot" : "manual"} · C++</span>
       </div>
 
       <div className="panel relative overflow-hidden">
@@ -487,15 +487,15 @@ export function InductionSim() {
         />
         {failed && (
           <div className="absolute inset-0 grid place-items-center bg-surface/90">
-            <p className="font-mono text-sm text-muted">couldn&apos;t load the wasm engine.</p>
+            <p className="text-sm text-muted">couldn&apos;t load the wasm engine.</p>
           </div>
         )}
         {!ready && !failed && (
           <div className="absolute inset-0 grid place-items-center bg-surface/90">
-            <p className="animate-pulse font-mono text-sm text-muted">winding the coil…</p>
+            <p className="animate-pulse text-sm text-muted">winding the coil…</p>
           </div>
         )}
-        <p className="pointer-events-none absolute bottom-3 right-4 text-right font-mono text-[10px] leading-relaxed text-muted/70">
+        <p className="pointer-events-none absolute bottom-3 right-4 text-right text-[10px] leading-relaxed text-muted/70">
           drag the magnet through the coil · speed makes volts, parking makes none<br />
           the arrow on the coil is the induced current — watch it flip (lenz)
         </p>

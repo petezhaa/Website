@@ -36,7 +36,7 @@ export async function GameShelf() {
                 href={`https://store.steampowered.com/app/${recentGame.appid}/`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mb-3 block w-full max-w-56 shrink-0 overflow-hidden rounded-[2px] border border-line transition hover:border-accent sm:mb-0"
+                className="mb-3 block w-full max-w-56 shrink-0 overflow-hidden rounded-md border border-line transition hover:border-accent sm:mb-0"
               >
                 <Image
                   src={`https://cdn.cloudflare.steamstatic.com/steam/apps/${recentGame.appid}/header.jpg`}
@@ -48,13 +48,13 @@ export async function GameShelf() {
               </a>
             )}
             <div className="min-w-0 flex-1">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-accent">
                 right now
               </p>
               {recent ? (
                 <>
-                  <p className="mt-1 font-mono text-xl font-bold leading-snug">{recent.name}</p>
-                  <p className="mt-1 font-mono text-xs text-muted">
+                  <p className="mt-1 font-serif text-xl leading-snug">{recent.name}</p>
+                  <p className="mt-1 text-xs text-muted">
                     {recent.hours2w}h in the last two weeks
                     {recentGame ? ` · ${recentGame.hours.toLocaleString()}h lifetime` : ""}
                   </p>
@@ -67,7 +67,7 @@ export async function GameShelf() {
             </div>
             <div className="hidden shrink-0 flex-col items-center gap-1 pr-2 sm:flex">
               <StardewPeter size={52} />
-              <p className="font-mono text-sm text-muted">me, in the valley</p>
+              <p className="text-sm text-muted">me, in the valley</p>
             </div>
           </div>
 
@@ -108,7 +108,7 @@ export async function GameShelf() {
           {/* where the hours actually went */}
           {totalHours > 0 && (
             <div className="mb-6">
-              <div className="flex h-3 overflow-hidden rounded-[2px]">
+              <div className="flex h-3 overflow-hidden rounded-md">
                 {strip.map((s, i) => (
                   <div
                     key={s.name}
@@ -119,7 +119,7 @@ export async function GameShelf() {
                 ))}
                 <div className="h-full bg-surface-2" style={{ width: `${stripRest}%` }} />
               </div>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10px] text-muted">
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-muted">
                 {strip.map((s, i) => (
                   <span key={s.name} className="flex items-center gap-1.5">
                     <span className={`inline-block h-2 w-2 rounded-sm ${stripColors[i]}`} />
@@ -134,7 +134,7 @@ export async function GameShelf() {
             </div>
           )}
 
-          <p className="mb-6 font-mono text-xs text-muted">
+          <p className="mb-6 text-xs text-muted">
             {totalHours.toLocaleString()} hours across {games!.length} games.
             No further comment.
           </p>
@@ -164,9 +164,9 @@ export async function GameShelf() {
                 </div>
                 {/* share of the top game's hours: the shelf, to scale */}
                 <div className="px-4 pb-3 pt-2">
-                  <div className="h-1.5 overflow-hidden rounded-[2px] bg-surface-2">
+                  <div className="h-1.5 overflow-hidden rounded-md bg-surface-2">
                     <div
-                      className="h-full rounded-[2px] bg-gold/70"
+                      className="h-full rounded-md bg-gold/70"
                       style={{ width: `${Math.max((g.hours / maxHours) * 100, 3)}%` }}
                     />
                   </div>

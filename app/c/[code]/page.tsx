@@ -35,15 +35,15 @@ export default async function ChallengePage({
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-10">
       <header className="mb-8 flex items-center justify-between">
-        <a href="/" className="font-mono text-xs text-muted transition hover:text-accent">
+        <a href="/" className="text-xs text-muted transition hover:text-accent">
           ← petezha.xyz
         </a>
-        <span className="font-mono text-xs text-muted">map game · challenge</span>
+        <span className="text-xs text-muted">map game · challenge</span>
       </header>
 
       {challenge ? (
         <>
-          <h1 className="font-mono font-bold text-3xl tracking-tight sm:text-4xl">
+          <h1 className="text-3xl tracking-tight sm:text-4xl">
             Beat my {challenge.score.toLocaleString()}
           </h1>
           <p className="mb-8 mt-3 max-w-xl leading-relaxed text-muted">
@@ -58,7 +58,7 @@ export default async function ChallengePage({
         </>
       ) : (
         <>
-          <h1 className="font-mono font-bold text-3xl tracking-tight sm:text-4xl">
+          <h1 className="text-3xl tracking-tight sm:text-4xl">
             That challenge link looks broken
           </h1>
           <p className="mb-8 mt-3 max-w-xl leading-relaxed text-muted">

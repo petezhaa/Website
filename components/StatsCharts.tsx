@@ -148,7 +148,7 @@ function Card({
       <p className="mb-4 font-mono text-[11px] text-muted">{sub}</p>
       {children}
       <details className="mt-3" onToggle={(e) => (e.currentTarget as HTMLDetailsElement).open && bumpVibe("curiosity", 12)}>
-        <summary className="cursor-pointer font-mono text-[11px] text-muted transition hover:text-accent">
+        <summary className="cursor-pointer text-[11px] text-muted transition hover:text-accent">
           view as table
         </summary>
         <div className="mt-2 max-h-44 overflow-y-auto">{table}</div>
@@ -161,7 +161,7 @@ function Tooltip({ tip }: { tip: Tip }) {
   if (!tip) return null;
   return (
     <div
-      className="pointer-events-none absolute z-10 rounded-[2px] border border-line bg-surface px-3 py-1.5 shadow-lg"
+      className="pointer-events-none absolute z-10 rounded-md border border-line bg-surface px-3 py-1.5 shadow-lg"
       style={{ left: tip.x, top: tip.y, transform: "translate(-50%, -110%)" }}
     >
       {tip.lines.map((l) => (
@@ -760,11 +760,11 @@ function GuessRating({ data }: { data: NonNullable<StatsData["guessGame"]> }) {
             alt={`${film.title} poster`}
             width={230}
             height={345}
-            className="h-auto w-full rounded-[2px] border border-line"
+            className="h-auto w-full rounded-md border border-line"
           />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-mono font-bold text-lg leading-tight">{film.title}</p>
+          <p className="font-serif text-lg leading-tight">{film.title}</p>
           <p className="font-mono text-[11px] text-muted">{film.year}</p>
           {!revealed && (
             <div className="mt-3">

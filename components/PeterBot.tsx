@@ -272,7 +272,7 @@ export function PeterBot({ initialOpen = false }: { initialOpen?: boolean } = {}
               </button>
               <PixelPeter size={38} />
               <p className="mt-1 text-xs font-medium">Peter Zhao</p>
-              <p className="font-mono text-[9px] text-muted">
+              <p className="text-[9px] text-muted">
                 PeterBot · Llama 3.3 70B · online
               </p>
             </div>
@@ -286,7 +286,7 @@ export function PeterBot({ initialOpen = false }: { initialOpen?: boolean } = {}
                 </p>
               ) : messages.length === 0 ? (
                 <div className="space-y-2">
-                  <p className="text-center font-mono text-[10px] uppercase tracking-widest text-muted">
+                  <p className="text-center text-[10px] uppercase tracking-widest text-muted">
                     today
                   </p>
                   <p className="text-sm text-muted">Some things people text me:</p>
@@ -302,7 +302,7 @@ export function PeterBot({ initialOpen = false }: { initialOpen?: boolean } = {}
                 </div>
               ) : (
                 <>
-                  <p className="text-center font-mono text-[10px] uppercase tracking-widest text-muted">
+                  <p className="text-center text-[10px] uppercase tracking-widest text-muted">
                     today {clock}
                   </p>
                   {messages.map((m, i) => {
@@ -323,7 +323,7 @@ export function PeterBot({ initialOpen = false }: { initialOpen?: boolean } = {}
                           {m.content}
                         </motion.div>
                         {delivered && (
-                          <p className="mt-0.5 text-right font-mono text-[9px] text-muted">
+                          <p className="mt-0.5 text-right text-[9px] text-muted">
                             Delivered
                           </p>
                         )}
