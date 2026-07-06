@@ -30,7 +30,7 @@ export const ROLES: Role[] = [
     location: "Remote",
     dates: "Jul – Sep 2026",
     status: "incoming",
-    quip: "Qualifying the telemetry, statistics, and search of a certain Microsoft CEO's AI bot.",
+    quip: "Working on telemetry, statistics, and search quality for Azure Search.",
     points: ["C++ and Python engineering for Azure Search."],
   },
   {
@@ -53,7 +53,7 @@ export const ROLES: Role[] = [
     title: "Software Development Engineer Intern",
     location: "Seattle, WA",
     dates: "May – Aug 2025",
-    quip: "Automated thumbnail localization so nobody had to review 15 languages by hand.",
+    quip: "Built an AI pipeline that automated thumbnail localization across 15+ languages.",
     points: [
       "AI inference pipeline (Java, AWS Lambda, DynamoDB) automating thumbnail localization across 15+ languages, cutting manual review 40% across 3 global teams.",
       "REST API on AWS CDK to query, flag, and reprocess incorrect AI outputs, reducing deployment time by 75%.",
@@ -78,7 +78,7 @@ export const ROLES: Role[] = [
     title: "Optimization Software Researcher",
     location: "Madison, WI",
     dates: "Sep 2024 – May 2025",
-    quip: "Getting distributed sensors to agree on what time it is, for neuroscience research.",
+    quip: "Real-time synchronization of distributed sensors for neuroscience research.",
     points: [
       "Real-time signal synchronization algorithms in Python, cutting timing jitter from 12 ms to 2 ms across distributed sensor arrays for neuroscience research.",
       "Data-driven optimization research with NumPy/Pandas to find and remove pipeline bottlenecks.",

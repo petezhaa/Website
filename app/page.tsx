@@ -3,7 +3,6 @@ import Image from "next/image";
 import { Reveal } from "@/components/Reveal";
 import { Polaroid } from "@/components/Polaroid";
 import { FortuneCookie } from "@/components/FortuneCookie";
-import { StatLine } from "@/components/StatLine";
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { GameChooser } from "@/components/GameChooser";
 import { BenchPanel } from "@/components/BenchPanel";
@@ -102,15 +101,11 @@ export default function Home() {
             </Reveal>
             <Reveal delay={140}>
               <p className="mt-7 max-w-xl text-lg leading-relaxed text-muted">
-                I study computer science, electrical engineering, and math, 
-                all three, because the work I enjoy sits somewhere between them.
-                This summer I&apos;m at NVIDIA building GPU simulation
-                infrastructure, then Microsoft on Azure Search. Last summer,
-                Amazon.
+                I&apos;m Peter Zhao, a student engineer at UW&ndash;Madison.
+                Right now I&apos;m at NVIDIA working on GPU simulation
+                infrastructure, and later this year I&apos;ll be at Microsoft
+                working on Azure Search. Last summer I was at Amazon.
               </p>
-              <Suspense fallback={null}>
-                <StatLine />
-              </Suspense>
             </Reveal>
             <Reveal delay={220}>
               <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-4">
@@ -157,7 +152,7 @@ export default function Home() {
         </section>
 
         {/* ============ WORK ============ */}
-        <Section id="work" title="Work" note="Five engineering roles, most recent first. The resume, in brief.">
+        <Section id="work" title="Work">
           <div className="flex flex-col lg:pl-5">
             {ROLES.map((role, i) => (
               <Reveal key={role.company + role.dates} delay={i * 50}>
@@ -168,7 +163,7 @@ export default function Home() {
         </Section>
 
         {/* ============ PROJECTS ============ */}
-        <Section id="projects" title="Projects" note="Things I built because I wanted them to exist.">
+        <Section id="projects" title="Projects">
           <div className="grid gap-5 sm:grid-cols-2">
             {PROJECTS.map((project, i) => (
               <Reveal key={project.name} delay={i * 60} className="h-full">
@@ -179,15 +174,11 @@ export default function Home() {
         </Section>
 
         {/* ============ THE ARCADE ============ */}
-        <Section
-          id="play"
-          title="The arcade"
-          note="Four languages, running in your browser, no plugins."
-        >
+        <Section id="play" title="The arcade">
           <Reveal>
             <p className="mb-8 max-w-2xl leading-relaxed text-muted">
-              A small arcade, each cabinet running a different language: the map
-              game&apos;s engine is{" "}
+              I built a small arcade for this site, and each game runs in a
+              different language in your browser. The map game&apos;s engine is{" "}
               <a
                 href={LINKS.github}
                 target="_blank"
@@ -196,9 +187,9 @@ export default function Home() {
               >
                 Rust compiled to WebAssembly
               </a>
-             , the physics and math sims are freestanding C++, the board game Go
-              is written in Go, and Snake is genuine Java bytecode run by a little
-              JVM I wrote for this site. React just draws.
+              , the physics and math sims are written in C++, the board game Go
+              is written in Go, and Snake is real Java bytecode running on a
+              small JVM that I wrote for this site.
             </p>
           </Reveal>
           <Reveal delay={100}>
@@ -208,8 +199,8 @@ export default function Home() {
             <div className="mt-12">
               <h3 className="font-serif text-xl tracking-tight">Benchmarks</h3>
               <p className="mb-3 mt-1 text-sm text-muted">
-                The same workload, run in each language, live. Yes, the C++
-                actually runs.
+                The same workload runs in each language so you can compare
+                them.
               </p>
               <BenchPanel />
             </div>
@@ -217,7 +208,7 @@ export default function Home() {
         </Section>
 
         {/* ============ ABOUT ============ */}
-        <Section id="about" title="About" note="The part that isn't on the resume.">
+        <Section id="about" title="About">
           <div className="grid gap-12 lg:grid-cols-[1.5fr_1fr]">
             <Reveal>
               <div className="space-y-5 leading-relaxed text-muted">
@@ -230,15 +221,13 @@ export default function Home() {
                   still ended up valedictorian of my high school.
                 </p>
                 <p>
-                  I study three majors because the things I want to build need all
-                  three: GPU systems, firmware, and control systems don&apos;t
-                  stay inside one department. I learn fastest when the project is
-                  slightly past what I already know how to do.
+                  I study three majors because the things I want to build need
+                  all three of them. GPU systems, firmware, and control systems
+                  all sit between computer science and electrical engineering.
                 </p>
                 <p>
-                  Outside of school: history, film and animation, photography, and
-                  grand strategy games. I also hike, which is why there&apos;s a
-                  national park tier list further down.
+                  Outside of school I like history, film, photography, grand
+                  strategy games, and hiking.
                 </p>
                 <div className="max-w-sm pt-3">
                   <Polaroid
@@ -284,12 +273,13 @@ export default function Home() {
         <Section
           id="parks"
           title="National parks, ranked"
-          note="All 63. Formed on trails, from photos, and with some bias toward mountains."
+          note="All 63 U.S. national parks."
         >
           <Reveal>
             <p className="mb-8 max-w-2xl leading-relaxed text-muted">
-              Disagree? Drag a park where you think it belongs, and the list will
-              explain why you&apos;re wrong.
+              I ranked all 63 national parks based on the ones I have visited
+              and photos of the rest. You can drag a park to where you think it
+              belongs.
             </p>
           </Reveal>
           <Reveal delay={80}>
@@ -298,21 +288,21 @@ export default function Home() {
         </Section>
 
         {/* ============ FILMS ============ */}
-        <Section id="films" title="Watching" note="From Letterboxd, live.">
+        <Section id="films" title="Watching" note="From Letterboxd.">
           <Suspense fallback={null}>
             <FilmShelf />
           </Suspense>
         </Section>
 
         {/* ============ VIDEO GAMES ============ */}
-        <Section id="games" title="Playing" note="From Steam, live.">
+        <Section id="games" title="Playing" note="From Steam.">
           <Suspense fallback={null}>
             <GameShelf />
           </Suspense>
         </Section>
 
         {/* ============ STATS ============ */}
-        <Section id="stats" title="By the numbers" note="Live data, real charts.">
+        <Section id="stats" title="By the numbers" note="Live data.">
           <Suspense fallback={null}>
             <StatsSection />
           </Suspense>
@@ -324,15 +314,15 @@ export default function Home() {
             <div className="rounded-2xl border border-line bg-surface p-8 sm:p-12">
               <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr] lg:items-center">
                 <div>
-                  <Kicker>One more thing</Kicker>
+                  <Kicker>The restaurant</Kicker>
                   <h2 className="mt-3 max-w-2xl font-serif text-3xl leading-snug tracking-tight sm:text-4xl">
                     My parents run a Chinese restaurant.
                   </h2>
                   <p className="mt-5 max-w-xl leading-relaxed text-muted">
-                    China Wok, back home in Wisconsin. It paid for the calculators,
-                    the tuition gaps, and the work ethic. If you&apos;re ever near
-                    Green Bay, ordering the General Tso&apos;s is the single most
-                    effective way to support this website.
+                    It is called China Wok, and it is back home in Wisconsin.
+                    Working there taught me most of my work ethic, and it
+                    helped pay for school. If you are ever near Green Bay you
+                    should order the General Tso&apos;s.
                   </p>
                   <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
                     <span className="text-gold">4.7★ on Google</span>
@@ -376,8 +366,8 @@ export default function Home() {
                   Get in touch.
                 </h2>
                 <p className="mt-5 max-w-md leading-relaxed text-muted">
-                  I&apos;m happy to talk about internships, projects, or school,
-                  and I answer email quickly. Genuinely, try me.
+                  I&apos;m happy to talk about internships, projects, or
+                  school. I answer email quickly.
                 </p>
                 <div className="mt-6 flex gap-6 text-sm text-muted">
                   <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer" className="tlink !text-muted hover:!text-accent">LinkedIn</a>

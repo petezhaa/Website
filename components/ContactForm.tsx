@@ -58,7 +58,7 @@ export function ContactForm() {
         onChange={(e) => setMessage(e.target.value)}
         required
         rows={4}
-        placeholder="Internship? Project? Zion discourse? Type it here."
+        placeholder="Internship, project, or something else."
         className={`${fieldCls} resize-none`}
       />
 
@@ -140,7 +140,7 @@ export function ContactForm() {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-moss opacity-60" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-moss" />
         </span>
-        replies fast, genuinely · or copy:{" "}
+        usually replies within a day · or copy:{" "}
         <button
           type="button"
           onClick={() => {
