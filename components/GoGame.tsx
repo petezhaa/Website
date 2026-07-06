@@ -55,7 +55,7 @@ function loadGo(): Promise<GoAPI> {
     throw new Error("GoEngine never appeared");
   })();
   // don't cache failure: a transient hiccup shouldn't brick the cabinet
-  // for the whole session — the next mount retries fresh
+  // for the whole session, the next mount retries fresh
   goLoaded = attempt.catch((err) => {
     goLoaded = null;
     throw err;
@@ -83,7 +83,7 @@ export function GoGame() {
     const c = canvasRef.current;
     const ctx = c?.getContext("2d");
     if (!c || !ctx) return;
-    // flat board, simple lines — the game is the graphics
+    // flat board, simple lines, the game is the graphics
     ctx.fillStyle = "#d7b473";
     ctx.fillRect(0, 0, PX, PX);
     // grid
@@ -189,7 +189,7 @@ export function GoGame() {
     const i = toIdx(e);
     if (i < 0) return;
     const res = api.play(i % N, Math.floor(i / N));
-    if (!res.ok) { setNote("illegal — occupied, suicide, or ko."); return; }
+    if (!res.ok) { setNote("illegal, occupied, suicide, or ko."); return; }
     bumpVibe("gamer", 8);
     lastRef.current = { you: i, bot: res.botPassed ? -1 : res.botY * N + res.botX };
     boardRef.current = api.board();
@@ -210,7 +210,7 @@ export function GoGame() {
     setCaps({ black: res.capsBlack, white: res.capsWhite });
     const s = api.score();
     setScore(s);
-    setNote(res.botPassed ? "both passed — count it up." : "you passed; the bot didn't.");
+    setNote(res.botPassed ? "both passed, count it up." : "you passed; the bot didn't.");
     draw();
   };
 
@@ -237,11 +237,11 @@ export function GoGame() {
         <button onClick={newGame} className={btn}>new game</button>
         <button onClick={doPass} className={btn}>pass</button>
         <span className="font-mono text-[11px] text-muted">
-          captures — you: {caps.black} · bot: {caps.white}
+          captures, you: {caps.black} · bot: {caps.white}
         </span>
         {score && (
           <span className="rounded-md border border-accent/40 bg-accent-soft px-2.5 py-1 font-mono text-[11px] text-accent">
-            area score — you {score.black} · bot {score.white} ·{" "}
+            area score, you {score.black} · bot {score.white} ·{" "}
             {score.black > score.white ? "you lead" : score.black < score.white ? "bot leads" : "even"}
           </span>
         )}
@@ -265,7 +265,7 @@ export function GoGame() {
       <p className="text-[11px] text-muted">{note}</p>
       <div className="panel p-4 text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">Go, written in Go</p>
-        <p>the rules engine — legality, ko, capture flood-fills, area scoring, and the bot — is Go compiled to WebAssembly with the standard toolchain (golang/main.go).</p>
+        <p>the rules engine, legality, ko, capture flood-fills, area scoring, and the bot, is Go compiled to WebAssembly with the standard toolchain (golang/main.go).</p>
         <p>9×9 board. the bot is greedy, not deep: it captures when it can and grabs influence when it can&apos;t. beatable. that&apos;s the point.</p>
       </div>
     </div>

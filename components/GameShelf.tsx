@@ -98,7 +98,7 @@ export async function GameShelf() {
                 <p className="font-mono text-2xl font-bold text-accent">
                   {rarest.globalPct.toFixed(1)}%
                 </p>
-                <p className="mt-0.5 truncate text-xs text-muted" title={`${rarest.name} — ${rarest.game}`}>
+                <p className="mt-0.5 truncate text-xs text-muted" title={`${rarest.name}, ${rarest.game}`}>
                   of players have my rarest achievement
                 </p>
               </div>
@@ -112,7 +112,7 @@ export async function GameShelf() {
                 {strip.map((s, i) => (
                   <div
                     key={s.name}
-                    title={`${s.name} — ${Math.round(s.pct)}%`}
+                    title={`${s.name}, ${Math.round(s.pct)}%`}
                     className={`h-full ${stripColors[i]}`}
                     style={{ width: `${s.pct}%` }}
                   />
@@ -186,7 +186,7 @@ export async function GameShelf() {
           >
             steamcommunity.com/id/PeterZhaoOfficial
           </a>
-          , and the hours are real.
+         , and the hours are real.
         </p>
       )}
     </Reveal>

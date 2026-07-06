@@ -105,7 +105,7 @@ export default async function HeresyPage({
             That heresy link is corrupted
           </h1>
           <p className="mt-4 max-w-xl leading-relaxed text-muted">
-            It didn&apos;t decode — maybe the rankings changed since it was
+            It didn&apos;t decode, maybe the rankings changed since it was
             made. Go commit your own heresy instead:{" "}
             <a
               href="/#parks"

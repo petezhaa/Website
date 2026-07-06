@@ -286,7 +286,7 @@ export function PendulumGame() {
       <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">control theory, running in C++</p>
         <p>plant&nbsp;&nbsp;θ̈ = (g/l)·sinθ − (u/l)·cosθ − c·θ̇&nbsp;&nbsp;(inverted pendulum on a cart)</p>
-        <p>control u = Kp·θ + Ki·∫θ dt + Kd·θ̇&nbsp;&nbsp;(your three sliders — plus a fixed cart-recentering term, like a real Segway)</p>
+        <p>control u = Kp·θ + Ki·∫θ dt + Kd·θ̇&nbsp;&nbsp;(your three sliders, plus a fixed cart-recentering term, like a real Segway)</p>
         <p>too little Kd and it oscillates itself to death; too much Kp and it slams the rail. the sweet spot is real: I built this with actual hardware in Nov 2025, and the tuning session went exactly like yours is going.</p>
       </div>
     </div>

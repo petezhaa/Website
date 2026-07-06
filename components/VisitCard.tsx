@@ -86,7 +86,7 @@ export function VisitCard() {
           >
             {secrets}/{SECRET_TOTAL}
           </p>
-          {/* the bar goldens as the hunt progresses — every find moves it */}
+          {/* the bar goldens as the hunt progresses, every find moves it */}
           <div className="mt-1.5 h-1.5 overflow-hidden rounded-md bg-surface-2">
             <div
               className={`h-full rounded-md transition-all duration-700 ${secrets >= 10 ? "bg-gold" : "bg-accent"}`}
@@ -112,7 +112,7 @@ export function VisitCard() {
                 <span className="text-fg">{k}</span> {v}/100
               </span>
             ))}
-            {" — the full pentagon lives in the corner widget. the bot can read it too."}
+            {", the full pentagon lives in the corner widget. the bot can read it too."}
           </p>
         ) : (
           <p>no reads yet. click something. the radar is patient.</p>

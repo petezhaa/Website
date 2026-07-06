@@ -7,7 +7,7 @@ import { bumpVibe } from "@/lib/vibeBus";
 // and (in RLC mode) a resonance curve in the top-right corner
 const W = 832;
 const H = 520;
-const V0 = 5; // battery / drive amplitude, volts (fixed — one knob fewer)
+const V0 = 5; // battery / drive amplitude, volts (fixed, one knob fewer)
 
 // oscilloscope frame
 const SX0 = 56, SX1 = 816, SY0 = 226, SY1 = 470;
@@ -53,7 +53,7 @@ function readPalette(): Palette {
   };
 }
 
-const MODE_NAMES = ["rc — charge a cap", "rl — tame a coil", "rlc — find resonance"];
+const MODE_NAMES = ["rc, charge a cap", "rl, tame a coil", "rlc, find resonance"];
 
 export function CircuitSim() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -128,7 +128,7 @@ export function CircuitSim() {
     };
     const coil = (x: number, ya: number, yb: number) => {
       const n = 4, r = (yb - ya) / (2 * n);
-      // the coil glows with |i| — the magnetic field, basically
+      // the coil glows with |i|, the magnetic field, basically
       ctx.save();
       const g = Math.min(1, Math.abs(ii) / Math.max(1, iScaleRef.current));
       if (g > 0.03) { ctx.shadowColor = P.moss; ctx.shadowBlur = 4 + 14 * g; }
@@ -419,7 +419,7 @@ export function CircuitSim() {
 
     // annotation above the scope
     ctx.fillStyle = P.muted;
-    if (m === 0) ctx.fillText(`τ = RC = ${tau.toFixed(2)} s — one τ gets you 63% of the way`, SX1, SY0 - 8);
+    if (m === 0) ctx.fillText(`τ = RC = ${tau.toFixed(2)} s, one τ gets you 63% of the way`, SX1, SY0 - 8);
     else if (m === 1) ctx.fillText(`τ = L/R = ${tau.toFixed(2)} s`, SX1, SY0 - 8);
     else ctx.fillText(`f = ${prm.f.toFixed(2)} Hz · f₀ = ${eng.res_f().toFixed(2)} Hz`, SX1, SY0 - 8);
     ctx.textAlign = "left";
@@ -638,7 +638,7 @@ export function CircuitSim() {
           {mode < 2 ? (
             <>tap the schematic to flip the switch<br />τ marked in gold on the scope</>
           ) : (
-            <>drag on the response curve to hunt the peak<br />f₀ marked in gold — that&apos;s resonance</>
+            <>drag on the response curve to hunt the peak<br />f₀ marked in gold, that&apos;s resonance</>
           )}
         </p>
       </div>
@@ -656,7 +656,7 @@ export function CircuitSim() {
           <>
             <p>KVL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;V₀·[switch] = R·i + v_C,&nbsp;&nbsp;i = C·dv_C/dt</p>
             <p>charge&nbsp;&nbsp;&nbsp;v_C(t) = V₀(1 − e^(−t/RC))&nbsp;&nbsp;·&nbsp;&nbsp;discharge&nbsp;&nbsp;v_C(t) = V₀·e^(−t/RC)</p>
-            <p>τ = RC = {tauUi.toFixed(2)} s — after one τ you&apos;re 63% there; after five, done-ish.</p>
+            <p>τ = RC = {tauUi.toFixed(2)} s, after one τ you&apos;re 63% there; after five, done-ish.</p>
           </>
         )}
         {mode === 1 && (
@@ -670,7 +670,7 @@ export function CircuitSim() {
           <>
             <p>KVL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;V₀·sin(ωt) = L·di/dt + R·i + q/C,&nbsp;&nbsp;ω = 2πf</p>
             <p>impedance&nbsp;&nbsp;|Z| = √(R² + (ωL − 1/ωC)²),&nbsp;&nbsp;I = V₀/|Z|</p>
-            <p>resonance&nbsp;&nbsp;f₀ = 1/(2π√(LC)) = {f0Ui.toFixed(2)} Hz — where ωL cancels 1/ωC and only R is left to argue.</p>
+            <p>resonance&nbsp;&nbsp;f₀ = 1/(2π√(LC)) = {f0Ui.toFixed(2)} Hz, where ωL cancels 1/ωC and only R is left to argue.</p>
           </>
         )}
         <p>integrated with RK4 at 2,400 substeps per second. mash the sliders; it will not blow up.</p>

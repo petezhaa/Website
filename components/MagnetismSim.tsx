@@ -478,12 +478,12 @@ export function MagnetismSim() {
     }`;
 
   const fmtR = (r: number | null) =>
-    r === null ? "—" : r === Infinity || r > 20 ? "∞" : r.toFixed(3);
+    r === null ? ", " : r === Infinity || r > 20 ? "∞" : r.toFixed(3);
   const statsLine = !stats
     ? "launch a charge (drag sets v) and this line checks r = mv/qB against the circle it actually draws."
     : `last launch (${stats.q > 0 ? "+q" : "−q"}) · predicted r = ${fmtR(stats.pred)} · measured r = ${fmtR(stats.meas)}${
         Math.abs(exV) + Math.abs(eyV) > 0.01
-          ? " · E ≠ 0, so the formula is off duty — watch the drift instead"
+          ? " · E ≠ 0, so the formula is off duty, watch the drift instead"
           : ""
       }`;
 
@@ -580,10 +580,10 @@ export function MagnetismSim() {
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the physics, running in C++</p>
         <p>force&nbsp;&nbsp;&nbsp;&nbsp;F = q(E + v × B)&nbsp;&nbsp;(Lorentz; B = B·ẑ, straight out of your screen)</p>
         <p>per axis&nbsp;&nbsp;aₓ = q(Eₓ + v_y·B) · a_y = q(E_y − vₓ·B)&nbsp;&nbsp;(m = |q| = 1 for everyone)</p>
-        <p>radius&nbsp;&nbsp;&nbsp;&nbsp;r = m·v / (q·B)&nbsp;&nbsp;(cyclotron radius: faster charge, wider circle — B never does work)</p>
+        <p>radius&nbsp;&nbsp;&nbsp;&nbsp;r = m·v / (q·B)&nbsp;&nbsp;(cyclotron radius: faster charge, wider circle, B never does work)</p>
         <p className="mt-2 border-t border-line pt-2 text-fg">{statsLine}</p>
         <p className="mt-1">
-          semi-implicit euler, 8 substeps, zero damping — orbits are honest circles, not slow spirals.
+          semi-implicit euler, 8 substeps, zero damping, orbits are honest circles, not slow spirals.
           edges wrap, so it&apos;s a torus. box height = 1 field unit.
         </p>
       </div>

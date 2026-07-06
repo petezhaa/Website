@@ -1,4 +1,4 @@
-// Daily Geo Challenge — pure, DOM-free helpers so they stay testable.
+// Daily Geo Challenge, pure, DOM-free helpers so they stay testable.
 // The whole feature is client-side: the Rust engine's game_start(m, seed)
 // runs a deterministic seeded Fisher-Yates, so the same seed yields the same
 // six rounds for every visitor worldwide on a given UTC day.
@@ -43,7 +43,7 @@ export function buildShare(
   num: number
 ): string {
   return (
-    `Peter's Daily Geo #${num} — ${total.toLocaleString()}/${max.toLocaleString()}\n` +
+    `Peter's Daily Geo #${num}, ${total.toLocaleString()}/${max.toLocaleString()}\n` +
     `${squares(scores)}\n` +
     `https://petezha.xyz`
   );

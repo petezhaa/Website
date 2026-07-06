@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 
-// Which came first? — streak mode against the history engine (rust/history.rs).
+// Which came first?, streak mode against the history engine (rust/history.rs).
 // Two events, click the earlier one. The engine deals pairs whose year gap
-// shrinks as your streak grows — 400 years at first, down to a floor of 15 —
+// shrinks as your streak grows, 400 years at first, down to a floor of 15, 
 // so the easy centuries run out exactly when you start feeling confident.
 
 type Engine = {
@@ -243,9 +243,9 @@ export function WhichFirst() {
                     >
                       {formatYear(year)}
                       {earlier
-                        ? " — earlier"
+                        ? ", earlier"
                         : over.picked === side
-                          ? " — your pick"
+                          ? ", your pick"
                           : ""}
                     </p>
                   </div>
@@ -270,7 +270,7 @@ export function WhichFirst() {
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">chronology under pressure, in Rust</p>
         <p>
           {nEvents} events in the wasm engine&apos;s table, one rule: click the earlier one.
-          each deal targets a year gap of max(400 / (streak + 1), 15) — round one might be
+          each deal targets a year gap of max(400 / (streak + 1), 15), round one might be
           the fall of Rome versus Columbus; by streak ten it&apos;s the telephone versus the
           Wright brothers.
         </p>

@@ -4,13 +4,13 @@ export const GITHUB_URL = "https://github.com/petezhaa";
 export type GithubStats = {
   repos: number;
   // primary language -> how many (non-fork) repos lead with it. From the
-  // same single list call — no per-repo requests, the keyless rate limit
+  // same single list call, no per-repo requests, the keyless rate limit
   // is 60/hr and this site shares an egress IP with the whole planet.
   languages: Record<string, number>;
 };
 
 // keyless works from a friendly IP, but the worker shares Cloudflare egress
-// with the internet — set GITHUB_TOKEN (fine-grained, public-repo read) as a
+// with the internet, set GITHUB_TOKEN (fine-grained, public-repo read) as a
 // secret to dodge the anonymous 60/hr limit in production.
 const HEADERS: Record<string, string> = {
   "User-Agent": "peterzhao-site",

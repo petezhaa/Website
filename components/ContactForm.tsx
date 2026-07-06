@@ -8,7 +8,7 @@ const EMAIL = "peterzhaoofficial@gmail.com";
 
 // No backend: submitting composes the email in the visitor's own mail app.
 // The preview window shows exactly what that email will look like, as you
-// type it — so the mailto isn't a leap of faith.
+// type it, so the mailto isn't a leap of faith.
 export function ContactForm() {
   const [name, setName] = useState("");
   const [from, setFrom] = useState("");
@@ -16,7 +16,7 @@ export function ContactForm() {
   const [copied, setCopied] = useState(false);
   const [sending, setSending] = useState(false);
 
-  const subject = name ? `Hi Peter — from ${name}` : "Hi Peter";
+  const subject = name ? `Hi Peter, from ${name}` : "Hi Peter";
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +24,7 @@ export function ContactForm() {
     setSending(true);
     bumpVibe("curiosity", 15);
     const body = encodeURIComponent(
-      `${message}\n\n— ${name || "someone from your website"}${from ? ` (${from})` : ""}`
+      `${message}\n\n${name || "someone from your website"}${from ? ` (${from})` : ""}`
     );
     // let the plane leave the button before the mail app steals focus
     setTimeout(() => {
@@ -79,7 +79,7 @@ export function ContactForm() {
                   <i className="bg-gold/60" />
                   <i className="bg-moss/60" />
                 </span>
-Preview — this is what I&apos;ll get
+                <span>Preview, this is what I&apos;ll get</span>
               </div>
               <div className="space-y-1 px-4 py-3 font-mono text-[11px] text-muted">
                 <p>
@@ -92,7 +92,7 @@ Preview — this is what I&apos;ll get
                   {message || "…"}
                 </p>
                 <p className="pt-1">
-                  — {name || "someone from your website"}
+                  {name || "someone from your website"}
                   {from ? ` (${from})` : ""}
                 </p>
               </div>

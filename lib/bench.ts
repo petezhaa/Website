@@ -1,4 +1,4 @@
-// bench.ts — the JavaScript contender. Same haversine recipe, operation for
+// bench.ts, the JavaScript contender. Same haversine recipe, operation for
 // operation, as bench.cpp and bench.rs (hand-rolled sin/cos/atan), so all three
 // return an identical checksum. This is the one that doesn't get compiled to
 // wasm, which is the whole point of the race.

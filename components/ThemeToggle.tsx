@@ -84,7 +84,7 @@ export function ThemeToggle() {
     }
     inFlight.current = true;
     // the body's own 0.25s color transition would keep fading UNDER the
-    // crossfade snapshot (a double animation that reads as a glitch) —
+    // crossfade snapshot (a double animation that reads as a glitch), 
     // suppress it for the duration so the crossfade is the only motion
     root.classList.add("theme-flip");
     const vt = doc.startViewTransition(apply);

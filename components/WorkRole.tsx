@@ -7,13 +7,13 @@ import { bumpVibe } from "@/lib/vibeBus";
 import type { Role } from "@/lib/resume";
 
 // One row of the work timeline. The quip is the headline; the actual work
-// (the resume bullets) unfolds on click — substance on demand.
+// (the resume bullets) unfolds on click, substance on demand.
 export function WorkRole({ role, last }: { role: Role; last: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
     <article className="relative grid gap-2 border-t border-line py-9 sm:grid-cols-[180px_1fr] sm:gap-8">
-      {/* timeline rail — a round node */}
+      {/* timeline rail, a round node */}
       <span
         aria-hidden
         className={`absolute -left-[22px] top-[38px] hidden h-3 w-3 rounded-full border-2 lg:block ${

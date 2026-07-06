@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 const CANONICAL = "petezha.xyz";
 
 export function middleware(req: NextRequest) {
-  // never force the canonical host during local development — otherwise
+  // never force the canonical host during local development, otherwise
   // localhost 308-redirects straight to production and you can't test.
   if (process.env.NODE_ENV !== "production") return NextResponse.next();
 

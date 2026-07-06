@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { bumpVibe } from "@/lib/vibeBus";
 
-// Guess the Year — history on a slider, scored by a Rust engine
+// Guess the Year, history on a slider, scored by a Rust engine
 // (rust/history.rs → /history.bin). Six events, 20 seconds each. The engine
 // grades on a curve that widens with age: the pyramid forgives a century,
 // the iPhone does not.
@@ -27,7 +27,7 @@ const YEAR_MAX = 2026;
 const ROUND_MS = 20_000;
 const BEST_KEY = "history-gy-best";
 
-// era ticks — a linear slider wearing a nonlinear costume
+// era ticks, a linear slider wearing a nonlinear costume
 const TICKS = [
   { v: -2500, label: "2500 BC" },
   { v: 1, label: "1 AD" },
@@ -282,18 +282,18 @@ export function GuessYear() {
           <div className="mt-6 flex flex-col items-center gap-1 text-center">
             {timedOut && (
               <p className="text-[10px] text-muted">
-                time ran out — the slider answered for you.
+                time ran out, the slider answered for you.
               </p>
             )}
             <p className="font-mono font-bold text-4xl tracking-tight text-accent">
               {fmtYear(last.actual)}
             </p>
             <p className="text-[11px] text-muted">
-              you said {fmtYear(last.guess)} —{" "}
+              you said {fmtYear(last.guess)}, {" "}
               {diff === 0
                 ? "dead on."
                 : diff <= 2
-                  ? `off by ${diff} — inside the bullseye.`
+                  ? `off by ${diff}, inside the bullseye.`
                   : `off by ${diff.toLocaleString()} years.`}
             </p>
             <p
@@ -342,7 +342,7 @@ export function GuessYear() {
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">forgiving chronology, in Rust</p>
         <p>the engine (rust/history.rs → wasm) grades on a curve: half points when you&apos;re off by one-twelfth of the event&apos;s age, floor of six years.</p>
         <p>so the pyramid forgives a century. the iPhone does not.</p>
-        <p>within 2 years is a bullseye — 1000 flat. close and quick earns up to +100 on top, capped at 1000 a round. six rounds, 6000 possible.</p>
+        <p>within 2 years is a bullseye, 1000 flat. close and quick earns up to +100 on top, capped at 1000 a round. six rounds, 6000 possible.</p>
       </div>
     </div>
   );

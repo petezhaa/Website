@@ -22,13 +22,13 @@ const TOPOS = [
   { name: "RC low-pass", art: "in ─R─●─ out · C to gnd", blurb: "highs leak to ground through C. corner at fc = 1/2πRC." },
   { name: "CR high-pass", art: "in ─C─●─ out · R to gnd", blurb: "C blocks the slow stuff. same corner, other side of it." },
   { name: "RLC band-pass", art: "in ─L─C─●─R─ gnd · out across R", blurb: "the LC pair only conducts near f₀ = 1/2π√LC. R sets how picky (Q = 2πf₀L/R)." },
-  { name: "RLC notch", art: "in ─R─●─ out · L─C to gnd", blurb: "at f₀ the LC leg is a dead short — one frequency falls in and never returns." },
+  { name: "RLC notch", art: "in ─R─●─ out · L─C to gnd", blurb: "at f₀ the LC leg is a dead short, one frequency falls in and never returns." },
 ];
 
 const BRIEFS = [
   "a clean 1 kHz tone, recorded onto a 40-year-old cassette. lose the hiss, keep the tone.",
-  "the classic: mains hum crawled in through the ground. 60 Hz has to go — the music stays.",
-  "junk on both sides of the signal. one corner will not cut it — you need a filter with a middle.",
+  "the classic: mains hum crawled in through the ground. 60 Hz has to go, the music stays.",
+  "junk on both sides of the signal. one corner will not cut it, you need a filter with a middle.",
   "the PA is feeding back at exactly 1 kHz, mid-song. cut the squeal, spare everything around it.",
   "one carrier, two kills at −24 dB on the flanks. this is the final. act like it.",
 ];
@@ -93,9 +93,9 @@ function readPalette(): Palette {
   };
 }
 
-// 2200 -> "2.20 kΩ", 1e-7 -> "100 nF" — engineering notation, three sig figs
+// 2200 -> "2.20 kΩ", 1e-7 -> "100 nF", engineering notation, three sig figs
 function fmtEng(v: number, unit: string) {
-  if (!isFinite(v) || v <= 0) return `— ${unit}`;
+  if (!isFinite(v) || v <= 0) return `, ${unit}`;
   const P: [number, string][] = [
     [1e9, "G"], [1e6, "M"], [1e3, "k"], [1, ""], [1e-3, "m"], [1e-6, "µ"], [1e-9, "n"], [1e-12, "p"],
   ];
@@ -109,7 +109,7 @@ function fmtEng(v: number, unit: string) {
   return `${v.toExponential(1)} ${unit}`;
 }
 function fmtF(f: number) {
-  if (!isFinite(f) || f <= 0) return "—";
+  if (!isFinite(f) || f <= 0) return ", ";
   if (f >= 1e6) return `${(f / 1e6).toFixed(1)} MHz`;
   if (f >= 1000) {
     const k = f / 1000;
@@ -554,7 +554,7 @@ export function FilterDesigner() {
         ))}
       </div>
       <p className="font-mono text-[11px] text-muted">
-        <span className="text-fg">{TOPOS[topo].art}</span> — {TOPOS[topo].blurb}{" "}
+        <span className="text-fg">{TOPOS[topo].art}</span>, {TOPOS[topo].blurb}{" "}
         <span className="text-gold">
           {topo < 2 ? `fc ≈ ${fmtF(fKnee)}` : `f₀ ≈ ${fmtF(fKnee)} · Q ≈ ${qVal >= 100 ? qVal.toFixed(0) : qVal.toFixed(1)}`}
         </span>
@@ -674,7 +674,7 @@ export function FilterDesigner() {
       <div className="panel relative overflow-hidden">
         <canvas ref={waveRef} width={WW} height={WH} className="block h-auto w-full select-none" />
         <p className="pointer-events-none absolute bottom-2 right-4 text-right text-[10px] text-muted/70">
-          faint: what goes in · clay: what comes out — steady state, the transient gave up long ago
+          faint: what goes in · clay: what comes out, steady state, the transient gave up long ago
         </p>
       </div>
 
@@ -682,9 +682,9 @@ export function FilterDesigner() {
       <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the math, running in C++</p>
         <p>transfer&nbsp;&nbsp;&nbsp;RC: 1/(1+jωRC) · CR: jωRC/(1+jωRC) · band-pass: R/(R+jX) · notch: jX/(R+jX), with X = ωL − 1/ωC</p>
-        <p>magnitude&nbsp;&nbsp;|H| needs only sqrt — the one math instruction wasm has. dB = 20·log10|H|, judged at each spec frequency.</p>
+        <p>magnitude&nbsp;&nbsp;|H| needs only sqrt, the one math instruction wasm has. dB = 20·log10|H|, judged at each spec frequency.</p>
         <p>log10&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;no libm, so: x = m·2ᵏ, ln m = 2·artanh((m−1)/(m+1)) summed to t¹¹, log10 = ln/ln10. the log-f grid is one hand-computed constant, 10^(1/50), multiplied 200 times.</p>
-        <p>phase&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;∠H from a minimax atan; the output trace is Σ aᵢ·|H(fᵢ)|·sin(2πfᵢt + ∠H(fᵢ)) — pure steady state, no ODE was integrated in the making of this filter.</p>
+        <p>phase&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;∠H from a minimax atan; the output trace is Σ aᵢ·|H(fᵢ)|·sin(2πfᵢt + ∠H(fᵢ)), pure steady state, no ODE was integrated in the making of this filter.</p>
       </div>
     </div>
   );

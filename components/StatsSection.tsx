@@ -271,7 +271,7 @@ export async function StatsSection() {
       }
       return h >>> 0;
     };
-    // every rated film with a poster plays — the whole diary window
+    // every rated film with a poster plays, the whole diary window
     const films = [...guessable].sort(
       (a, b) => hash(a.title + a.year) - hash(b.title + b.year)
     );

@@ -76,7 +76,7 @@ export default async function NowPage() {
             <>
               {current.quip}{" "}
               <span className="text-muted">
-                — {current.title} at {current.company}, {current.location}.
+                {current.title} at {current.company}, {current.location}.
               </span>
             </>
           ) : (
@@ -98,7 +98,7 @@ export default async function NowPage() {
               <span className="text-fg">{lastFilm.title}</span>
               {lastFilm.year ? ` (${lastFilm.year})` : ""}
               {lastFilm.rating !== null ? (
-                <span className="text-gold"> — {stars(lastFilm.rating)}</span>
+                <span className="text-gold">, {stars(lastFilm.rating)}</span>
               ) : null}
               {lastFilm.rewatch ? " (a rewatch)" : ""}.
             </>
@@ -110,7 +110,7 @@ export default async function NowPage() {
         <Row label="playing">
           {recent ? (
             <>
-              <span className="text-fg">{recent.name}</span> — {recent.hours2w}h
+              <span className="text-fg">{recent.name}</span>, {recent.hours2w}h
               in the last two weeks.
             </>
           ) : (

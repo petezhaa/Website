@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { dayNumber } from "@/lib/daily";
 
-// The daily-challenge leaderboard — the site's first backend state. One KV
+// The daily-challenge leaderboard, the site's first backend state. One KV
 // key per UTC day holding the top 50, expiring after a week. Scores are
 // client-reported and capped at the game's max; this is a personal site,
 // not a casino. Honor system, lightly enforced.

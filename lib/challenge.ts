@@ -83,7 +83,7 @@ export function decodeChallenge(code: string): Challenge | null {
   }
 }
 
-// rank title for the share card — mirrors the game's own tiers
+// rank title for the share card, mirrors the game's own tiers
 export function rankTitle(pct: number): string {
   if (pct >= 90) return "Cartographer";
   if (pct >= 70) return "Navigator";

@@ -56,7 +56,7 @@ function resample(raw: [number, number][], n: number): [number, number][] {
   return out;
 }
 
-// a default drawing so the toy animates on arrival — a heart curve
+// a default drawing so the toy animates on arrival, a heart curve
 function heartPoints(): [number, number][] {
   const pts: [number, number][] = [];
   for (let i = 0; i < SAMPLES; i++) {
@@ -183,7 +183,7 @@ export function EpicycleDrawer() {
     const terms = termsRef.current;
     const nUse = Math.min(nTermsRef.current, terms.length);
     const t = tRef.current;
-    // walk the epicycle chain — only the top-N largest terms
+    // walk the epicycle chain, only the top-N largest terms
     let x = 0, y = 0;
     ctx.lineWidth = 1;
     for (let i = 0; i < nUse; i++) {
@@ -423,7 +423,7 @@ export function EpicycleDrawer() {
           </div>
         )}
         <p className="pointer-events-none absolute bottom-3 right-4 text-right text-[10px] leading-relaxed text-muted/70">
-          {drawing ? "release to transform" : "draw a shape — the vectors will retrace it"}<br />
+          {drawing ? "release to transform" : "draw a shape, the vectors will retrace it"}<br />
           {drawing ? "" : "dashed ghost: your original · fewer circles, blurrier trace"}
         </p>
       </div>
@@ -431,7 +431,7 @@ export function EpicycleDrawer() {
         <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-4 font-mono text-[11px] text-muted">
           <span className="uppercase tracking-[0.2em] text-accent">spectrum</span>
           <span>
-            using {nTerms}/{termCount || "—"} terms · err ≈ {err == null ? "—" : err.toFixed(1)} px
+            using {nTerms}/{termCount || ", "} terms · err ≈ {err == null ? ", " : err.toFixed(1)} px
           </span>
         </div>
         <canvas ref={specRef} width={SW} height={SH} className="block h-auto w-full" aria-label="harmonic spectrum" />
@@ -441,8 +441,8 @@ export function EpicycleDrawer() {
         <p>each point is a complex number z = x + iy.</p>
         <p>analysis&nbsp;&nbsp;c_k = (1/N) Σⱼ zⱼ · e^(−i·2π·k·j/N)&nbsp;&nbsp;(the DFT, in C++)</p>
         <p>synthesis z(t) = Σₖ c_k · e^(+i·2π·f_k·t)&nbsp;&nbsp;(the spinning vectors, biggest first)</p>
-        <p>truncation: keep the N biggest coefficients and you keep the shape — that is compression.</p>
-        <p>err is the mean gap between your points and the top-N partial sum. sharp corners cost harmonics — try the square.</p>
+        <p>truncation: keep the N biggest coefficients and you keep the shape, that is compression.</p>
+        <p>err is the mean gap between your points and the top-N partial sum. sharp corners cost harmonics, try the square.</p>
       </div>
     </div>
   );

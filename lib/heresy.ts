@@ -1,4 +1,4 @@
-// "Publish your heresy" — the park tier list reverts your edits after 2.4s,
+// "Publish your heresy", the park tier list reverts your edits after 2.4s,
 // so we capture your INTENDED ordering at move time and pack the parks you
 // moved off-canon into a /heresy/<code> URL. Stateless, all in the path
 // (opengraph-image routes only receive path params, not query).

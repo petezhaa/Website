@@ -108,7 +108,7 @@ export function ParkTierList() {
     }
   };
 
-  // parks whose intended tier differs from my canon — the heresy
+  // parks whose intended tier differs from my canon, the heresy
   const heresyChanges = () => {
     const changes: { index: number; tier: number }[] = [];
     intendedRef.current.forEach((toLabel, park) => {
@@ -254,7 +254,7 @@ export function ParkTierList() {
               ✕
             </button>
             <p className="text-[10px] uppercase tracking-[0.2em] text-accent">
-              re: your proposed change — {rebuttal.park}, {rebuttal.from} →{" "}
+              re: your proposed change, {rebuttal.park}, {rebuttal.from} →{" "}
               {rebuttal.to}
             </p>
             <div className="mt-2 space-y-2 text-sm leading-relaxed text-muted">

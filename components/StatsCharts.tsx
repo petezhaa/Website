@@ -741,8 +741,8 @@ function GuessRating({ data }: { data: NonNullable<StatsData["guessGame"]> }) {
         <table className={tableCls}>
           <tbody>
             <tr><td className={tdCls}>rounds played</td><td className={tdCls}>{played}</td></tr>
-            <tr><td className={tdCls}>your avg error</td><td className={tdCls}>{played ? (sumErr / played).toFixed(2) : "—"}★</td></tr>
-            <tr><td className={tdCls}>model avg error</td><td className={tdCls}>{played ? (sumModel / played).toFixed(2) : "—"}★</td></tr>
+            <tr><td className={tdCls}>your avg error</td><td className={tdCls}>{played ? (sumErr / played).toFixed(2) : ", "}★</td></tr>
+            <tr><td className={tdCls}>model avg error</td><td className={tdCls}>{played ? (sumModel / played).toFixed(2) : ", "}★</td></tr>
           </tbody>
         </table>
       }

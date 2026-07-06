@@ -9,7 +9,7 @@ const H = 440; // part a: the ε–δ arena
 const RW = 840;
 const RH = 280; // part b: the riemann lab
 
-// the demon's ε schedule — one round per entry, shrinking
+// the demon's ε schedule, one round per entry, shrinking
 const EPS = [0.75, 0.5, 0.3, 0.18, 0.1, 0.06, 0.035, 0.02];
 
 // per-function plot windows [x0, x1, y0, y1], sized so L ± 0.75 stays visible
@@ -20,7 +20,7 @@ const VIEW: [number, number, number, number][] = [
   [-1.15, 1.15, -0.45, 1.45], // step
 ];
 
-// the lab integrates [RA, RB] — deliberately asymmetric, so left/right sums
+// the lab integrates [RA, RB], deliberately asymmetric, so left/right sums
 // keep their honest O(1/n) error even on the even functions
 const RA = -0.5;
 const RB = 1;
@@ -35,7 +35,7 @@ const RVIEW: [number, number][] = [
 
 const FALLBACK_NAMES = ["x²", "x·sin(1/x)", "|x|", "step(x)"];
 const TAGLINES = [
-  "smooth, obedient — the warmup",
+  "smooth, obedient, the warmup",
   "continuous at 0, but only just",
   "a corner is not a crime",
   "the trap: a jump lives at 0",
@@ -234,7 +234,7 @@ export function AnalysisGame() {
         ctx.fill();
       }
 
-      // the demon's eye: (a, L) itself is excluded — 0 < |x − a|
+      // the demon's eye: (a, L) itself is excluded, 0 < |x − a|
       ctx.beginPath();
       ctx.arc(X(a), Y(L), 4.5, 0, Math.PI * 2);
       ctx.fillStyle = P.surface;
@@ -253,8 +253,8 @@ export function AnalysisGame() {
       ctx.fillStyle = winCol;
       ctx.fillText(
         pass
-          ? `sup |f−L| = ${sup.toFixed(4)} < ε — the window holds`
-          : `sup |f−L| = ${sup.toFixed(4)} ≥ ε — the curve escapes`,
+          ? `sup |f−L| = ${sup.toFixed(4)} < ε, the window holds`
+          : `sup |f−L| = ${sup.toFixed(4)} ≥ ε, the curve escapes`,
         12, 40,
       );
     }
@@ -437,7 +437,7 @@ export function AnalysisGame() {
         S.phase = "won";
         setPhase("won");
         setMsg(
-          `out of ε. for every challenge you produced a δ — which is, verbatim, the definition. ` +
+          `out of ε. for every challenge you produced a δ, which is, verbatim, the definition. ` +
           `lim x→${fmt(a)} ${names[S.fi]} = ${fmt(L)}, certified. ∎ (+${pts})`,
         );
         bumpVibe("curiosity", 12);
@@ -457,11 +457,11 @@ export function AnalysisGame() {
           ? `no δ exists. the jump has height 1, so every punctured window holds a point with |f−L| = 0.5 ≥ ε. ` +
             `once ε ≤ half the jump, the demon always wins: this limit does not exist. ` +
             `that is exactly what “discontinuous at 0” means. ∎`
-          : `no δ — however microscopic — survives this ε. the claimed L is simply not the limit. the demon accepts your surrender.`,
+          : `no δ, however microscopic, survives this ε. the claimed L is simply not the limit. the demon accepts your surrender.`,
       );
       bumpVibe("curiosity", 10);
     } else {
-      setMsg(`sup = ${sup.toFixed(4)} ≥ ε — the curve slips out of the band. the demon cackles. tighten δ.`);
+      setMsg(`sup = ${sup.toFixed(4)} ≥ ε, the curve slips out of the band. the demon cackles. tighten δ.`);
     }
   };
 
@@ -513,7 +513,7 @@ export function AnalysisGame() {
 
       {ready && eng && (
         <p className="font-mono text-[11px] text-muted">
-          claim: lim x→{fmt(eng.game_a(fi))} of {names[fi]} = {fmt(eng.game_L(fi))} —{" "}
+          claim: lim x→{fmt(eng.game_a(fi))} of {names[fi]} = {fmt(eng.game_L(fi))}, {" "}
           <span className="text-accent">the ε demon disputes it</span>
         </p>
       )}
@@ -560,7 +560,7 @@ export function AnalysisGame() {
           <span className="text-[11px] text-muted">
             {phase === "won"
               ? "flawless. now try a nastier function."
-              : "pick another function — this one is broken at a, and that was the point."}
+              : "pick another function, this one is broken at a, and that was the point."}
           </span>
         )}
       </div>
@@ -607,16 +607,16 @@ export function AnalysisGame() {
           <span className="inline-block h-1.5 w-36 overflow-hidden rounded-full bg-line">
             <span className="block h-full bg-accent transition-all duration-300" style={{ width: `${errPct}%` }} />
           </span>
-          <span className="text-muted/70">log error — watch midpoint fall off a cliff</span>
+          <span className="text-muted/70">log error, watch midpoint fall off a cliff</span>
         </span>
       </div>
 
       <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the analysis, running in C++</p>
         <p>limit&nbsp;&nbsp;&nbsp;&nbsp;lim x→a f(x) = L&nbsp;&nbsp;⇔&nbsp;&nbsp;∀ε&gt;0 ∃δ&gt;0 : 0 &lt; |x−a| &lt; δ ⇒ |f(x)−L| &lt; ε</p>
-        <p>the duel&nbsp;&nbsp;the demon calls ε, you answer δ. C++ checks sup{"{"}|f(x)−L| : 0&lt;|x−a|&lt;δ{"}"} over ~4000 samples — you win iff sup &lt; ε.</p>
+        <p>the duel&nbsp;&nbsp;the demon calls ε, you answer δ. C++ checks sup{"{"}|f(x)−L| : 0&lt;|x−a|&lt;δ{"}"} over ~4000 samples, you win iff sup &lt; ε.</p>
         <p>integral&nbsp;&nbsp;∫ₐᵇ f dx = lim Σᵢ f(xᵢ*)·Δx, Δx = (b−a)/n&nbsp;&nbsp;(left | right | midpoint choose xᵢ*)</p>
-        <p>error: left/right ∝ 1/n, midpoint ∝ 1/n² — for smooth f. the step revokes midpoint&apos;s superpower; x·sin(1/x) bends the rules. discontinuity isn&apos;t a vibe — it&apos;s a failed ∀∃.</p>
+        <p>error: left/right ∝ 1/n, midpoint ∝ 1/n², for smooth f. the step revokes midpoint&apos;s superpower; x·sin(1/x) bends the rules. discontinuity isn&apos;t a vibe, it&apos;s a failed ∀∃.</p>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
-// The hand-written half of the /now page — the part no API can fill in.
+// The hand-written half of the /now page, the part no API can fill in.
 // Keep it short, honest, and in my own voice; update it when life shifts.
-// (The other half — last film, recent games — is pulled live on the page.)
+// (The other half, last film, recent games, is pulled live on the page.)
 
 export const NOW_UPDATED = "July 2026";
 
@@ -11,7 +11,7 @@ export const NOW_LINES: { label: string; text: string }[] = [
   },
   {
     label: "reading",
-    text: "more history than fiction lately — the older the campaign, the better.",
+    text: "more history than fiction lately, the older the campaign, the better.",
   },
   {
     label: "side project",

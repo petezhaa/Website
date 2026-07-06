@@ -102,7 +102,7 @@ export default function Home() {
             </Reveal>
             <Reveal delay={140}>
               <p className="mt-7 max-w-xl text-lg leading-relaxed text-muted">
-                I study computer science, electrical engineering, and math &mdash;
+                I study computer science, electrical engineering, and math, 
                 all three, because the work I enjoy sits somewhere between them.
                 This summer I&apos;m at NVIDIA building GPU simulation
                 infrastructure, then Microsoft on Azure Search. Last summer,
@@ -142,7 +142,7 @@ export default function Home() {
               <div className="mx-auto h-64 w-64 overflow-hidden rounded-full border border-line bg-surface shadow-sm sm:h-72 sm:w-72 lg:h-80 lg:w-80">
                 <Image
                   src="/childhood.jpg"
-                  alt="Peter as a small child in Pulaski, Wisconsin"
+                  alt="Peter as a small child in rural Wisconsin"
                   width={480}
                   height={480}
                   unoptimized
@@ -150,14 +150,14 @@ export default function Home() {
                 />
               </div>
               <figcaption className="mt-4 text-center text-sm italic text-muted">
-                Pulaski, Wisconsin. Age four.
+                Rural Wisconsin. Age four.
               </figcaption>
             </figure>
           </Reveal>
         </section>
 
         {/* ============ WORK ============ */}
-        <Section id="work" title="Work" note="Five engineering roles, most recent first — the résumé, in brief.">
+        <Section id="work" title="Work" note="Five engineering roles, most recent first. The résumé, in brief.">
           <div className="flex flex-col lg:pl-5">
             {ROLES.map((role, i) => (
               <Reveal key={role.company + role.dates} delay={i * 50}>
@@ -182,7 +182,7 @@ export default function Home() {
         <Section
           id="play"
           title="The arcade"
-          note="Four languages, running in your browser — no plugins."
+          note="Four languages, running in your browser, no plugins."
         >
           <Reveal>
             <p className="mb-8 max-w-2xl leading-relaxed text-muted">
@@ -196,7 +196,7 @@ export default function Home() {
               >
                 Rust compiled to WebAssembly
               </a>
-              , the physics and math sims are freestanding C++, the board game Go
+             , the physics and math sims are freestanding C++, the board game Go
               is written in Go, and Snake is genuine Java bytecode run by a little
               JVM I wrote for this site. React just draws.
             </p>
@@ -222,7 +222,7 @@ export default function Home() {
             <Reveal>
               <div className="space-y-5 leading-relaxed text-muted">
                 <p className="font-serif text-2xl leading-snug tracking-tight text-fg sm:text-3xl">
-                  I grew up in Pulaski, Wisconsin, in a trailer park.
+                  I grew up in rural Wisconsin, in a trailer park.
                 </p>
                 <p>
                   I worked at my parents&apos; restaurant. I was one of the only
@@ -243,8 +243,8 @@ export default function Home() {
                 <div className="max-w-sm pt-3">
                   <Polaroid
                     src="/first-home.jpg"
-                    alt="The trailer in Pulaski, Wisconsin, where Peter grew up"
-                    caption="pulaski, wisconsin — where it started"
+                    alt="The trailer in rural Wisconsin where Peter grew up"
+                    caption="where it started"
                     width={316}
                     height={234}
                   />
@@ -329,14 +329,14 @@ export default function Home() {
                     My parents run a Chinese restaurant.
                   </h2>
                   <p className="mt-5 max-w-xl leading-relaxed text-muted">
-                    China Wok, in Pulaski, Wisconsin. It paid for the calculators,
+                    China Wok, back home in Wisconsin. It paid for the calculators,
                     the tuition gaps, and the work ethic. If you&apos;re ever near
                     Green Bay, ordering the General Tso&apos;s is the single most
                     effective way to support this website.
                   </p>
                   <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
                     <span className="text-gold">4.7★ on Google</span>
-                    <span>1170 Mountain Bay Dr, Pulaski, WI</span>
+                    <span>near Green Bay, WI</span>
                     <span>$10&ndash;20</span>
                   </div>
                   <div className="mt-8">
@@ -396,7 +396,7 @@ export default function Home() {
       {/* ============ FOOTER ============ */}
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-6 py-8 text-sm text-muted">
-          <span>© 2026 Peter Zhao — Pulaski, Wisconsin</span>
+          <span>© 2026 Peter Zhao, Wisconsin</span>
           <a
             href={LINKS.github}
             target="_blank"

@@ -10,7 +10,7 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["400", "500", "700"],
 });
 
-// Newsreader shows up only where a human is talking — the few serif
+// Newsreader shows up only where a human is talking, the few serif
 // pull-quotes that warm up an otherwise-monospace page.
 const newsreader = Newsreader({
   variable: "--font-newsreader",

@@ -10,7 +10,7 @@ export async function generateMetadata({
   const { code } = await params;
   const c = decodeChallenge(code);
   const title = c
-    ? `Beat my ${c.score.toLocaleString()} — Peter's map game`
+    ? `Beat my ${c.score.toLocaleString()}, Peter's map game`
     : "Map game challenge · Peter Zhao";
   const description = c
     ? `I scored ${c.score.toLocaleString()}/6000 on the same six rounds. Race my ghost pins and see if you can do better.`
@@ -62,7 +62,7 @@ export default async function ChallengePage({
             That challenge link looks broken
           </h1>
           <p className="mb-8 mt-3 max-w-xl leading-relaxed text-muted">
-            The code didn&apos;t decode — maybe the game was updated since the
+            The code didn&apos;t decode, maybe the game was updated since the
             link was made. Play a fresh round instead.
           </p>
           <MapGame />

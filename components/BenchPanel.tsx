@@ -89,7 +89,7 @@ export function BenchPanel() {
     };
 
     const kb = (b: number) => `${(b / 1024).toFixed(1)} KB compiled`;
-    // rank by MEASURED speed — don't assume wasm wins (V8 is very good here)
+    // rank by MEASURED speed, don't assume wasm wins (V8 is very good here)
     const built = [
       mk("cpp", "C++ → wasm", kb(sizeRef.current.cpp), c),
       mk("rust", "Rust → wasm", kb(sizeRef.current.rust), r),
@@ -168,7 +168,7 @@ export function BenchPanel() {
                   <span className="text-fg">
                     {rows[0].sum.toLocaleString(undefined, { maximumFractionDigits: 1 })}
                   </span>{" "}
-                  {allMatch ? "— identical ✓ (same algorithm, to the bit)" : "— (tiny FP drift)"}
+                  {allMatch ? ", identical ✓ (same algorithm, to the bit)" : ", (tiny FP drift)"}
                 </p>
                 <p className="mt-1">
                   {spread < 1.15 ? (
@@ -176,14 +176,14 @@ export function BenchPanel() {
                       basically a tie ({spread.toFixed(2)}× across all three). a
                       modern JS JIT compiles this hot numeric loop to nearly the
                       same machine code as wasm, so the honest takeaway
-                      isn&apos;t &ldquo;wasm is faster&rdquo; — it&apos;s that
+                      isn&apos;t &ldquo;wasm is faster&rdquo;, it&apos;s that
                       wasm gets you C++/Rust and a self-contained ~1&nbsp;KB
                       binary at the same speed, with no JIT warm-up.
                     </>
                   ) : (
                     <>
                       <span className="text-fg">{rows[0].label}</span> wins this
-                      run, {spread.toFixed(2)}× the slowest — though on scalar
+                      run, {spread.toFixed(2)}× the slowest, though on scalar
                       math like this the three are usually neck and neck.
                     </>
                   )}

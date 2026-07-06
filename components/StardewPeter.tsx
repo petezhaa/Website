@@ -1,7 +1,7 @@
 // Stardew Peter, in the actual Stardew farmer style this time: the head is
 // half the sprite, the face is flat and wide, there is NO mouth, the eyes are
 // 2x2 with a white catchlight, the arms hang as straight columns, and the
-// legs are stubs. The outfit carries the identity — it's the "age four,
+// legs are stubs. The outfit carries the identity, it's the "age four,
 // allegedly" fit: buzz cut, gray sweatshirt, red band, crest, the 83 pants.
 const GRID = [
   "...HHHHHHHHHH...",

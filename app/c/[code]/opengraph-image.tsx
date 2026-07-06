@@ -57,7 +57,7 @@ export default async function Image({
 
         <span style={{ fontSize: 32, color: "#9a967f" }}>
           {c && c.beat >= 1
-            ? `beat a random clicker by ${c.beat.toFixed(1)}× — think you can do better?`
+            ? `beat a random clicker by ${c.beat.toFixed(1)}×, think you can do better?`
             : "think you can do better?"}
         </span>
       </div>

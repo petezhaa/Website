@@ -61,7 +61,7 @@ export function CheeseMode() {
         () => { root.classList.add("beer-lean"); pulseTimer.current = setTimeout(() => root.classList.remove("beer-lean"), 1400); },
         () => { root.classList.add("beer-blur"); pulseTimer.current = setTimeout(() => root.classList.remove("beer-blur"), 700); },
         () => rain([BEVERAGES[Math.floor(Math.random() * BEVERAGES.length)]], 1),
-        // day turns to night turns to day — same crossfade the real toggle uses
+        // day turns to night turns to day, same crossfade the real toggle uses
         () => { chaosFlips.current++; window.dispatchEvent(new Event("theme-toggle")); },
       ];
       effects[Math.floor(Math.random() * effects.length)]();
@@ -99,7 +99,7 @@ export function CheeseMode() {
   };
 
   // the other wisconsin food group. type "beer" (or "wine", we don't judge)
-  // and the site has a few — then keeps having a few.
+  // and the site has a few, then keeps having a few.
   const triggerBeer = () => {
     const next = !beerOn.current;
     beerOn.current = next;

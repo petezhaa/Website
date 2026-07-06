@@ -1,7 +1,7 @@
 // A very small JVM. Parses a real .class file (as produced by javac) and
 // interprets enough of the bytecode to run this site's Snake.java: one class,
 // static int / int[] fields, static methods, int arithmetic and control flow.
-// ~60 opcodes. No objects, no GC, no strings — deliberately. The point is
+// ~60 opcodes. No objects, no GC, no strings, deliberately. The point is
 // that what runs in the browser is the genuine javac output, not a port.
 //
 // javap -c java/Snake.class shows exactly the instruction stream this executes.

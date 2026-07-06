@@ -8,7 +8,7 @@
    A personal site that reads like a well-set magazine profile:
    warm paper, a serif display voice, a clean sans for reading,
    generous whitespace, hairline rules, one quiet green accent.
-   Designed the way a person with taste designs — not a template,
+   Designed the way a person with taste designs, not a template,
    and deliberately NOT a developer-terminal costume.
    ============================================================ */
 
@@ -36,7 +36,7 @@
   --fg: #ece7d8;        /* warm paper text */
   --muted: #9a9384;
   --line: #2e2b22;
-  --accent: #93b089;    /* sage — lifted so it reads on the dark ground */
+  --accent: #93b089;    /* sage, lifted so it reads on the dark ground */
   --accent-soft: rgba(147, 176, 137, 0.14);
   --accent-fg: #16150f;
   --gold: #cba646;
@@ -224,7 +224,7 @@ body {
    old terminal look to a quieter editorial one.
    ============================================================ */
 
-/* a soft framed block — used mostly to frame interactive widgets
+/* a soft framed block, used mostly to frame interactive widgets
    (game canvases, forms). Editorial: gentle radius, hairline, no hard box. */
 .panel {
   border: 1px solid var(--line);
@@ -251,7 +251,7 @@ body {
 }
 
 /* editorial link: an underline that sits a little low and warms to the
-   accent on hover — the way body-copy links look in print online. */
+   accent on hover, the way body-copy links look in print online. */
 .tlink {
   color: var(--accent);
   text-decoration: none;

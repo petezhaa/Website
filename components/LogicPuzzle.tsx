@@ -37,11 +37,11 @@ const TAGLINES = [
   "the palette is one gate. it is enough. it is always enough. (B is soldered on but it is not your problem.)",
   "a nand is an and holding a grudge. talk it down.",
   "De Morgan in the wild: or is just nand of nots. feel it.",
-  "the classic 4-nand xor — a rite of passage in every digital lab.",
+  "the classic 4-nand xor, a rite of passage in every digital lab.",
   "C low picks A, C high picks B. congratulations, you are building what FPGAs are made of.",
 ];
 
-// small SVG glyphs — the ANSI distinctive shapes, squeezed into a chip:
+// small SVG glyphs, the ANSI distinctive shapes, squeezed into a chip:
 // D-shape AND, curved-back OR, triangle+dot NOT, a dot turns AND/OR into NAND/NOR
 function GateGlyph({ t }: { t: number }) {
   const s = { fill: "none", stroke: "currentColor", strokeWidth: 1.6 } as const;
@@ -211,7 +211,7 @@ export function LogicPuzzle() {
               disabled={locked}
               title={
                 locked
-                  ? "locked — clear the previous level first"
+                  ? "locked, clear the previous level first"
                   : `${nm}${cleared ? ` · best ${best[i]} gates` : ""}`
               }
               className={`${chip(level === i)} ${locked ? "cursor-not-allowed opacity-35" : ""}`}
@@ -227,7 +227,7 @@ export function LogicPuzzle() {
       </div>
 
       <p className="text-[11px] leading-relaxed text-muted">
-        lvl {level + 1} · <span className="text-fg">{names[level]}</span> — {TAGLINES[level] ?? ""}
+        lvl {level + 1} · <span className="text-fg">{names[level]}</span>, {TAGLINES[level] ?? ""}
       </p>
 
       <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
@@ -259,7 +259,7 @@ export function LogicPuzzle() {
 
           {gates.length === 0 && !pending && (
             <p className="rounded-md border border-dashed border-line px-3 py-4 text-center text-[11px] text-muted">
-              empty board. pick a gate from the palette below — solder responsibly.
+              empty board. pick a gate from the palette below, solder responsibly.
             </p>
           )}
 
@@ -369,7 +369,7 @@ export function LogicPuzzle() {
           </div>
           {nG >= MAXG && !isSolved && (
             <p className="mt-2 text-[11px] text-accent">
-              out of silicon. twelve gates is the whole die — undo something.
+              out of silicon. twelve gates is the whole die, undo something.
             </p>
           )}
         </div>
@@ -427,7 +427,7 @@ export function LogicPuzzle() {
             </tbody>
           </table>
           <p className="mt-2 max-w-[13rem] text-[10px] leading-relaxed text-muted">
-            the truth table is the spec. there is no other spec. click a row to probe it — every
+            the truth table is the spec. there is no other spec. click a row to probe it, every
             gate on the bench lights up with its value for that combo.
           </p>
         </div>
@@ -437,7 +437,7 @@ export function LogicPuzzle() {
       {isSolved && nG > 0 && (
         <div className="flex flex-wrap items-center gap-3 rounded-md border border-moss/50 bg-moss/10 px-4 py-3">
           <p className="text-[11px] leading-relaxed text-moss">
-            ✓ all {rows} rows match. done in {nG} gate{nG === 1 ? "" : "s"} · par {par} —{" "}
+            ✓ all {rows} rows match. done in {nG} gate{nG === 1 ? "" : "s"} · par {par}, {" "}
             {nG < par
               ? "under par. the synthesizer would like a word."
               : nG === par
@@ -467,22 +467,22 @@ export function LogicPuzzle() {
       <div className="panel p-4 text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the netlist, running in C++</p>
         <p>
-          signals — inputs are 0..n−1; gate k&apos;s output is signal n+k. a new gate may only read
+          signals, inputs are 0..n−1; gate k&apos;s output is signal n+k. a new gate may only read
           signals that already exist, so the netlist is a DAG by construction: no combinational
           loops, ever, and evaluation is one left-to-right sweep.
         </p>
         <p>
-          eval — for each row r (A is the top bit) C++ sweeps the gates in order: ¬a · a∧b · a∨b ·
+          eval, for each row r (A is the top bit) C++ sweeps the gates in order: ¬a · a∧b · a∨b ·
           a⊕b · ¬(a∧b) · ¬(a∨b). the last gate placed is OUT; solved() compares it to the target
           on all 2ⁿ rows.
         </p>
         <p>
           the nand levels are the classic completeness result: x⊼x = ¬x, ¬(x⊼y) = x∧y, and De
-          Morgan buys ∨ — so one gate builds every circuit. your cpu is mostly this trick,
+          Morgan buys ∨, so one gate builds every circuit. your cpu is mostly this trick,
           repeated a few billion times.
         </p>
         <p>
-          par — the known-minimal gate count. matching it is the sport; going over just means
+          par, the known-minimal gate count. matching it is the sport; going over just means
           you&apos;ve invented technical debt.
         </p>
       </div>

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 
-// Timeline Builder — six shuffled events from the Rust history engine
+// Timeline Builder, six shuffled events from the Rust history engine
 // (rust/history.rs), reordered by hand until they read oldest-to-newest.
 // Scored by correctly-ordered pairs (Kendall tau against true chronology).
 
@@ -25,7 +25,7 @@ type Engine = {
 };
 
 type Card = {
-  pos: number; // position in the dealt hand (0..5) — what tl_score wants
+  pos: number; // position in the dealt hand (0..5), what tl_score wants
   name: string;
   year: number;
 };
@@ -92,7 +92,7 @@ export function TimelineBuilder() {
       const v = localStorage.getItem(BEST_KEY);
       if (v !== null && Number.isFinite(parseInt(v, 10))) setBest(parseInt(v, 10));
     } catch {
-      // private mode etc. — the best score just stays session-only
+      // private mode etc., the best score just stays session-only
     }
     return () => {
       cancelled = true;
@@ -242,7 +242,7 @@ export function TimelineBuilder() {
                 <span className={score === PAIRS ? "text-moss" : "text-accent"}>
                   {score}/{PAIRS}
                 </span>{" "}
-                pairs in order — {verdict(score ?? 0)}
+                pairs in order, {verdict(score ?? 0)}
               </p>
               <button
                 onClick={deal}
@@ -259,14 +259,14 @@ export function TimelineBuilder() {
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">kendall tau, in Rust</p>
         <p>
           six events make fifteen pairs. the engine counts how many pairs you put in the right
-          order — the Kendall tau rank statistic, moonlighting as a history quiz.
+          order, the Kendall tau rank statistic, moonlighting as a history quiz.
         </p>
         <p>
           shuffling at random averages 7.5 of 15, so &quot;directionally correct&quot; starts at 8.
           the deal never repeats a year; there is always exactly one right answer.
         </p>
         <p>
-          swapping two adjacent cards changes exactly one pair — every move is worth exactly one
+          swapping two adjacent cards changes exactly one pair, every move is worth exactly one
           point, up or down.
         </p>
       </div>

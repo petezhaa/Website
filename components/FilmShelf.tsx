@@ -18,7 +18,7 @@ function StatTile({ value, label }: { value: string; label: string }) {
 
 // GitHub-contributions style: 16 weeks of diary activity, one cell per day.
 // Server-rendered divs; the RSS diary only reaches back ~50 films, which is
-// exactly the point — the gaps are honest.
+// exactly the point, the gaps are honest.
 function WatchHeatmap({ films }: { films: LetterboxdData["films"] }) {
   const counts = new Map<string, number>();
   for (const f of films) {
@@ -55,7 +55,7 @@ function WatchHeatmap({ films }: { films: LetterboxdData["films"] }) {
             {col.map((cell) => (
               <div
                 key={cell.date}
-                title={cell.future ? undefined : `${cell.date}${cell.n ? ` — ${cell.n} film${cell.n > 1 ? "s" : ""}` : ""}`}
+                title={cell.future ? undefined : `${cell.date}${cell.n ? `, ${cell.n} film${cell.n > 1 ? "s" : ""}` : ""}`}
                 className={`h-3.5 w-3.5 rounded-[3px] ${
                   cell.future
                     ? "bg-transparent"
@@ -139,7 +139,7 @@ function Shelf({ data }: { data: LetterboxdData }) {
         )}
         {recent[0] && (
           <StatTile
-            value={recent[0].rating !== null ? stars(recent[0].rating) : "—"}
+            value={recent[0].rating !== null ? stars(recent[0].rating) : ", "}
             label={`last watch: ${recent[0].title}`}
           />
         )}
@@ -157,7 +157,7 @@ function Shelf({ data }: { data: LetterboxdData }) {
             rel="noopener noreferrer"
             className="group"
             title={`${film.title} (${film.year})${
-              film.rating !== null ? ` — ${stars(film.rating)}` : ""
+              film.rating !== null ? `, ${stars(film.rating)}` : ""
             }`}
           >
             <div className="overflow-hidden rounded-md border border-line transition group-hover:-translate-y-1 group-hover:border-accent">
@@ -199,7 +199,7 @@ export async function FilmShelf() {
         <Shelf data={data} />
       ) : (
         <p className="leading-relaxed text-muted">
-          Letterboxd isn&apos;t answering right now — the diary lives at{" "}
+          Letterboxd isn&apos;t answering right now, the diary lives at{" "}
           <a
             href={LETTERBOXD_URL}
             target="_blank"
@@ -221,7 +221,7 @@ export async function FilmShelf() {
         >
           Letterboxd
         </a>
-        , so judge accordingly.
+       , so judge accordingly.
       </p>
     </Reveal>
   );

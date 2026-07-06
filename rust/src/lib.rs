@@ -144,8 +144,8 @@ static PARKS: &[Place] = &[
 
 // ---- mode 7: where's Peter? (an autobiographical tour of my actual life) ----
 static WHERES_PETER: &[Place] = &[
-    place!("where I grew up (Pulaski, WI)", 44.67, -88.24),
-    place!("my parents' restaurant, China Wok", 44.67, -88.21), // Pulaski, WI
+    place!("where I grew up (rural Wisconsin)", 44.67, -88.24),
+    place!("my parents' restaurant, China Wok", 44.67, -88.21),
     place!("Green Bay — go Packers", 44.51, -88.02),
     place!("UW–Madison, three majors", 43.08, -89.41),
     place!("Amazon, summer 2025", 47.62, -122.34), // Seattle

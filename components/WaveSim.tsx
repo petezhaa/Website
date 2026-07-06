@@ -310,7 +310,7 @@ export function WaveSim() {
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the physics, running in C++</p>
         <p>faraday&nbsp;&nbsp;∂Hy/∂t = −(1/μ)·∂Ez/∂x&nbsp;&nbsp;(the gold line)</p>
         <p>ampère&nbsp;&nbsp;&nbsp;∂Ez/∂t = −(1/ε)·∂Hy/∂x&nbsp;&nbsp;(the filled wave)</p>
-        <p>speed&nbsp;&nbsp;&nbsp;&nbsp;c = 1/√(με) — inside the slab light drops to c/n, n = √εᵣ = {nIdx.toFixed(2)}</p>
+        <p>speed&nbsp;&nbsp;&nbsp;&nbsp;c = 1/√(με), inside the slab light drops to c/n, n = √εᵣ = {nIdx.toFixed(2)}</p>
         <p>fresnel&nbsp;&nbsp;r = (n₁−n₂)/(n₁+n₂) = {rF.toFixed(2)} → {(rF * rF * 100).toFixed(0)}% of the power bounces off each face</p>
         <p>leapfrogged on a staggered Yee grid at Courant 0.5; both ends are Mur absorbers, so the box pretends to be infinite.</p>
       </div>

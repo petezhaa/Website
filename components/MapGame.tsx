@@ -1108,7 +1108,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
     const pts = engine.last_points();
     roundPtsRef.current.push(pts); // for the daily share block
     if (engine.last_distance_km() < 25) {
-      // bullseye — small celebration (and it counts as a find)
+      // bullseye, small celebration (and it counts as a find)
       foundSecret("bullseye");
       setConfetti(Array.from({ length: 18 }, (_, i) => i));
       setTimeout(() => setConfetti([]), 1500);
@@ -1163,7 +1163,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
     playIntro();
   };
 
-  // record the daily result once — under the day whose BOARD was played, so a
+  // record the daily result once, under the day whose BOARD was played, so a
   // game finishing just past UTC midnight files under the day it started
   const persistDaily = (total: number, pts: number[]): number => {
     if (typeof window === "undefined") return 0;
@@ -1456,7 +1456,7 @@ export function MapGame({ challenge }: { challenge?: Challenge } = {}) {
                 >
                   {dailyInfo.played
                     ? `Daily #${dailyInfo.num} done ✓${dailyInfo.streak > 1 ? ` · 🔥 ${dailyInfo.streak}` : ""}`
-                    : `🗓 Today's 6 — Daily #${dailyInfo.num}`}
+                    : `🗓 Today's 6, Daily #${dailyInfo.num}`}
                 </button>
                 <p className="text-[10px] text-muted">
                   {dailyInfo.played

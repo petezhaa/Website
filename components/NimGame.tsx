@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 
-// Nim — combinatorial game theory with a Rust engine (rust/nim.rs). Take any
+// Nim, combinatorial game theory with a Rust engine (rust/nim.rs). Take any
 // number of stones from one pile; last stone wins. The bot plays Bouton's
 // 1901 theorem; the math panel shows you the XOR it's playing.
 
@@ -46,7 +46,7 @@ export function NimGame() {
       const e = engineRef.current;
       if (!e) return;
       e.new_game((Date.now() & 0xffffffff) >>> 0, cas ? 1 : 0);
-      setNote("your move. take stones from one pile — last stone wins.");
+      setNote("your move. take stones from one pile, last stone wins.");
       setBusy(false);
       sync();
     },
@@ -97,7 +97,7 @@ export function NimGame() {
         const bp = Math.floor(mv / 100);
         const bn = mv % 100;
         if (e.winner() === 1) {
-          setNote(`bot takes ${bn} from pile ${PILE_NAMES[bp]} — and the last stone. XOR wins again.`);
+          setNote(`bot takes ${bn} from pile ${PILE_NAMES[bp]}, and the last stone. XOR wins again.`);
           setRecord((r) => ({ ...r, bot: r.bot + 1 }));
         } else {
           setNote(`bot takes ${bn} from pile ${PILE_NAMES[bp]}. your move.`);
@@ -238,7 +238,7 @@ export function NimGame() {
           <p className="mt-2 max-w-xl leading-relaxed text-muted">
             {nimSum === 0
               ? "nim-sum 0: whoever must move from here loses against perfect play. if it's your turn, stall and pray."
-              : "nim-sum ≠ 0: there is exactly one kind of winning move — shrink a pile so the XOR becomes 0. find it."}
+              : "nim-sum ≠ 0: there is exactly one kind of winning move, shrink a pile so the XOR becomes 0. find it."}
           </p>
         </div>
       )}
@@ -246,7 +246,7 @@ export function NimGame() {
       <div className="panel p-4 text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">combinatorial game theory, in Rust</p>
         <p>Bouton (1901): a Nim position is lost for the player to move ⇔ the XOR of the pile sizes is 0.</p>
-        <p>the bot just plays that theorem — when the nim-sum is s ≠ 0, some pile has pᵢ ⊕ s &lt; pᵢ, and shrinking it to pᵢ ⊕ s zeroes the sum.</p>
+        <p>the bot just plays that theorem, when the nim-sum is s ≠ 0, some pile has pᵢ ⊕ s &lt; pᵢ, and shrinking it to pᵢ ⊕ s zeroes the sum.</p>
         <p>every game starts winnable (nim-sum ≠ 0, you move first). beat the perfect bot and you&apos;ve re-derived a 125-year-old theorem.</p>
       </div>
     </div>

@@ -501,7 +501,7 @@ export function ChargeSim() {
         <p>force&nbsp;&nbsp;&nbsp;&nbsp;F = k·q₁q₂·r̂ / r²&nbsp;&nbsp;(Coulomb; like repels, opposite attracts)</p>
         <p>field&nbsp;&nbsp;&nbsp;&nbsp;E(p) = k·Σⱼ qⱼ (p − pⱼ) / |p − pⱼ|³&nbsp;&nbsp;(the arrows)</p>
         <p>potential V(p) = k·Σⱼ qⱼ / |p − pⱼ|&nbsp;&nbsp;(the heatmap; equipotentials are its level sets)</p>
-        <p>gauss&nbsp;&nbsp;&nbsp;&nbsp;∮ E·n̂ dl = 2πk·Q_enclosed&nbsp;&nbsp;(drag the surface — the integral is computed numerically and it just… holds)</p>
+        <p>gauss&nbsp;&nbsp;&nbsp;&nbsp;∮ E·n̂ dl = 2πk·Q_enclosed&nbsp;&nbsp;(drag the surface, the integral is computed numerically and it just… holds)</p>
         <p>each frame integrates every charge against every other (O(n²)), softened + damped, at 60&nbsp;Hz.</p>
       </div>
     </div>

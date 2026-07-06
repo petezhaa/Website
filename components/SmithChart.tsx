@@ -50,7 +50,7 @@ const HINTS = [
   "25 − j40. the one every textbook uses. there is a reason.",
   "this load is secretly sitting on a special circle already. one part. choose wisely.",
   "big, lazy, slightly capacitive. maybe deal with it in admittance first.",
-  "433 MHz — the garage-door band. the parts get smaller up here; the chart does not.",
+  "433 MHz, the garage-door band. the parts get smaller up here; the chart does not.",
   "915 MHz and a high-Q load hugging the rim. small slider moves, big dot moves. breathe.",
 ];
 
@@ -428,7 +428,7 @@ export function SmithChart() {
               key={nm}
               disabled={!unlocked}
               onClick={() => pickLevel(i)}
-              title={unlocked ? nm : "locked — match the previous load first"}
+              title={unlocked ? nm : "locked, match the previous load first"}
               className={chip(level === i, !unlocked)}
             >
               {solved[i] ? "✓ " : ""}{i + 1}
@@ -595,7 +595,7 @@ export function SmithChart() {
         <p>series L/C&nbsp;&nbsp;z′ = z + jX/Z₀, X = ωL or −1/ωC&nbsp;&nbsp;(a series part can&apos;t change resistance → the dot rides a constant-R circle)</p>
         <p>shunt L/C&nbsp;&nbsp;y′ = 1/z + jB·Z₀, B = ωC or −1/ωL&nbsp;&nbsp;(a shunt part can&apos;t change conductance → a constant-G circle, the same family mirrored)</p>
         <p>vswr&nbsp;&nbsp;(1 + |Γ|)/(1 − |Γ|)&nbsp;&nbsp;(what the standing wave on the line does about your choices)</p>
-        <p>no trig anywhere — the chart is a Möbius map of the right half z-plane, and every slider tick re-walks ~200 points of it in C++.</p>
+        <p>no trig anywhere, the chart is a Möbius map of the right half z-plane, and every slider tick re-walks ~200 points of it in C++.</p>
       </div>
     </div>
   );

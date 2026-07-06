@@ -48,4 +48,4 @@ just ship         # the whole ceremony: engines, build, deploy
 
 Needs `GROQ_API_KEY` and `STEAM_API_KEY` in `.env.local` (and as Cloudflare secrets in production).
 
-Designed and built by me, in Pulaski, WI.
+Designed and built by me, in Wisconsin.

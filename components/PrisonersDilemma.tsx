@@ -182,7 +182,7 @@ export function PrisonersDilemma() {
             </tbody>
           </table>
           <p className="mt-2 max-w-[15rem] leading-relaxed text-muted">
-            defecting always beats cooperating in one round — yet mutual defection (1/1) is worse for both than mutual cooperation (3/3). that&apos;s the dilemma.
+            defecting always beats cooperating in one round, yet mutual defection (1/1) is worse for both than mutual cooperation (3/3). that&apos;s the dilemma.
           </p>
         </div>
       </div>

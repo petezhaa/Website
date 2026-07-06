@@ -1,7 +1,7 @@
 // Steam playtime via the official Web API, revalidated every 6 hours.
 // Steam login-walls the community games page for everyone now, so the API
 // is the only route. Needs STEAM_API_KEY in .env.local (free, instant:
-// https://steamcommunity.com/dev/apikey — any domain works, even localhost).
+// https://steamcommunity.com/dev/apikey, any domain works, even localhost).
 // Profile game details must be public (they are).
 
 const STEAM_ID64 = "76561198195642403"; // PeterZhaoOfficial

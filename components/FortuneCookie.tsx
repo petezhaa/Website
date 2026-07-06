@@ -7,7 +7,7 @@ import { bumpVibe, foundSecret } from "@/lib/vibeBus";
 // Crack a cookie, get a fortune. The fortunes are house-written and the
 // lucky numbers are load-bearing.
 const FORTUNES = [
-  "You will order the General Tso's. — Confucius, probably",
+  "You will order the General Tso's., Confucius, probably",
   "A wok paid for this website's hosting. Honor it.",
   "He who reads personal websites is hungry within the hour.",
   "Your code compiles on the first try today. Order accordingly.",

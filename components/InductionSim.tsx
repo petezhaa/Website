@@ -150,7 +150,7 @@ export function InductionSim() {
     ctx.stroke();
     ctx.globalAlpha = 1;
 
-    // the lamp: glow scales with |emf| — no change in flux, no light
+    // the lamp: glow scales with |emf|, no change in flux, no light
     const g = Math.min(1, Math.abs(emfV) / 2.2);
     ctx.fillStyle = P.muted;
     ctx.fillRect(LAMP.x - 10, LAMP.y + LAMP.r - 2, 20, 8);
@@ -329,7 +329,7 @@ export function InductionSim() {
     };
 
     trace(PLOT.phiY, phis, 0, 1.18, P.gold, "flux Φ(t) through the coil", `Φ = ${fluxV.toFixed(2)}`);
-    trace(PLOT.emfY, emfs, -esc, esc, P.n, "emf ℰ(t) = −N·dΦ/dt — the negative slope of Φ", `ℰ = ${emfV.toFixed(2)}`);
+    trace(PLOT.emfY, emfs, -esc, esc, P.n, "emf ℰ(t) = −N·dΦ/dt, the negative slope of Φ", `ℰ = ${emfV.toFixed(2)}`);
   }, []);
 
   // load wasm + start the loop when the section is near
@@ -497,16 +497,16 @@ export function InductionSim() {
         )}
         <p className="pointer-events-none absolute bottom-3 right-4 text-right text-[10px] leading-relaxed text-muted/70">
           drag the magnet through the coil · speed makes volts, parking makes none<br />
-          the arrow on the coil is the induced current — watch it flip (lenz)
+          the arrow on the coil is the induced current, watch it flip (lenz)
         </p>
       </div>
 
       <div className="panel p-4 font-mono text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">the physics, running in C++</p>
         <p>flux&nbsp;&nbsp;&nbsp;&nbsp;Φ(d) = k·a² / (a² + d²)^(3/2)&nbsp;&nbsp;(bar magnet a distance d down the coil axis)</p>
-        <p>faraday&nbsp;ℰ = −N·dΦ/dt&nbsp;&nbsp;(finite-differenced from the magnet&apos;s actual motion — your wrist is the input)</p>
+        <p>faraday&nbsp;ℰ = −N·dΦ/dt&nbsp;&nbsp;(finite-differenced from the magnet&apos;s actual motion, your wrist is the input)</p>
         <p>ohm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I = ℰ/R&nbsp;&nbsp;(the lamp is honest: no changing flux, no light)</p>
-        <p>lenz: the minus sign is the coil fighting the change — the current flips the moment Φ stops rising and starts falling.</p>
+        <p>lenz: the minus sign is the coil fighting the change, the current flips the moment Φ stops rising and starts falling.</p>
       </div>
     </div>
   );

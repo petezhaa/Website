@@ -207,7 +207,7 @@ export function SnakeJava() {
       </div>
       <div className="panel p-4 text-[11px] leading-relaxed text-muted">
         <p className="mb-1 uppercase tracking-[0.2em] text-accent">actual Java bytecode</p>
-        <p>java/Snake.java is compiled with javac, and the raw .class file ships to your browser — where a ~250-line JVM interpreter written in TypeScript for this site (lib/jvm.ts) executes the bytecode, instruction by instruction: iload, iastore, if_icmpne, invokestatic.</p>
+        <p>java/Snake.java is compiled with javac, and the raw .class file ships to your browser, where a ~250-line JVM interpreter written in TypeScript for this site (lib/jvm.ts) executes the bytecode, instruction by instruction: iload, iastore, if_icmpne, invokestatic.</p>
         <p>no plugins, no transpiling. `javap -c Snake.class` shows exactly what&apos;s running right now.</p>
       </div>
     </div>
