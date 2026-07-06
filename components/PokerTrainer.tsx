@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { bumpVibe } from "@/lib/vibeBus";
 
 // Heads-up Texas Hold'em against a bot, with a coach. The C++ engine deals,
@@ -61,35 +62,44 @@ const CATS = [
 ];
 const ADVICE = ["fold", "check or call", "bet or raise"];
 
-function Card({ c, hidden = false }: { c: number; hidden?: boolean }) {
-  if (hidden)
-    return (
-      <div
-        className="grid h-16 w-11 place-items-center rounded-md border border-line sm:h-20 sm:w-14"
-        style={{
-          background:
-            "repeating-linear-gradient(45deg, var(--surface-2) 0 4px, var(--surface) 4px 8px)",
-        }}
-      />
-    );
-  if (c < 0)
+// A card deals in with a small flip-and-drop; `delay` staggers a spread.
+function Card({ c, hidden = false, delay = 0 }: { c: number; hidden?: boolean; delay?: number }) {
+  const reduce = useReducedMotion();
+  if (c < 0 && !hidden)
     return <div className="h-16 w-11 rounded-md border border-dashed border-line sm:h-20 sm:w-14" />;
-  const red = (c & 3) === 1 || (c & 3) === 2;
+  const red = !hidden && ((c & 3) === 1 || (c & 3) === 2);
   return (
-    <div className="flex h-16 w-11 flex-col items-center justify-center rounded-md border border-line bg-surface shadow-sm sm:h-20 sm:w-14">
-      <span
-        className={`font-serif text-lg font-semibold leading-none sm:text-xl ${red ? "" : "text-fg"}`}
-        style={red ? { color: "#b0483f" } : undefined}
-      >
-        {RANKS[c >> 2]}
-      </span>
-      <span
-        className={`text-base leading-none sm:text-lg ${red ? "" : "text-fg"}`}
-        style={red ? { color: "#b0483f" } : undefined}
-      >
-        {SUITS[c & 3]}
-      </span>
-    </div>
+    <motion.div
+      initial={reduce ? false : { opacity: 0, y: -22, rotateY: 90, scale: 0.85 }}
+      animate={{ opacity: 1, y: 0, rotateY: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 320, damping: 24, delay }}
+      style={{ transformPerspective: 600 }}
+    >
+      {hidden ? (
+        <div
+          className="grid h-16 w-11 place-items-center rounded-md border border-line sm:h-20 sm:w-14"
+          style={{
+            background:
+              "repeating-linear-gradient(45deg, var(--surface-2) 0 4px, var(--surface) 4px 8px)",
+          }}
+        />
+      ) : (
+        <div className="flex h-16 w-11 flex-col items-center justify-center rounded-md border border-line bg-surface shadow-sm sm:h-20 sm:w-14">
+          <span
+            className={`font-serif text-lg font-semibold leading-none sm:text-xl ${red ? "" : "text-fg"}`}
+            style={red ? { color: "#b0483f" } : undefined}
+          >
+            {RANKS[c >> 2]}
+          </span>
+          <span
+            className={`text-base leading-none sm:text-lg ${red ? "" : "text-fg"}`}
+            style={red ? { color: "#b0483f" } : undefined}
+          >
+            {SUITS[c & 3]}
+          </span>
+        </div>
+      )}
+    </motion.div>
   );
 }
 
@@ -137,6 +147,9 @@ export function PokerTrainer() {
   const [failed, setFailed] = useState(false);
   const [coachOn, setCoachOn] = useState(true);
   const [s, setS] = useState<Snap | null>(null);
+  // bumps every deal so the hole cards remount and re-animate per hand
+  const [handId, setHandId] = useState(0);
+  const reduce = useReducedMotion();
 
   const snap = useCallback((withCoach: boolean): Snap => {
     const e = engRef.current!;
@@ -199,6 +212,7 @@ export function PokerTrainer() {
     const e = engRef.current;
     if (!e) return;
     e.new_hand();
+    setHandId((n) => n + 1);
     setS(snap(true));
     bumpVibe("gamer", 6);
   }, [snap]);
@@ -312,8 +326,10 @@ export function PokerTrainer() {
           {/* bot row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Card c={s.bot[0]} hidden={s.bot[0] < 0} />
-              <Card c={s.bot[1]} hidden={s.bot[1] < 0} />
+              {/* keyed on the card value too: at showdown the backs remount
+                  as faces, which plays the flip */}
+              <Card key={`b0-${handId}-${s.bot[0]}`} c={s.bot[0]} hidden={s.bot[0] < 0} delay={0.16} />
+              <Card key={`b1-${handId}-${s.bot[1]}`} c={s.bot[1]} hidden={s.bot[1] < 0} delay={0.24} />
               <div>
                 <p className="text-sm font-medium">
                   Bot {!s.heroButton && <span className="ml-1 rounded-full border border-line px-1.5 text-[9px] uppercase tracking-wide text-muted">dealer</span>}
@@ -323,20 +339,31 @@ export function PokerTrainer() {
             </div>
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-widest text-muted">pot</p>
-              <p className="font-mono text-2xl font-bold text-fg">{s.pot}</p>
+              {/* pulses when the pot changes */}
+              <motion.p
+                key={s.pot}
+                initial={reduce ? false : { scale: 1.3 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                className="font-mono text-2xl font-bold text-fg"
+              >
+                {s.pot}
+              </motion.p>
             </div>
           </div>
 
-          {/* board */}
+          {/* board: each street's new cards deal in with a stagger */}
           <div className="my-5 flex justify-center gap-2">
-            {s.board.map((c, i) => <Card key={i} c={c} />)}
+            {s.board.map((c, i) => (
+              <Card key={`bd-${handId}-${i}-${c}`} c={c} delay={c >= 0 && i < 3 ? i * 0.12 : 0} />
+            ))}
           </div>
 
           {/* hero row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Card c={s.hero[0]} />
-              <Card c={s.hero[1]} />
+              <Card key={`h0-${handId}`} c={s.hero[0]} />
+              <Card key={`h1-${handId}`} c={s.hero[1]} delay={0.08} />
               <div>
                 <p className="text-sm font-medium">
                   You {s.heroButton && <span className="ml-1 rounded-full border border-line px-1.5 text-[9px] uppercase tracking-wide text-muted">dealer</span>}
@@ -353,7 +380,14 @@ export function PokerTrainer() {
           <div className="mt-5 flex flex-wrap gap-2">
             {s.over ? (
               <>
-                <p className="w-full text-sm">{resultLine()}</p>
+                <motion.p
+                  initial={reduce ? false : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: reduce ? 0 : 0.35, duration: 0.4 }}
+                  className="w-full text-sm"
+                >
+                  {resultLine()}
+                </motion.p>
                 <button onClick={deal} className="btn-solid px-5 py-2.5 text-sm">
                   Next hand
                 </button>
